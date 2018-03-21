@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_SYSTICK_H_
   #define _STM32F10X_SYSTICK_H_
 
@@ -10,21 +17,14 @@
                        ((CLOCK == SYSTICK_CLOCK_AHB_DIV_EIGHT) || \
                         (CLOCK == SYSTICK_CLOCK_AHB))
 
-
-
-
-
 /* interface */
 void SYSTICK_SetClockSource(uint8 source);
-void SYSTICK_EnableInt(BOOL flag);
-void SYSTICK_EnableCounter(BOOL flag);
-BOOL SYSTICK_IsCountFlagSet(void);
+void SYSTICK_EnableInt(bool flag);
+void SYSTICK_EnableCounter(bool flag);
+bool SYSTICK_IsCountFlagSet(void);
 void SYSTICK_ClrCountFlag(void);
 void SYSTICK_SetTickInterval(uint32_t time);
 
 
+#endif /* _STM32F10X_SYSTICK_H_ */
 
-
-
-
-#endif

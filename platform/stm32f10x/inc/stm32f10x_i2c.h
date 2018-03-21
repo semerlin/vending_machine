@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_I2C_H_
   #define _STM32F10X_I2C_H_
 
@@ -139,4 +146,5 @@ void I2C_ClearError(I2C_Group group, uint32_t error);
 void I2C_AckEnable(I2C_Group group, BOOL flag);
 
 
-#endif
+#endif /* _STM32F10X_I2C_H */
+

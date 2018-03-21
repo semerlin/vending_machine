@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_i2c.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -77,7 +84,7 @@ void I2C_Reset(I2C_Group group)
  * @param i2c group
  * @param enable or disable
  */
-void I2C_Enable(I2C_Group group, BOOL flag)
+void I2C_Enable(I2C_Group group, bool flag)
 {
     assert_param(group < I2C_Count);
     I2C_T * const I2cX = I2Cx[group];
@@ -224,7 +231,7 @@ void I2C_GenerateStop(I2C_Group group)
  * @param enable or disable flag
  */
 void I2C_EnableInt(I2C_Group group, uint16_t intFlag,
-                   BOOL flag)
+                   bool flag)
 {
     assert_param(group < I2C_Count);
     assert_param(IS_I2C_IT_Param(intFlag));
@@ -271,7 +278,7 @@ uint8_t I2C_ReadData(I2C_Group group)
  * @param i2c flag
  * @return set or not
  */
-BOOL I2C_Is_FlagSet(I2C_Group group, uint32_t flag)
+bool I2C_Is_FlagSet(I2C_Group group, uint32_t flag)
 {
     assert_param(group < I2C_Count);
     
@@ -347,7 +354,7 @@ void I2C_ClearError(I2C_Group group, uint32_t error)
  * @param i2c group
  * @param enable or disable flag
  */
-void I2C_AckEnable(I2C_Group group, BOOL flag)
+void I2C_AckEnable(I2C_Group group, bool flag)
 {
     assert_param(group < I2C_Count);
     

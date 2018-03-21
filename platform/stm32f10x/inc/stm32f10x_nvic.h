@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_NVIC_H_
   #define _STM32F10X_NVIC_H_
 
@@ -6,10 +13,10 @@
 /* NVIC Init Structure definition */
 typedef struct
 {
-    uint8_t_t channel;
-    uint8_t_t preemptionPriority;
-    uint8_t_t subPriority;
-    BOOL enable;
+    uint8_t channel;
+    uint8_t preemptionPriority;
+    uint8_t subPriority;
+    bool enable;
 } NVIC_Config;
 
 /* IRQ Channels */
@@ -105,13 +112,14 @@ typedef struct
 
 void NVIC_Init(const NVIC_Config *config);
 void NVIC_InitStruct(NVIC_Config *config);
-void NVIC_EnableIRQ(uint8_t channel, BOOL flag);
-void NVIC_SetIRQPending(uint8_t channel, BOOL flag);
-BOOL NVIC_IsIRQPending(uint8_t channel);
-BOOL NVIC_IsIRQActive(uint8_t channel);
-void NVIC_SetIRQPriority(uint8_t channel, uint8 preemptionPriority,
+void NVIC_EnableIRQ(uint8_t channel, bool flag);
+void NVIC_SetIRQPending(uint8_t channel, bool flag);
+bool NVIC_IsIRQPending(uint8_t channel);
+bool NVIC_IsIRQActive(uint8_t channel);
+void NVIC_SetIRQPriority(uint8_t channel, uint8_t preemptionPriority,
                          uint8_t subPriority);
-void NVIC_GetIRQPriority(uint8_t channel, uint8 *preemptionPriority,
+void NVIC_GetIRQPriority(uint8_t channel, uint8_t *preemptionPriority,
                          uint8_t *subPriority);
 
-#endif
+#endif /* _STM32F10X_NVIC_H_ */
+

@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_flash.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -44,7 +51,7 @@ FLASH_T *FLASH = (FLASH_T *)FLASH_BASE;
  * @brief enable flash prefetch
  * @param flag: TRUE: enable, FALSE: disable
  */
-void Flash_EnablePrefetch(BOOL flag)
+void Flash_EnablePrefetch(bool flag)
 {
     if(flag)
         *((volatile uint32_t *)ACR_PRFTBE) = 0x01;
@@ -57,7 +64,7 @@ void Flash_EnablePrefetch(BOOL flag)
  * @brief get flash prefetch status
  * @return flash prefetch is enabled if true, otherwise false
  */
-BOOL FLASH_IsPrefetchEnabled(void)
+bool FLASH_IsPrefetchEnabled(void)
 {
     if(*((volatile uint32_t*)ACR_PRFTBS))
     {
@@ -73,7 +80,7 @@ BOOL FLASH_IsPrefetchEnabled(void)
  *        than 8MHz
  * @param flag: TRUE: enable, FALSE: disable
  */
-void FLASH_EnableHalfCycleAccess(BOOL flag)
+void FLASH_EnableHalfCycleAccess(bool flag)
 {
     if(flag)
         *((volatile uint32_t*)ACR_HLFCYA) = 0x01;
@@ -85,7 +92,7 @@ void FLASH_EnableHalfCycleAccess(BOOL flag)
  * @brief get flash half cycle access status
  * @return flash half cycle access is enabled if true, otherwise false
  */
-BOOL FLASH_IsHalfCycleAccessEnabled(void)
+bool FLASH_IsHalfCycleAccessEnabled(void)
 {
     if(*((volatile uint32_t*)ACR_HLFCYA))
     {

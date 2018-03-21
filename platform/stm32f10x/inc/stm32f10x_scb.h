@@ -1,5 +1,12 @@
-#ifndef _LIB_SBC_STM32_H_
-  #define _LIB_SBC_STM32_H_
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
+#ifndef _STM32F10X_SCB_H_
+  #define _STM32F10X_SCB_H_
 
 #include "types.h"
 
@@ -126,13 +133,13 @@ typedef enum
 /* interface */
 uint32_t SCB_GetCPUID(void);
 void SCB_PendNMI(void);
-BOOL SCB_IsNMIPending(void);
-void SCB_PendPendSV(BOOL flag);
-BOOL SCB_IsPendSVPending(void);
-void SCB_PendSysTick(BOOL flag);
-BOOL SCB_IsIntPending(void);
+bool SCB_IsNMIPending(void);
+void SCB_PendPendSV(bool flag);
+bool SCB_IsPendSVPending(void);
+void SCB_PendSysTick(bool flag);
+bool SCB_IsIntPending(void);
 uint32_t SCB_GetPendIntVector(void);
-BOOL SCB_IsIntPreempted(void);
+bool SCB_IsIntPreempted(void);
 uint32_t SCB_GetActiveIntVector(void);
 void SCB_SetVectTableConfig(VectTable table);
 VectTable SCB_GetVectTableConfig(void);
@@ -141,21 +148,21 @@ uint8_t SCB_GetMinPreemptionPriority(void);
 uint8_t SCB_GetMinSubPriority(void);
 uint8_t SCB_GetPriorityGrouping(void);
 void SCB_GenSystemReset(void);
-void SCB_EnableAllIntWakeup(BOOL flag);         
+void SCB_EnableAllIntWakeup(bool flag);         
 void SCB_SetSleepMode(uint8_t mode);
-void SCB_EnableSleepOnExit(BOOL flag);                
+void SCB_EnableSleepOnExit(bool flag);                
 void SCB_SetStackAlign(uint16_t align);               
-void SCB_BusFaultIgnore(BOOL flag);           
-void SCB_EnableDiv0Trp(BOOL flag);
-void SCB_EnableUnalignTrp(BOOL flag);          
-void SCB_EnableUserAccessSTIR(BOOL flag);
+void SCB_BusFaultIgnore(bool flag);           
+void SCB_EnableDiv0Trp(bool flag);
+void SCB_EnableUnalignTrp(bool flag);          
+void SCB_EnableUserAccessSTIR(bool flag);
 void SCB_SetThreadModeEnterMethod(uint8_t mode);     
 void SCB_SetExceptionPriorty(uint8_t exception, uint32_t priority);
-void SCB_EnableException(uint8_t handle, BOOL flag);
+void SCB_EnableException(uint8_t handle, bool flag);
 uint8_t SCB_GetPendingException(void);
-void SCB_SetPendingStatus(uint8_t exception, BOOL flag);
+void SCB_SetPendingStatus(uint8_t exception, bool flag);
 uint8_t SCB_GetActiveException(void);
-void SCB_SetActiveStatus(uint8_t exception, BOOL flag);
+void SCB_SetActiveStatus(uint8_t exception, bool flag);
 uint32_t SCB_GetUsageFaultDetail(void);
 void SCB_ClrUsageFaultStatus(uint32_t reg);
 uint32_t SCB_GetBusFaultDetail(void);
@@ -168,4 +175,4 @@ uint32_t SCB_GetMemFaultAddress(void);
 uint32_t SCB_GetBusFaultAddress(void);
 
 
-#endif
+#endif /* _STM32F10X_SCB_H_ */

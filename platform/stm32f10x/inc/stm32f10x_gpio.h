@@ -1,5 +1,12 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_GPIO_H_
-#define _STM32F10X_GPIO_H_
+  #define _STM32F10X_GPIO_H_
 
 #include "types.h"
 
@@ -55,7 +62,5 @@ void GPIO_ResetPin(GPIO_Group group, uint8_t pin);
 void GPIO_LockPin(GPIO_Group group, uint8_t pin);
 
 
-
-
-#endif
+#endif /* _STM32F10X_GPIO_H_ */
 

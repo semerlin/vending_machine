@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_wwdg.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -115,7 +122,7 @@ void WWDG_ClrEWIFlag(void)
  * @brief get ewi flag
  * @return true means set, false means clear
  */
-BOOL WWDG_IsEWIFFlagSet(void)
+bool WWDG_IsEWIFFlagSet(void)
 {
     if(*((volatile uint32_t*)SR_EWIF) == 0x01)
         return TRUE;

@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_SPI_H_
   #define _STM32F10X_SPI_H_
 
@@ -118,19 +125,19 @@ typedef struct
     uint32_t length;
     uint32_t format;
     uint32_t nssMode;
-    BOOL useCrc;
+    bool useCrc;
 }SPI_Config;
 
 
 /* interface */
-void SPI_Enable(SPI_Group group, BOOL flag);
+void SPI_Enable(SPI_Group group, bool flag);
 void SPI_Setup(SPI_Group group, const SPI_Config *config);
 void SPI_StructInit(SPI_Config *config);
-void SPI_EnableInt(SPI_Group group, uint8_t intflag, BOOL flag);
-BOOL SPI_IsFlagOn(SPI_Group group, uint8_t flag);
-void SPI_SetCRCNext(SPI_Group group, BOOL flag);
-void SPI_EnableTxDMA(SPI_Group group, BOOL flag);
-void SPI_EnableRxDMA(SPI_Group group, BOOL flag);
+void SPI_EnableInt(SPI_Group group, uint8_t intflag, bool flag);
+bool SPI_IsFlagOn(SPI_Group group, uint8_t flag);
+void SPI_SetCRCNext(SPI_Group group, bool flag);
+void SPI_EnableTxDMA(SPI_Group group, bool flag);
+void SPI_EnableRxDMA(SPI_Group group, bool flag);
 void SPI_WriteData(SPI_Group group, uint16_t data);
 uint16_t SPI_ReadData(SPI_Group group);
 uint16_t SPI_WriteReadDataSync(SPI_Group group, uint16 data);
@@ -141,5 +148,5 @@ uint16_t SPI_GetRxCRC(SPI_Group group);
 uint16_t SPI_GetTxCRC(SPI_Group group);
 
 
-#endif
+#endif /* _STM32F10X_SPI_H_ */
 

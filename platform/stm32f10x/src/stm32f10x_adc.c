@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_adc.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -60,7 +67,7 @@ static ADC_T * const ADCx[] = {(ADC_T *)ADC1_BASE,
  * @param adc group
  * @param power on flag
  */
-void ADC_PowerOn(ADC_Group group, BOOL flag)
+void ADC_PowerOn(ADC_Group group, bool flag)
 {
     assert_param(group < ADC_Count);
     ADC_T * const AdcX = ADCx[group];
@@ -105,7 +112,7 @@ void ADC_Calibration(ADC_Group group)
  * @param flag need to check
  * @return TRUE:set FALSE:reset
  */
-BOOL ADC_IsFlagOn(ADC_Group group, uint8_t flag)
+bool ADC_IsFlagOn(ADC_Group group, uint8_t flag)
 {
     assert_param(group < ADC_Count);
     assert_param(IS_ADC_FLAG_PARAM(flag));
@@ -154,7 +161,7 @@ void ADC_SetDualMode(ADC_Group group, uint32_t mode)
  * @param enable or disable flag
  */
 void ADC_EnableAnalogWatchdogOnGroup(ADC_Group group, uint8_t channel, 
-                                     BOOL flag)
+                                     bool flag)
 {
     assert_param(group == ADC1);
     assert_param(IS_ADC_CHANNEL_GROUP_PARAM(channel));
@@ -185,7 +192,7 @@ void ADC_EnableAnalogWatchdogOnGroup(ADC_Group group, uint8_t channel,
  * @param enable or disable flag
  */
 void ADC_EnableAnalogWatchdogOnChannel(ADC_Group group, uint8_t channel, 
-                                       BOOL flag)
+                                       bool flag)
 {
     assert_param(group == ADC1);
     assert_param(IS_ADC_CHANNEL_PARAM(channel));
@@ -226,7 +233,7 @@ void ADC_SetDiscontinuousModeChannelCount(ADC_Group group,
  * @param adc group
  * @param enable or diable flag
  */
-void ADC_EnableAutoInjected(ADC_Group group, BOOL flag)
+void ADC_EnableAutoInjected(ADC_Group group, bool flag)
 {
     assert_param(group == ADC1);
     
@@ -281,7 +288,7 @@ void ADC_SetConvertMode(ADC_Group group, uint8_t mode)
  * @param interrupt flag
  * @param enable or disable flag
  */
-void ADC_EnableInt(ADC_Group group, uint32_t intFlag, BOOL flag)
+void ADC_EnableInt(ADC_Group group, uint32_t intFlag, bool flag)
 {
     assert_param(group < ADC_Count);
     assert_param(IS_ADC_IT_PARAM(intFlag));
@@ -298,7 +305,7 @@ void ADC_EnableInt(ADC_Group group, uint32_t intFlag, BOOL flag)
  * @brief enable or disable internal temperature sensor
  * @param enable or disable flag
  */
-void ADC_EnableTemperensor(ADC_Group group, BOOL flag)
+void ADC_EnableTemperensor(ADC_Group group, bool flag)
 {
     assert_param(group == ADC1);
     
@@ -334,7 +341,7 @@ void ADC_InternalTriggerConversion(ADC_Group group, uint8_t channel)
  * @param trigger or not
  */
 void ADC_EnableExternalTriggerOnGroup(ADC_Group group, uint8_t channel,
-                                      BOOL flag)
+                                      bool flag)
 {
     assert_param(group < ADC_Count);
     assert_param(IS_ADC_CHANNEL_GROUP_PARAM(channel));
@@ -403,7 +410,7 @@ void ADC_SetDataAlignment(ADC_Group group, uint32_t alignment)
  * @param adc group
  * @param enable or disable flag
  */
-void ADC_EnableDMA(ADC_Group group, BOOL flag)
+void ADC_EnableDMA(ADC_Group group, bool flag)
 {
     assert_param(group < ADC_Count);
     

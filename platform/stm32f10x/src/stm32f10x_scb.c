@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_scb.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -107,7 +114,7 @@ void SCB_PendNMI(void)
  * @brief check if NMI is pending
  * @retunr TREU:yes FALSE:no
  */
-BOOL SCB_IsNMIPending(void)
+bool SCB_IsNMIPending(void)
 {
     if(((SCB->ICSR) & NMIPENDSET) == NMIPENDSET)
         return TRUE;
@@ -119,7 +126,7 @@ BOOL SCB_IsNMIPending(void)
  * @brief change pendsv exception state
  * @param flag TRUE:pending FALSE: not pending
  */
-void SCB_PendPendSV(BOOL flag)
+void SCB_PendPendSV(bool flag)
 {
     if(flag)
         SCB->ICSR |= PENDSVSET;
@@ -132,7 +139,7 @@ void SCB_PendPendSV(BOOL flag)
  * @brief check if PendSV is pending
  * @retunr TREU:yes FALSE:no
  */
-BOOL SCB_IsPendSVPending(void)
+bool SCB_IsPendSVPending(void)
 {
     if(((SCB->ICSR) & PENDSVSET) == PENDSVSET)
         return TRUE;
@@ -144,7 +151,7 @@ BOOL SCB_IsPendSVPending(void)
  * @brief change SysTick exception state
  * @param flag TRUE:pending FALSE: not pending
  */
-void SCB_PendSysTick(BOOL flag)
+void SCB_PendSysTick(bool flag)
 {
     if(flag)
         SCB->ICSR |= PENDSTSET;
@@ -156,7 +163,7 @@ void SCB_PendSysTick(BOOL flag)
  * @brief check if any interrupt is pending, excluding NMI and Faults
  * @return TRUE:yes FALSE:no
  */
-BOOL SCB_IsIntPending(void)
+bool SCB_IsIntPending(void)
 {
     if(((SCB->ICSR) & ISRPENDING) == ISRPENDING)
         return TRUE;
@@ -178,7 +185,7 @@ uint32_t SCB_GetPendIntVector(void)
  * @brief indicates whether there are preempted active exceptions
  * @return TRUE:yes FALSE:no
  */
-BOOL SCB_IsIntPreempted(void)
+bool SCB_IsIntPreempted(void)
 {
     if(((SCB->ICSR) & RETOBASE) == RETOBASE)
         return FALSE;
@@ -277,7 +284,7 @@ void SCB_GenSystemReset(void)
  * @brief config only enabled interrupts or all interrupts can wakeup processor
  * @param TRUE: all FALSE: only enabled
  */
-void SCB_EnableAllIntWakeup(BOOL flag)
+void SCB_EnableAllIntWakeup(bool flag)
 {
 	SCB->SCR &= ~SEVEONPEND;
     if(flag)
@@ -301,7 +308,7 @@ void SCB_SetSleepMode(uint8_t mode)
  *        mode
  * @param TRUE: Enter sleep or deep sleep FALSE: Do not sleep
  */  
-void SCB_EnableSleepOnExit(BOOL flag)
+void SCB_EnableSleepOnExit(bool flag)
 {
     SCB->SCR &= ~SLEEPONEXIT;
 
@@ -326,7 +333,7 @@ void SCB_SetStackAlign(uint16_t align)
  * @brief whether process bus faults or not
  * @param TRUE: yes FALSE:no
  */                   
-void SCB_BusFaultIgnore(BOOL flag)
+void SCB_BusFaultIgnore(bool flag)
 {
     SCB->CCR &= ~BFHFNMIGN;
     if(flag)
@@ -339,7 +346,7 @@ void SCB_BusFaultIgnore(BOOL flag)
  * @brief configure trap divide by 0 
  * @param TRUE: yes FALSE:no
  */                   
-void SCB_EnableDiv0Trp(BOOL flag)
+void SCB_EnableDiv0Trp(bool flag)
 {
     SCB->CCR &= ~DIV0TRP;
     if(flag)
@@ -351,7 +358,7 @@ void SCB_EnableDiv0Trp(BOOL flag)
  * @brief enables unaligned access traps 
  * @param TRUE: yes FALSE:no
  */ 
-void SCB_EnableUnalignTrp(BOOL flag)
+void SCB_EnableUnalignTrp(bool flag)
 {
     SCB->CCR &= ~UNALIGNTRP;
     if(flag)
@@ -362,7 +369,7 @@ void SCB_EnableUnalignTrp(BOOL flag)
  * @brief enables unprivileged software access to the STIR 
  * @param TRUE: yes FALSE:no
  */                   
-void SCB_EnableUserAccessSTIR(BOOL flag)
+void SCB_EnableUserAccessSTIR(bool flag)
 {
     SCB->CCR &= ~USERSETMPEND;
     if(flag)
@@ -429,7 +436,7 @@ void SCB_SetExceptionPriorty(uint8_t exception, uint32_t priority)
  * @param exception handler
  * @param TRUE: enable FALSE: disable
  */
-void SCB_EnableException(uint8_t handle, BOOL flag)
+void SCB_EnableException(uint8_t handle, bool flag)
 {
     assert_param(IS_SCB_EXCEPTION_PARAM(handle));
     switch(handle)
@@ -487,7 +494,7 @@ uint8_t SCB_GetPendingException(void)
  * @brief set exception pending status
  * @param TRUE:set FALSE:reset
  */
-void SCB_SetPendingStatus(uint8_t exception, BOOL flag)
+void SCB_SetPendingStatus(uint8_t exception, bool flag)
 {   
     assert_param(IS_SCB_EXCEPTION_PARAM(exception));
    
@@ -572,7 +579,7 @@ uint8_t SCB_GetActiveException(void)
  * @param exception handler
  * @param TRUE:set FALSE:reset
  */
-void SCB_SetActiveStatus(uint8_t exception, BOOL flag)
+void SCB_SetActiveStatus(uint8_t exception, bool flag)
 {   
     
     assert_param(IS_SCB_ACTIVE_PARAM(exception));

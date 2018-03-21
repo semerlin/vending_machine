@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_usart.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_rcc.h"
@@ -59,7 +66,7 @@ static USART_T * const USARTx[] = {(USART_T *)USART1_BASE,
  * @param group: usart group
  * @param flag: TRUE: enable FALSE:disable
  */
-void USART_Enable(USART_Group group, BOOL flag)
+void USART_Enable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -75,7 +82,7 @@ void USART_Enable(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param flag: TRUE: enable FALSE:disable
  */
-void USART_TransEnable(USART_Group group, BOOL flag)
+void USART_TransEnable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -91,7 +98,7 @@ void USART_TransEnable(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param flag: TRUE: enable FALSE:disable
  */
-void USART_RecvEnable(USART_Group group, BOOL flag)
+void USART_RecvEnable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -217,7 +224,7 @@ void USART_SetPrescaler(USART_Group group, uint8_t prescaler)
  * @param flag: flag position
  * @return TRUE: flag is set FALSE: flag is not set
  */
-BOOL USART_IsFlagOn(USART_Group group, uint16_t flag)
+bool USART_IsFlagOn(USART_Group group, uint16_t flag)
 {
     assert_param(group < UASRT_Count);
     assert_param(IS_USART_FLAG(flag));
@@ -296,7 +303,7 @@ void USART_SetWakeupMethod(USART_Group group, uint16_t method)
  * @param interrupt flag
  * @param enable or disable flag
  */
-void USART_EnableInt(USART_Group group, uint8_t intFlag, BOOL flag)
+void USART_EnableInt(USART_Group group, uint8_t intFlag, bool flag)
 {
     assert_param(group < UASRT_Count);
     assert_param(IS_USART_IT(intFlag));
@@ -334,13 +341,13 @@ void USART_EnableInt(USART_Group group, uint8_t intFlag, BOOL flag)
  * @param interrupt flag
  * @return enable flag
  */
-BOOL USART_IsIntEnabled(USART_Group group, uint8_t intFlag)
+bool USART_IsIntEnabled(USART_Group group, uint8_t intFlag)
 {
     assert_param(group < UASRT_Count);
     assert_param(IS_USART_IT(intFlag));
     
     USART_T * const UsartX = USARTx[group];
-    BOOL ret = FALSE;
+    bool ret = FALSE;
     switch(intFlag & 0x01)
     {
     case 0x01:
@@ -395,7 +402,7 @@ void USART_SendBreakCharacter(USART_Group group)
  * @param enable or disable usart LIN mode
  * @param group: usart group
  */
-void USART_EnableLINMode(USART_Group group, BOOL flag)
+void USART_EnableLINMode(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -427,7 +434,7 @@ void USART_SetLineBreakDetectLength(USART_Group group, uint8_t length)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_EnableDMATX(USART_Group group, BOOL flag)
+void USART_EnableDMATX(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -444,7 +451,7 @@ void USART_EnableDMATX(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_EnableDMARX(USART_Group group, BOOL flag)
+void USART_EnableDMARX(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -461,7 +468,7 @@ void USART_EnableDMARX(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_SmartcardEnable(USART_Group group, BOOL flag)
+void USART_SmartcardEnable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -477,7 +484,7 @@ void USART_SmartcardEnable(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_SmartcardNACKEnable(USART_Group group, BOOL flag)
+void USART_SmartcardNACKEnable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -493,7 +500,7 @@ void USART_SmartcardNACKEnable(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_HalfDuplexSelection(USART_Group group, BOOL flag)
+void USART_HalfDuplexSelection(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     
@@ -509,7 +516,7 @@ void USART_HalfDuplexSelection(USART_Group group, BOOL flag)
  * @param group: usart group
  * @param enable or disable flag 
  */
-void USART_IrdaEnable(USART_Group group, BOOL flag)
+void USART_IrdaEnable(USART_Group group, bool flag)
 {
     assert_param(group < UASRT_Count);
     

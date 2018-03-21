@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_WWDG_H_
   #define _STM32F10X_WWDG_H_
 
@@ -16,9 +23,6 @@
                                         (param == WWDG_TIMEBASE_DIV4) || \
 			                            (param == WWDG_TIMEBASE_DIV8))
 
-
-
-
 /* interface */
 void WWDG_Startup(void);
 void WWDG_Feed(void);
@@ -27,14 +31,10 @@ void WWDG_SetTimerBase(uint16_t base);
 void WWDG_SetWindowCounter(uint8_t cnt);
 void WWDG_EnableEWI(void);
 void WWDG_ClrEWIFlag(void);
-BOOL WWDG_IsEWIFFlagSet(void);
+bool WWDG_IsEWIFFlagSet(void);
 
 
-
-
-
-
-#endif
+#endif /* _STM32F10X_WWDG_H_ */
 
 
 

@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_USART_H_
   #define _STM32F10X_USART_H_
 
@@ -147,45 +154,46 @@ typedef struct
     uint16_t parity;
     uint16_t stopBits;
     uint16_t hardwareFlowControl;
-    BOOL txEnable;
-    BOOL rxEnable;
-    BOOL clkEnable;
+    bool txEnable;
+    bool rxEnable;
+    bool clkEnable;
     uint16_t clkPolarity;
     uint16_t clkPhase;
-    BOOL lastBitClkEnable;
+    bool lastBitClkEnable;
 }USART_Config;
 
 
 
 /* interface */
-void USART_Enable(USART_Group group, BOOL flag);
-void USART_TransEnable(USART_Group group, BOOL flag);
-void USART_RecvEnable(USART_Group group, BOOL flag);
+void USART_Enable(USART_Group group, bool flag);
+void USART_TransEnable(USART_Group group, bool flag);
+void USART_RecvEnable(USART_Group group, bool flag);
 void USART_Setup(USART_Group group, const USART_Config *config);
 void USART_StructInit(USART_Config *config);
 void USART_SetAddress(USART_Group group, uint8_t address);
 uint8_t USART_GetAddress(USART_Group group);
 void USART_SetPrescaler(USART_Group group, uint8_t prescaler);
-BOOL USART_IsFlagOn(USART_Group group, uint16_t intFlag);
+bool USART_IsFlagOn(USART_Group group, uint16_t intFlag);
 void USART_ClearFlag(USART_Group group, uint16_t intFlag);
 void USART_WriteData(USART_Group group, uint8_t data);
 uint8_t USART_ReadData(USART_Group group);
 void USART_SetWakeupMethod(USART_Group group, uint16_t method);
 void USART_EnableInt(USART_Group group, uint8_t intFlag, 
-                     BOOL flag);
-BOOL USART_IsIntEnabled(USART_Group group, uint8_t intFlag);
+                     bool flag);
+bool USART_IsIntEnabled(USART_Group group, uint8_t intFlag);
 void USART_SetRecvMode(USART_Group group, uint8_t mode);
 void USART_SendBreakCharacter(USART_Group group);
-void USART_EnableLINMode(USART_Group group, BOOL flag);
+void USART_EnableLINMode(USART_Group group, bool flag);
 void USART_SetLineBreakDetectLength(USART_Group group, uint8_t length);
-void USART_EnableDMATX(USART_Group group, BOOL flag);
-void USART_EnableDMARX(USART_Group group, BOOL flag);
-void USART_SmartcardEnable(USART_Group group, BOOL flag);
-void USART_SmartcardNACKEnable(USART_Group group, BOOL flag);
-void USART_HalfDuplexSelection(USART_Group group, BOOL flag);
-void USART_IrdaEnable(USART_Group group, BOOL flag);
+void USART_EnableDMATX(USART_Group group, bool flag);
+void USART_EnableDMARX(USART_Group group, bool flag);
+void USART_SmartcardEnable(USART_Group group, bool flag);
+void USART_SmartcardNACKEnable(USART_Group group, bool flag);
+void USART_HalfDuplexSelection(USART_Group group, bool flag);
+void USART_IrdaEnable(USART_Group group, bool flag);
 void USART_SetIrdaMode(USART_Group group, uint8_t mode);
 void USART_SetGuardTime(USART_Group group, uint16_t time);
 
 
-#endif
+#endif /* _STM32F10X_USART_H_ */
+

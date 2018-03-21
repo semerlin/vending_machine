@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_spi.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -60,7 +67,7 @@ static SPI_T * const SPIx[] = {(SPI_T *)SPI1_BASE,
  * @param spt group
  * @param enable or disable flag
  */
-void SPI_Enable(SPI_Group group, BOOL flag)
+void SPI_Enable(SPI_Group group, bool flag)
 {
     assert_param(group < SPI_Count);
     SPI_T * const SpiX = SPIx[group];
@@ -198,7 +205,7 @@ void SPI_StructInit(SPI_Config *config)
  * @param interrupt name
  * @param enable or disable flag
  */
-void SPI_EnableInt(SPI_Group group, uint8_t intFlag, BOOL flag)
+void SPI_EnableInt(SPI_Group group, uint8_t intFlag, bool flag)
 {
     assert_param(group < SPI_Count);
     assert_param(IS_SPI_IT_Param(intFlag));
@@ -217,7 +224,7 @@ void SPI_EnableInt(SPI_Group group, uint8_t intFlag, BOOL flag)
  * @param flag need to check
  * @return flag status
  */
-BOOL SPI_IsFlagOn(SPI_Group group, uint8_t flag)
+bool SPI_IsFlagOn(SPI_Group group, uint8_t flag)
 {   
     assert_param(group < SPI_Count);
     assert_param(IS_SPI_Flag_Param(flag));
@@ -235,7 +242,7 @@ BOOL SPI_IsFlagOn(SPI_Group group, uint8_t flag)
  * @param spi group
  * @param next character is crr or not 
  */
-void SPI_SetCRCNext(SPI_Group group,BOOL flag)
+void SPI_SetCRCNext(SPI_Group group,bool flag)
 {
     assert_param(group < SPI_Count);
     
@@ -251,7 +258,7 @@ void SPI_SetCRCNext(SPI_Group group,BOOL flag)
  * @param spi group
  * @param enable or not
  */
-void SPI_EnableTxDMA(SPI_Group group, BOOL flag)
+void SPI_EnableTxDMA(SPI_Group group, bool flag)
 {
     assert_param(group < SPI_Count);
     
@@ -267,7 +274,7 @@ void SPI_EnableTxDMA(SPI_Group group, BOOL flag)
  * @param spi group
  * @param enable or not
  */
-void SPI_EnableRxDMA(SPI_Group group, BOOL flag)
+void SPI_EnableRxDMA(SPI_Group group, bool flag)
 {
     assert_param(group < SPI_Count);
     

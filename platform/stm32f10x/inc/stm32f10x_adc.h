@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_ADC_H_
  #define _STM32F10X_ADC_H_
 
@@ -234,28 +241,28 @@ typedef enum
 
 
 /* interface */
-void ADC_PowerOn(ADC_Group group, BOOL flag);
+void ADC_PowerOn(ADC_Group group, bool flag);
 void ADC_Calibration(ADC_Group group);
-BOOL ADC_IsFlagOn(ADC_Group group, uint8_t flag);
+bool ADC_IsFlagOn(ADC_Group group, uint8_t flag);
 void ADC_ClrFlag(ADC_Group group, uint8_t flag);
 void ADC_SetDualMode(ADC_Group group, uint32_t mode);
 void ADC_EnableAnalogWatchdogOnGroup(ADC_Group group, uint8_t channel, 
-                                     BOOL flag);
+                                     bool flag);
 void ADC_EnableAnalogWatchdogOnChannel(ADC_Group group, uint8_t channel, 
-                                       BOOL flag);
+                                       bool flag);
 void ADC_SetDiscontinuousModeChannelCount(ADC_Group group, 
                                           uint32_t count);
-void ADC_EnableAutoInjected(ADC_Group group, BOOL flag);
+void ADC_EnableAutoInjected(ADC_Group group, bool flag);
 void ADC_SetConvertMode(ADC_Group group, uint8_t mode);
-void ADC_EnableInt(ADC_Group group, uint32_t intFlag, BOOL flag);
-void ADC_EnableTemperensor(ADC_Group group, BOOL flag);
+void ADC_EnableInt(ADC_Group group, uint32_t intFlag, bool flag);
+void ADC_EnableTemperensor(ADC_Group group, bool flag);
 void ADC_InternalTriggerConversion(ADC_Group group, uint8_t channel);
 void ADC_EnableExternalTriggerOnGroup(ADC_Group group, uint8_t channel,
-                                      BOOL flag);
+                                      bool flag);
 void ADC_SetTriggerMode(ADC_Group group, uint8_t channel,
                         uint32_t mode);
 void ADC_SetDataAlignment(ADC_Group group, uint32_t alignment);
-void ADC_EnableDMA(ADC_Group group, BOOL flag);
+void ADC_EnableDMA(ADC_Group group, bool flag);
 void ADC_SetSampleCycle(ADC_Group group, uint8_t channel,
                         uint8_t cycle);
 void ADC_SetInjectedDataOffset(ADC_Group group, uint8_t channel,
@@ -273,4 +280,4 @@ uint16_t ADC_GetRegularValue(ADC_Group group);
 uint16_t ADC_GetDualModeADC2Value(void);
 
 
-#endif
+#endif /* _STM32F10X_ADC_H_ */

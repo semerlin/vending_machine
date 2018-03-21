@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_systick.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_rcc.h"
@@ -38,7 +45,7 @@ void SYSTICK_SetClockSource(uint8_t source)
  * @brief systick exception request enable
  * @param enable flag
  */
-void SYSTICK_EnableInt(BOOL flag)
+void SYSTICK_EnableInt(bool flag)
 {
     SYSTICK->CTRL &= ~CTRL_TICKINT;
     if(flag)
@@ -49,7 +56,7 @@ void SYSTICK_EnableInt(BOOL flag)
  * @brief start or stop systick counter
  * @param start flag
  */
-void SYSTICK_EnableCounter(BOOL flag)
+void SYSTICK_EnableCounter(bool flag)
 {
     SYSTICK->CTRL &= ~CTRL_ENABLE;
     if(flag)
@@ -60,7 +67,7 @@ void SYSTICK_EnableCounter(BOOL flag)
  * @brief check if count flag is set
  * @return TRUE:set FALSE:not set
  */
-BOOL SYSTICK_IsCountFlagSet(void)
+bool SYSTICK_IsCountFlagSet(void)
 {
     if(SYSTICK->CTRL & CTRL_COUNTFLAG)
         return TRUE;

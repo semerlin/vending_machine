@@ -1,5 +1,12 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _MACROS_H_
-#define _MACROS_H_
+  #define _MACROS_H_
 
 #include <stddef.h>
 
@@ -38,6 +45,16 @@
         (struct_type *)((char *)__mptr - T_OFFSET_OF(struct_type, member)); \
     })
 
+#ifdef __cplusplus
+    #define BEGIN_DECLS    extern "C" {
+    #define END_DECLS      }
+#else
+    #define BEGIN_DECLS
+    #define END_DECLS
+#endif
+
+#define STR(x) VAL(x)
+#define VAL(x) #x
 
 /* unused parameter declare */
 #ifndef UNUSED
@@ -45,7 +62,5 @@
 #endif
 
 
-#endif
-
-
+#endif /* _MACROS_H_ */
 

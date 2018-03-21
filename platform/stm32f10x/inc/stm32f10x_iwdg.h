@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_IWDG_H_
   #define _STM32F10X_IWDG_H_
 
@@ -21,61 +28,15 @@
                                   (param == IWDG_PR_DIV128) || \
                                   (param == IWDG_PR_DIV256))
 
-
-
-
-
-
 /* interface */
 void IWDG_Startup(void);
 void IWDG_Feed(void);
 void IWDG_SetClockPrescaler(uint8_t div);
 uint8_t IWDG_GetClockPrescaler(void);
 void IWDG_SetReloadValue(uint8_t value);
-uint16 IWDG_GetReloadValue(void);
+uint16_t IWDG_GetReloadValue(void);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif
+#endif /* _STM32F10X_IWDG_H_ */
 
 

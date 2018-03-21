@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -161,7 +168,7 @@ void RCC_DeInit(void)
  * @brief startup internal high speed clock
  * @return TRUE: success FALSE: failed
  */
-BOOL RCC_StartupHSI(void)
+bool RCC_StartupHSI(void)
 {
     uint32_t waitCount = 0;
 	volatile uint32_t i = 0;
@@ -248,7 +255,7 @@ uint8_t RCC_GetHSITrimValue(void)
  * @brief check if HSI is on
  * @return TRUE:on FALSE:off
  */
-BOOL RCC_IsHSIOn(void)
+bool RCC_IsHSIOn(void)
 {
     if(*((volatile uint32_t*)CR_HSION))
         return TRUE;
@@ -261,7 +268,7 @@ BOOL RCC_IsHSIOn(void)
  * @brief start up HSE
  * @return TRUE: success FALSE: failed
  */
-BOOL RCC_StartupHSE(void)
+bool RCC_StartupHSE(void)
 {
     uint32_t waitCount = 0;
 	volatile uint16_t i = 0;
@@ -310,7 +317,7 @@ void RCC_StopHSE(void)
  * @brief bypass the oscillator with an external clock
  * @param flag TRUE:bypass FALSE: not bypass
  */
-BOOL RCC_BypassHSE(BOOL flag)
+bool RCC_BypassHSE(BOOL flag)
 {
     *((volatile uint32_t*)CR_HSEON) = 0x00;
     *((volatile uint32_t*)CR_HSEBYP) = 0x00;
@@ -326,7 +333,7 @@ BOOL RCC_BypassHSE(BOOL flag)
  * @brief check if HSE is on
  * @return TRUE:on FALSE:off
  */
-BOOL RCC_IsHSEOn(void)
+bool RCC_IsHSEOn(void)
 {
     if(*((volatile uint32_t*)CR_HSEON))
         return TRUE;
@@ -338,7 +345,7 @@ BOOL RCC_IsHSEOn(void)
  * @brief check if HSE is bypassed
  * @return TRUE: yes FALSE: no
  */
-BOOL RCC_IsHSEBypassed(void)
+bool RCC_IsHSEBypassed(void)
 {
     if(*((volatile uint32_t*)CR_HSEBYP))
         return TRUE;
@@ -353,7 +360,7 @@ BOOL RCC_IsHSEBypassed(void)
  *        hardware if a HSE clock failure is detected
  * @param flag: TRUE:enable FALSE:disable
 */
-void RCC_EnableClockSecurityConfig(BOOL flag)
+void RCC_EnableClockSecurityConfig(bool flag)
 {
     if(flag)
         *((volatile uint32_t*)CR_CSSON) = 0x01;
@@ -366,7 +373,7 @@ void RCC_EnableClockSecurityConfig(BOOL flag)
  * @brief startup pll
  * @return TRUE: success FALSE:failed
  */
-BOOL RCC_StartupPLL(void)
+bool RCC_StartupPLL(void)
 {
     uint32_t waitCount = 0;
 	volatile uint16_t i = 0;
@@ -414,7 +421,7 @@ void RCC_StopPLL(void)
  * @brief check if pll is on
  * @return TRUE: on FALSE: off
  */
-BOOL RCC_GetPLLONFlag(void)
+bool RCC_GetPLLONFlag(void)
 {
     if(*((volatile uint32_t*)CR_PLLON))
         return TRUE;
@@ -504,7 +511,7 @@ static uint32_t calcPllFactor(uint32 clockIn, uint32 clockOut,
 * @param hse clock
 * @return acturally output clock 
 */
-uint32_t RCC_SetSysclkUsePLL(uint32 clock, BOOL useHSE, 
+uint32_t RCC_SetSysclkUsePLL(uint32 clock, bool useHSE, 
                              uint32_t hseClock)
 {
     assert_param(clock > hseClock);
@@ -691,7 +698,7 @@ void RCC_ClrClockIntFlag(uint8_t intSrc)
 * @param intSrc clock source
 * @param flag enable flag
 */
-void RCC_EnableClockInt(uint8_t intSrc, BOOL flag)
+void RCC_EnableClockInt(uint8_t intSrc, bool flag)
 {
     if(intSrc == RCC_INT_PLLReady)
     {
@@ -762,7 +769,7 @@ uint8_t RCC_GetClockIntFlag(uint8 intSrc)
  * @param reg: periphearl name
  * @param TRUE: set  FALSE: reset
  */
-void RCC_APB2PeriphReset(uint32_t reg, BOOL flag)
+void RCC_APB2PeriphReset(uint32_t reg, bool flag)
 {
     if(flag)
         RCC->APB2RSTR |= reg;
@@ -775,7 +782,7 @@ void RCC_APB2PeriphReset(uint32_t reg, BOOL flag)
  * @param reg: periphearl name
  * @param TRUE: set  FALSE: reset
  */
-void RCC_APB1PeriphReset(uint32_t reg, BOOL flag)
+void RCC_APB1PeriphReset(uint32_t reg, bool flag)
 {
     if(flag)
         RCC->APB1RSTR |= reg;
@@ -789,7 +796,7 @@ void RCC_APB1PeriphReset(uint32_t reg, BOOL flag)
  * @param reg: periphearl name
  * @param flag: enable flag
  */
-void RCC_AHBPeripClockEnable(uint32_t reg, BOOL flag)
+void RCC_AHBPeripClockEnable(uint32_t reg, bool flag)
 {
     if(flag)
         RCC->AHBENR |= reg;
@@ -802,7 +809,7 @@ void RCC_AHBPeripClockEnable(uint32_t reg, BOOL flag)
  * @param reg: periphearl name
  * @param flag: enable flag
  */
-void RCC_APB2PeripClockEnable(uint16_t reg, BOOL flag)
+void RCC_APB2PeripClockEnable(uint16_t reg, bool flag)
 {
     if(flag)
         RCC->APB2ENR |= reg;
@@ -816,7 +823,7 @@ void RCC_APB2PeripClockEnable(uint16_t reg, BOOL flag)
  * @param reg: periphearl name
  * @param flag: enable flag
  */
-void RCC_APB1PeripClockEnable(uint32_t reg, BOOL flag)
+void RCC_APB1PeripClockEnable(uint32_t reg, bool flag)
 {
     if(flag)
         RCC->APB1ENR |= reg;
@@ -829,7 +836,7 @@ void RCC_APB1PeripClockEnable(uint32_t reg, BOOL flag)
  * @brief reset backup domain 
  * @param reset flag
  */
-void RCC_BackUpRegisterReset(BOOL flag)
+void RCC_BackUpRegisterReset(bool flag)
 {
     if(flag)
         *(volatile uint32_t*)BDCR_BDRST = 0x01;
@@ -841,7 +848,7 @@ void RCC_BackUpRegisterReset(BOOL flag)
  * @brief check if rtc clock is enabled
  * @return enable status
  */
-BOOL RCC_IsRTCEnabled(void)
+bool RCC_IsRTCEnabled(void)
 {
     if(*(volatile uint32_t*)BDCR_RTCEN)
         return TRUE;
@@ -873,7 +880,7 @@ uint8_t RCC_GetRTCClockSource(void)
  * @brief startup rtc use lse
  * @return success flag
  */
-BOOL RCC_StartupLSE(void)
+bool RCC_StartupLSE(void)
 {
     uint32_t waitCount = 0;
 	volatile uint32_t i = 0;
@@ -904,7 +911,7 @@ BOOL RCC_StartupLSE(void)
  * @brief bypass lse
  * @param bypass flag
  */
-BOOL RCC_BypassLSE(BOOL flag)
+bool RCC_BypassLSE(BOOL flag)
 {
     *(volatile uint32_t*)BDCR_LSEON = 0x00;
     *(volatile uint32_t*)BDCR_LSEBYP = 0x00;
@@ -932,7 +939,7 @@ void RCC_StopLSE(void)
  * @brief startup rtc use lsi
  * @return success flag
  */
-BOOL RCC_StartupLSI(void)
+bool RCC_StartupLSI(void)
 {
     uint32_t waitCount = 0;
 	volatile uint32_t i = 0;

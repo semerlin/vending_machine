@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _STM32F10X_RCC_H_
   #define _STM32F10X_RCC_H_
 
@@ -225,24 +232,24 @@
 
 /* interface */
 void RCC_DeInit(void);
-BOOL RCC_StartupHSI(void);
+bool RCC_StartupHSI(void);
 void RCC_StopHSI(void);
 uint8_t RCC_GetHSICalValue(void);
 void RCC_SetHSITrimValue(uint8_t value);
 uint8_t RCC_GetHSITrimValue(void);
-BOOL RCC_IsHSIOn(void);
-BOOL RCC_StartupHSE(void);
+bool RCC_IsHSIOn(void);
+bool RCC_StartupHSE(void);
 void RCC_StopHSE(void);
-BOOL RCC_BypassHSE(BOOL flag);
-BOOL RCC_IsHSEOn(void);
-BOOL RCC_IsHSEBypassed(void);
-void RCC_EnableClockSecurityConfig(BOOL flag);
-BOOL RCC_StartupPLL(void);
+bool RCC_BypassHSE(BOOL flag);
+bool RCC_IsHSEOn(void);
+bool RCC_IsHSEBypassed(void);
+void RCC_EnableClockSecurityConfig(bool flag);
+bool RCC_StartupPLL(void);
 void RCC_StopPLL(void);
-BOOL RCC_GetPLLONFlag(void);
+bool RCC_GetPLLONFlag(void);
 void RCC_MCOConfig(uint32_t method);
 void RCC_USBPrescalerFromPLL(uint8_t config);
-uint32_t RCC_SetSysclkUsePLL(uint32 clock, BOOL useHSE, 
+uint32_t RCC_SetSysclkUsePLL(uint32 clock, bool useHSE, 
                              uint32_t hseClock);
 void RCC_HCLKPrescalerFromSYSCLK(uint8_t config);
 void RCC_PCLK1PrescalerHCLK(uint32_t config);
@@ -255,118 +262,26 @@ void RCC_SystemClockSwitch(uint8_t clock);
 uint8_t RCC_GetSystemClock(void);
 void RCC_ADCPrescalerFromPCLK2(uint32_t config);
 void RCC_ClrClockIntFlag(uint8_t intSrc);
-void RCC_EnableClockInt(uint8_t intSrc, BOOL flag);
+void RCC_EnableClockInt(uint8_t intSrc, bool flag);
 uint8_t RCC_GetClockIntFlag(uint8 intSrc);
-void RCC_APB2PeriphReset(uint32_t reg, BOOL flag);
-void RCC_APB1PeriphReset(uint32_t reg, BOOL flag);
-void RCC_AHBPeripClockEnable(uint32_t reg, BOOL flag);
-void RCC_APB2PeripClockEnable(uint16_t reg, BOOL flag);
-void RCC_APB1PeripClockEnable(uint32_t reg, BOOL flag);
-void RCC_BackUpRegisterReset(BOOL flag);
-BOOL RCC_IsRTCEnabled(void);
+void RCC_APB2PeriphReset(uint32_t reg, bool flag);
+void RCC_APB1PeriphReset(uint32_t reg, bool flag);
+void RCC_AHBPeripClockEnable(uint32_t reg, bool flag);
+void RCC_APB2PeripClockEnable(uint16_t reg, bool flag);
+void RCC_APB1PeripClockEnable(uint32_t reg, bool flag);
+void RCC_BackUpRegisterReset(bool flag);
+bool RCC_IsRTCEnabled(void);
 void RCC_SetRTCClockSource(uint32_t source);
 uint8_t RCC_GetRTCClockSource(void);
-BOOL RCC_StartupLSE(void);
-BOOL RCC_BypassLSE(BOOL flag);
+bool RCC_StartupLSE(void);
+bool RCC_BypassLSE(bool flag);
 void RCC_StopLSE(void);
-BOOL RCC_StartupLSI(void);
+bool RCC_StartupLSI(void);
 void RCC_CloseLSI(void);
 uint8_t RCC_GetResetFlag(void);
 void RCC_ClrResetFlag(void);
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
+#endif /* _STM32F10X_RCC_H_ */
 
 

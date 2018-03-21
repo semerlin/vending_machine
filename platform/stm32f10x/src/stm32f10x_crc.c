@@ -1,14 +1,9 @@
 /**
-* @file      stm32f10x_crc.c
-* @brief     library of crc module
-* @details   none
-* @author    huangyang
-* @date      2016-12-11
-* @version   V0.0.0.1
-* @par Copyright (c):
-       HuangYang
-* @par History:        
-*   version: huangyang, 2016-12-11, create this module\n
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
 */
 #include "stm32f10x_crc.h"
 #include "stm32f10x_map.h"

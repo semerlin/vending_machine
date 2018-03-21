@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "stm32f10x_nvic.h"
 #include "stm32f10x_scb.h"
 #include "stm32f10x_map.h"
@@ -75,7 +82,7 @@ void NVIC_InitStruct(NVIC_Config *config)
 * @param irq channel
 * @param enable or disable flag
 */
-void NVIC_EnableIRQ(uint8_t channel, BOOL flag)
+void NVIC_EnableIRQ(uint8_t channel, bool flag)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));
     if(flag)
@@ -89,7 +96,7 @@ void NVIC_EnableIRQ(uint8_t channel, BOOL flag)
 * @param irq channel
 * @param set or reset flag
 */
-void NVIC_SetIRQPending (uint8_t channel, BOOL flag)
+void NVIC_SetIRQPending (uint8_t channel, bool flag)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));
     if(flag)
@@ -103,7 +110,7 @@ void NVIC_SetIRQPending (uint8_t channel, BOOL flag)
 * @param irq channel
 * @return pending flag
 */
-BOOL NVIC_IsIRQPending(uint8_t channel)
+bool NVIC_IsIRQPending(uint8_t channel)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));
     if((NVIC->ISPR[channel >> 5] & (1 << (channel % 32))) != 0)
@@ -117,7 +124,7 @@ BOOL NVIC_IsIRQPending(uint8_t channel)
 * @param irq channel
 * @return active flag
 */
-BOOL NVIC_IsIRQActive(uint8_t channel)
+bool NVIC_IsIRQActive(uint8_t channel)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));
     if((NVIC->IABR[channel >> 5] & (1 << (channel % 32))) != 0)
