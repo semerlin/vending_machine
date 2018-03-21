@@ -1,5 +1,12 @@
-#ifndef PORTMACRO_H
-#define PORTMACRO_H
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
+#ifndef _PORTMACRO_H
+  #define _PORTMACRO_H
 
 
 /* Port specific definitions */
@@ -124,5 +131,5 @@ warnings. */
 
 
 
-#endif /* PORTMACRO_H */
+#endif /* _PORTMACRO_H */
 

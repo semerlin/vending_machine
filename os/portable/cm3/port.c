@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "cm3_core.h"
 #include "stm32f10x_scb.h"
 #include "stm32f10x_systick.h"
@@ -199,23 +206,6 @@ void vPortValidateInterruptPriority( void )
 }
 
 #endif /* configASSERT_DEFINED */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
