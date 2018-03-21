@@ -117,7 +117,7 @@ void GPIO_WriteDataGroup(GPIO_Group group, uint16_t data)
  * @param pin: pin position
  * @return pin data
  */
-uint8_t GPIO_ReadPin(GPIO_Group group, uint8 pin)
+uint8_t GPIO_ReadPin(GPIO_Group group, uint8_t pin)
 {
     assert_param(group < GPIO_Count);
     assert_param(pin < 16);

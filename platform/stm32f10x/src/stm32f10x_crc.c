@@ -42,7 +42,7 @@ void CRC_ResetDR(void)
  * @brief calculate one data crc value
  * *return 32-bit crc value
  */
-uint32_t CRC_Cal(uint32 data)
+uint32_t CRC_Cal(uint32_t data)
 {
 	CRC->DR = data;
 
@@ -55,7 +55,7 @@ uint32_t CRC_Cal(uint32 data)
  * @param [in] len: buffer length
  * @return 32-bit crc value
  */
-uint32_t CRC_CalBlock(uint32 *buf, uint32 len)
+uint32_t CRC_CalBlock(uint32_t *buf, uint32_t len)
 {
     assert_param(buf != NULL);
 

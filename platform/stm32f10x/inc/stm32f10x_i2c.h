@@ -121,29 +121,29 @@ typedef struct
     uint16_t addressBits;
     uint16_t selfAddress;
     uint8_t selfAddressDual;
-    BOOL enableDualAddress;
-    BOOL enableStrech;
-    BOOL enableGeneralCall;
-    BOOL enablePEC;
-    BOOL enableDMA;
+    bool enableDualAddress;
+    bool enableStrech;
+    bool enableGeneralCall;
+    bool enablePEC;
+    bool enableDMA;
 }I2C_Config;
 
 
 /* interface */
 void I2C_Reset(I2C_Group group);
-void I2C_Enable(I2C_Group group, BOOL flag);
+void I2C_Enable(I2C_Group group, bool flag);
 void I2C_Setup(I2C_Group group, I2C_Config *config);
 void I2C_StructInit(I2C_Config *config);
 void I2C_GenerateStart(I2C_Group group);
 void I2C_GenerateStop(I2C_Group group);
-void I2C_EnableInt(I2C_Group group, uint16_t intFlag, BOOL flag);
+void I2C_EnableInt(I2C_Group group, uint16_t intFlag, bool flag);
 void I2C_WriteData(I2C_Group group,  uint8_t data);
 uint8_t I2C_ReadData(I2C_Group group);
-BOOL I2C_Is_FlagSet(I2C_Group group, uint32_t flag);
+bool I2C_Is_FlagSet(I2C_Group group, uint32_t flag);
 uint32_t I2C_GetEvent(I2C_Group group);
 uint32_t I2C_GetError(I2C_Group group);
 void I2C_ClearError(I2C_Group group, uint32_t error);
-void I2C_AckEnable(I2C_Group group, BOOL flag);
+void I2C_AckEnable(I2C_Group group, bool flag);
 
 
 #endif /* _STM32F10X_I2C_H */

@@ -304,7 +304,7 @@ void SPI_WriteData(SPI_Group group, uint16_t data)
  * @param spi group
  * @param data to write
  */
-uint16_t SPI_WriteReadDataSync(SPI_Group group, uint16 data)
+uint16_t SPI_WriteReadDataSync(SPI_Group group, uint16_t data)
 {
     assert_param(group < SPI_Count);
     

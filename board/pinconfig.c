@@ -21,8 +21,8 @@ typedef enum
 typedef struct
 {
     PIN_BUS bus;
-    uint32 resetReg;
-    uint32 enableReg;
+    uint32_t resetReg;
+    uint32_t enableReg;
 }PIN_CLOCK;
 
 
@@ -81,8 +81,8 @@ PIN_CLOCK pinClocks[] =
  */
 static const PIN_CONFIG *getPinConfig(const char *name)
 {
-    uint32 len = sizeof(pins) / sizeof(PIN_CONFIG);
-    for(uint32 i = 0; i < len; ++i)
+    uint32_t len = sizeof(pins) / sizeof(PIN_CONFIG);
+    for(uint32_t i = 0; i < len; ++i)
     {
         if(strcmp(name, pins[i].name) == 0)
             return &pins[i];
@@ -97,8 +97,8 @@ static const PIN_CONFIG *getPinConfig(const char *name)
 void pinInit(void)
 {
     //config pin clocks
-    uint32 len = sizeof(pinClocks) / sizeof(PIN_CLOCK);
-    for(uint32 i = 0; i < len; ++i)
+    uint32_t len = sizeof(pinClocks) / sizeof(PIN_CLOCK);
+    for(uint32_t i = 0; i < len; ++i)
     {
         switch(pinClocks[i].bus)
         {
@@ -122,7 +122,7 @@ void pinInit(void)
     
     //config pins
     len = sizeof(pins) / sizeof(PIN_CONFIG);
-    for(uint32 i = 0; i < len; ++i)
+    for(uint32_t i = 0; i < len; ++i)
     {
         GPIO_Setup(pins[i].group, &pins[i].config);
     }
@@ -132,7 +132,7 @@ void pinInit(void)
  * @brief set pin
  * @param pin name
  */
-void pinSet(__in const char *name)
+void pinSet(const char *name)
 {
     const PIN_CONFIG *config = getPinConfig(name);
     assert_param(config != NULL);
@@ -144,7 +144,7 @@ void pinSet(__in const char *name)
  * @brief reset pin
  * @param pin name
  */
-void pinReset(__in const char *name)
+void pinReset(const char *name)
 {
     const PIN_CONFIG *config = getPinConfig(name);
     assert_param(config != NULL);
@@ -155,7 +155,7 @@ void pinReset(__in const char *name)
  * @brief check if pin is set
  * @param pin name
  */
-BOOL isPinSet(__in const char *name)
+bool isPinSet(const char *name)
 {
     const PIN_CONFIG *config = getPinConfig(name);
     assert_param(config != NULL);
@@ -171,7 +171,7 @@ BOOL isPinSet(__in const char *name)
  * @param pin group
  * @param pin number
  */
-void getPinInfo(__in const char *name, __out uint8 *group, __out uint8 *num)
+void getPinInfo(const char *name, uint8_t *group, uint8_t *num)
 {
     assert_param(name != NULL);
     assert_param(group != NULL);

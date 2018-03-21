@@ -7,7 +7,7 @@
 void pinInit(void);
 void pinSet(const char *name);
 void pinReset(const char *name);
-BOOL isPinSet(const char *name);
+bool isPinSet(const char *name);
 void getPinInfo(const char *name, uint8_t *group, uint8_t *num);
 
 #endif

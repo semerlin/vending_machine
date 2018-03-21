@@ -11,7 +11,7 @@
 
 /* Port specific definitions */
 
-#include "sysdef.h"
+#include "types.h"
 #include "stm32f10x_scb.h"
 #include "port.h"
 

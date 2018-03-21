@@ -1,7 +1,7 @@
 #ifndef _SERIAL_H_
   #define _SERIAL_H_
 
-#include "sysdef.h"
+#include "types.h"
 
 /* serial parameter definition */
 typedef enum
@@ -52,24 +52,25 @@ typedef enum
 	Baudrate_115200 = 115200
 }Baudrate;
 
+typedef struct _serial_t serial;
 
 /* interface */
-Handle Serial_Request(__in Port port);
-BOOL Serial_Open(__in Handle handle);
-void Serial_Close(__in Handle handle);
-void Serial_SetBaudrate(__in Handle handle, __in Baudrate baudrate);
-void Serial_SetParity(__in Handle handle, __in Parity parity);
-void Serial_SetStopBits(__in Handle handle, __in StopBits stopBits);
-void Serial_SetDataBits(__in Handle handle, __in DataBits dataBits);
-void Serial_SetBufferLength(__in Handle handle, __in UBaseType_t rxLen, 
-                            __in UBaseType_t txLen);
+serial *Serial_Request(Port port);
+bool Serial_Open(serial *handle);
+void Serial_Close(serial *handle);
+void Serial_SetBaudrate(serial *handle, Baudrate baudrate);
+void Serial_SetParity(serial *handle, Parity parity);
+void Serial_SetStopBits(serial *handle, StopBits stopBits);
+void Serial_SetDataBits(serial *handle, DataBits dataBits);
+void Serial_SetBufferLength(serial *handle, UBaseType_t rxLen, 
+                            UBaseType_t txLen);
 
-BOOL Serial_GetChar(__in Handle handle, __out char *data, 
-                    __in portTickType xBlockTime);
-BOOL Serial_PutChar(__in Handle handle, __in char data,
-                    __in portTickType xBlockTime);
-void Serial_PutString(__in Handle handle, __in const char *string,
-                      __in uint32 length);
+bool Serial_GetChar(serial *handle, char *data, 
+                    portTickType xBlockTime);
+bool Serial_PutChar(serial *handle, char data,
+                    portTickType xBlockTime);
+void Serial_PutString(serial *handle, const char *string,
+                      uint32_t length);
 
 #endif
 

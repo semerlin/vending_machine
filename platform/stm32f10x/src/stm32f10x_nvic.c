@@ -138,7 +138,7 @@ bool NVIC_IsIRQActive(uint8_t channel)
 * @param irq channel
 * @param irq priority
 */
-void NVIC_SetIRQPriority(uint8_t channel, uint8 preemptionPriority,
+void NVIC_SetIRQPriority(uint8_t channel, uint8_t preemptionPriority,
                          uint8_t subPriority)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));
@@ -168,7 +168,7 @@ void NVIC_SetIRQPriority(uint8_t channel, uint8 preemptionPriority,
 * @param irq channel
 * @return irq priority
 */
-void NVIC_GetIRQPriority(uint8_t channel, uint8 *preemptionPriority,
+void NVIC_GetIRQPriority(uint8_t channel, uint8_t *preemptionPriority,
                          uint8_t *subPriority)
 {
     assert_param(IS_NVIC_IRQ_CHANNEL(channel));

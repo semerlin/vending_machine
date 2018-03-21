@@ -18,7 +18,7 @@
                         (CLOCK == SYSTICK_CLOCK_AHB))
 
 /* interface */
-void SYSTICK_SetClockSource(uint8 source);
+void SYSTICK_SetClockSource(uint8_t source);
 void SYSTICK_EnableInt(bool flag);
 void SYSTICK_EnableCounter(bool flag);
 bool SYSTICK_IsCountFlagSet(void);

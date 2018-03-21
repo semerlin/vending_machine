@@ -240,7 +240,7 @@ uint8_t RCC_GetHSITrimValue(void);
 bool RCC_IsHSIOn(void);
 bool RCC_StartupHSE(void);
 void RCC_StopHSE(void);
-bool RCC_BypassHSE(BOOL flag);
+bool RCC_BypassHSE(bool flag);
 bool RCC_IsHSEOn(void);
 bool RCC_IsHSEBypassed(void);
 void RCC_EnableClockSecurityConfig(bool flag);
@@ -249,7 +249,7 @@ void RCC_StopPLL(void);
 bool RCC_GetPLLONFlag(void);
 void RCC_MCOConfig(uint32_t method);
 void RCC_USBPrescalerFromPLL(uint8_t config);
-uint32_t RCC_SetSysclkUsePLL(uint32 clock, bool useHSE, 
+uint32_t RCC_SetSysclkUsePLL(uint32_t clock, bool useHSE, 
                              uint32_t hseClock);
 void RCC_HCLKPrescalerFromSYSCLK(uint8_t config);
 void RCC_PCLK1PrescalerHCLK(uint32_t config);
@@ -263,7 +263,7 @@ uint8_t RCC_GetSystemClock(void);
 void RCC_ADCPrescalerFromPCLK2(uint32_t config);
 void RCC_ClrClockIntFlag(uint8_t intSrc);
 void RCC_EnableClockInt(uint8_t intSrc, bool flag);
-uint8_t RCC_GetClockIntFlag(uint8 intSrc);
+uint8_t RCC_GetClockIntFlag(uint8_t intSrc);
 void RCC_APB2PeriphReset(uint32_t reg, bool flag);
 void RCC_APB1PeriphReset(uint32_t reg, bool flag);
 void RCC_AHBPeripClockEnable(uint32_t reg, bool flag);

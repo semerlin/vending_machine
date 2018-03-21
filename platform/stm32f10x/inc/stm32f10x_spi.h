@@ -140,7 +140,7 @@ void SPI_EnableTxDMA(SPI_Group group, bool flag);
 void SPI_EnableRxDMA(SPI_Group group, bool flag);
 void SPI_WriteData(SPI_Group group, uint16_t data);
 uint16_t SPI_ReadData(SPI_Group group);
-uint16_t SPI_WriteReadDataSync(SPI_Group group, uint16 data);
+uint16_t SPI_WriteReadDataSync(SPI_Group group, uint16_t data);
 void SPI_WriteDataSync(SPI_Group group, uint16_t data);
 uint16_t SPI_ReadDataSync_BiDirection(SPI_Group group);
 void SPI_SetCRCPolynomial(SPI_Group group, uint16_t data);

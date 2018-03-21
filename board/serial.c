@@ -7,13 +7,13 @@
 #include "global.h"
 
 /* serial handle definition */
-typedef struct
+struct _serial_t
 {
     Port port;
     UBaseType_t rxBufLen;
     UBaseType_t txBufLen;
     USART_Config config;
-}SERIAL_T;
+};
 
 /* The queue used to hold received characters. */
 static xQueueHandle xRxedChars[Port_Count];
@@ -26,59 +26,60 @@ static xQueueHandle xCharsForTx[Port_Count];
  * @brief get system serial resource
  * @return serial handle
  */
-Handle Serial_Request(__in Port port)
+serial *Serial_Request(Port port)
 {
     assert_param(port < Port_Count);
-    SERIAL_T *serial = pvPortMalloc(sizeof(SERIAL_T) / sizeof(char));
-    if(serial == NULL)
+    serial *pserial = pvPortMalloc(sizeof(serial) / sizeof(char));
+    if (NULL == pserial)
+    {
         return NULL;
-    serial->port = port;
-    serial->txBufLen = 64;
-    serial->rxBufLen = 64;
-    USART_StructInit(&serial->config);
+    }
+    pserial->port = port;
+    pserial->txBufLen = 64;
+    pserial->rxBufLen = 64;
+    USART_StructInit(&pserial->config);
 
-    return serial;
+    return pserial;
 }
 
 /**
  * @brief open serial port
  * @param serial handle
  */
-BOOL Serial_Open(__in Handle handle)
+bool Serial_Open(serial *handle)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
     assert_param(serial->port < Port_Count);
     
     NVIC_Config nvicConfig = {USART1_IRQChannel, USART1_PRIORITY, 0, TRUE};
     
     /* Create the queues used to hold Rx/Tx characters */
-	xRxedChars[serial->port] = xQueueCreate(serial->rxBufLen, 
+	xRxedChars[handle->port] = xQueueCreate(handle->rxBufLen, 
                                             (UBaseType_t)sizeof(portCHAR));
-	xCharsForTx[serial->port] = xQueueCreate(serial->txBufLen, 
+	xCharsForTx[handle->port] = xQueueCreate(handle->txBufLen, 
                                              (UBaseType_t)sizeof(portCHAR));
                                              
-    if((xRxedChars[serial->port] != NULL) && 
-       (xCharsForTx[serial->port] != NULL))
+    if((xRxedChars[handle->port] != NULL) && 
+       (xCharsForTx[handle->port] != NULL))
     {
-        switch(serial->port)
+        switch(handle->port)
         {
         case COM1:
-            USART_Setup(USART1, &serial->config);
+            USART_Setup(USART1, &handle->config);
             USART_EnableInt(USART1, USART_IT_RXNE, TRUE);
             nvicConfig.channel = USART1_IRQChannel;
             NVIC_Init(&nvicConfig);
             USART_Enable(USART1, TRUE);
             break;
         case COM2:
-            USART_Setup(USART2, &serial->config);
+            USART_Setup(USART2, &handle->config);
             USART_EnableInt(USART2, USART_IT_RXNE, TRUE);
             nvicConfig.channel = USART2_IRQChannel;
             NVIC_Init(&nvicConfig);
             USART_Enable(USART2, TRUE);
             break;
         case COM3:
-            USART_Setup(USART3, &serial->config);
+            USART_Setup(USART3, &handle->config);
             USART_EnableInt(USART3, USART_IT_RXNE, TRUE);
             nvicConfig.channel = USART3_IRQChannel;
             NVIC_Init(&nvicConfig);
@@ -97,11 +98,11 @@ BOOL Serial_Open(__in Handle handle)
  * @brief close serial port
  * @param serial port handle
  */
-void Serial_Close(__in Handle handle)
+void Serial_Close(serial *handle)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
-    switch(serial->port)
+    serial *pserial = (serial *)handle;
+    switch(pserial->port)
     {
     case COM1:
         USART_EnableInt(USART1, USART_IT_TXE, FALSE);
@@ -121,8 +122,8 @@ void Serial_Close(__in Handle handle)
     default:
         break;
     }
-    vQueueDelete(xRxedChars[serial->port]);
-    vQueueDelete(xCharsForTx[serial->port]);
+    vQueueDelete(xRxedChars[pserial->port]);
+    vQueueDelete(xCharsForTx[pserial->port]);
     vPortFree(handle);
 }
 
@@ -131,11 +132,11 @@ void Serial_Close(__in Handle handle)
  * @param handle: serial handle
  * @param baudrate: baudrate
  */
-void Serial_SetBaudrate(__in Handle handle, __in Baudrate baudrate)
+void Serial_SetBaudrate(serial *handle, Baudrate baudrate)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
-    serial->config.baudRate = baudrate;
+    serial *pserial = (serial *)handle;
+    pserial->config.baudRate = baudrate;
 }
 
 /**
@@ -143,20 +144,20 @@ void Serial_SetBaudrate(__in Handle handle, __in Baudrate baudrate)
  * @param handle: serial handle
  * @param parity: parity
  */
-void Serial_SetParity(__in Handle handle, __in Parity parity)
+void Serial_SetParity(serial *handle, Parity parity)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
+    serial *pserial = (serial *)handle;
     switch(parity)
     {
     case No:
-        serial->config.parity = USART_Parity_None;
+        pserial->config.parity = USART_Parity_None;
         break;
     case Even:
-        serial->config.parity = USART_Parity_Even;
+        pserial->config.parity = USART_Parity_Even;
         break;
     case Odd:
-        serial->config.parity = USART_Parity_Odd;
+        pserial->config.parity = USART_Parity_Odd;
         break;
     default:
         break;
@@ -168,20 +169,20 @@ void Serial_SetParity(__in Handle handle, __in Parity parity)
  * @param handle: serial handle
  * @param stopBits: stop bits
  */
-void Serial_SetStopBits(__in Handle handle, __in StopBits stopBits)
+void Serial_SetStopBits(serial *handle, StopBits stopBits)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
+    serial *pserial = (serial *)handle;
     switch(stopBits)
     {
     case STOP_1:
-        serial->config.stopBits = USART_StopBits_1;
+        pserial->config.stopBits = USART_StopBits_1;
         break;
     case STOP_1_5:
-        serial->config.stopBits = USART_StopBits_1_5;
+        pserial->config.stopBits = USART_StopBits_1_5;
         break;
 	case STOP_2:
-        serial->config.stopBits = USART_StopBits_2;
+        pserial->config.stopBits = USART_StopBits_2;
         break;
     default:
         break;
@@ -193,14 +194,14 @@ void Serial_SetStopBits(__in Handle handle, __in StopBits stopBits)
  * @param handle: serial handle
  * @param dataBits: data bits
  */
-void Serial_setDataBits(__in Handle handle, __in DataBits dataBits)
+void Serial_setDataBits(serial *handle, DataBits dataBits)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
+    serial *pserial = (serial *)handle;
     switch(dataBits)
     {
     case BITS_8:
-        serial->config.wordLength = USART_WordLength_8;
+        pserial->config.wordLength = USART_WordLength_8;
         break;
     default:
         break;
@@ -213,25 +214,25 @@ void Serial_setDataBits(__in Handle handle, __in DataBits dataBits)
  * @param rxLen: rx buffer length
  * @param txLen: tx buffer length
  */
-void Serial_SetBufferLength(__in Handle handle, __in UBaseType_t rxLen, 
-                            __in UBaseType_t txLen)
+void Serial_SetBufferLength(serial *handle, UBaseType_t rxLen, 
+                            UBaseType_t txLen)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
-    serial->rxBufLen = rxLen;
-    serial->txBufLen = txLen;
+    serial *pserial = (serial *)handle;
+    pserial->rxBufLen = rxLen;
+    pserial->txBufLen = txLen;
 }
 
 /**
  * @brief get a char from serial port
  * @return TRUE: success FALSE: timeout
  */
-BOOL Serial_GetChar(__in Handle handle, __out char *data, 
-                    __in portTickType xBlockTime)
+bool Serial_GetChar(serial *handle, char *data, 
+                    portTickType xBlockTime)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
-    if(xQueueReceive(xRxedChars[serial->port], data, xBlockTime))
+    serial *pserial = (serial *)handle;
+    if(xQueueReceive(xRxedChars[pserial->port], data, xBlockTime))
 		return TRUE;
 	else
 		return FALSE;
@@ -241,17 +242,17 @@ BOOL Serial_GetChar(__in Handle handle, __out char *data,
  * @brief put a char from serial port
  * @return TRUE: success FALSE: timeout
  */
-BOOL Serial_PutChar(__in Handle handle, __in char data,
-                    __in portTickType xBlockTime)
+bool Serial_PutChar(serial *handle, char data,
+                    portTickType xBlockTime)
 {
     assert_param(handle != NULL);
-    SERIAL_T *serial = (SERIAL_T *)handle;
+    serial *pserial = (serial *)handle;
     //send char to queue
-	if(xQueueSend(xCharsForTx[serial->port], &data, xBlockTime ) == pdPASS)
+	if(xQueueSend(xCharsForTx[pserial->port], &data, xBlockTime ) == pdPASS)
 	{
         /* enable txe interrupt, so when transmit data register is empty,
            an interrupt occured */
-        switch(serial->port)
+        switch(pserial->port)
         {
         case COM1:
             USART_EnableInt(USART1, USART_IT_TXE, TRUE);
@@ -277,8 +278,8 @@ BOOL Serial_PutChar(__in Handle handle, __in char data,
  * @param string to put
  * @param string length
  */
-void Serial_PutString(__in Handle handle, __in const char *string,
-                      __in uint32 length)
+void Serial_PutString(serial *handle, const char *string,
+                      uint32_t length)
 {
     UNUSED(length);
     

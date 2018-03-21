@@ -34,9 +34,9 @@ uint32_t __get_FAULTMASK(void);
 void __reset_FAULTMASK(void);
 void __set_BASEPRI(uint32_t val);
 uint32_t __get_BASEPRI(void);
-uint32_t __REV(uint32 value);
+uint32_t __REV(uint32_t value);
 uint32_t __REV16(uint16_t value);
-int32 __REVSH(int16_t value);
+int32_t __REVSH(int16_t value);
 uint32_t __RBIT(uint32_t value);
 uint32_t __CLZ(uint32_t value);
 

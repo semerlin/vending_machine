@@ -317,7 +317,7 @@ void RCC_StopHSE(void)
  * @brief bypass the oscillator with an external clock
  * @param flag TRUE:bypass FALSE: not bypass
  */
-bool RCC_BypassHSE(BOOL flag)
+bool RCC_BypassHSE(bool flag)
 {
     *((volatile uint32_t*)CR_HSEON) = 0x00;
     *((volatile uint32_t*)CR_HSEBYP) = 0x00;
@@ -464,8 +464,8 @@ void RCC_USBPrescalerFromPLL(uint8_t config)
  * @param needDiv2: return whether need div by 2
  * @return acturally output clock 
  */
-static uint32_t calcPllFactor(uint32 clockIn, uint32 clockOut,
-                            __out uint32_t *div, __out uint8_t *needDiv2)
+static uint32_t calcPllFactor(uint32_t clockIn, uint32_t clockOut,
+                               uint32_t *div, uint8_t *needDiv2)
 {
     uint8_t tempDiv = 0;
     if(clockOut % clockIn == 0)
@@ -511,7 +511,7 @@ static uint32_t calcPllFactor(uint32 clockIn, uint32 clockOut,
 * @param hse clock
 * @return acturally output clock 
 */
-uint32_t RCC_SetSysclkUsePLL(uint32 clock, bool useHSE, 
+uint32_t RCC_SetSysclkUsePLL(uint32_t clock, bool useHSE, 
                              uint32_t hseClock)
 {
     assert_param(clock > hseClock);
@@ -727,7 +727,7 @@ void RCC_EnableClockInt(uint8_t intSrc, bool flag)
  * @brief get clock ready interrupt flag
  * @return flag status
  */
-uint8_t RCC_GetClockIntFlag(uint8 intSrc)
+uint8_t RCC_GetClockIntFlag(uint8_t intSrc)
 {
     uint8_t flag = 0;
     
@@ -911,7 +911,7 @@ bool RCC_StartupLSE(void)
  * @brief bypass lse
  * @param bypass flag
  */
-bool RCC_BypassLSE(BOOL flag)
+bool RCC_BypassLSE(bool flag)
 {
     *(volatile uint32_t*)BDCR_LSEON = 0x00;
     *(volatile uint32_t*)BDCR_LSEBYP = 0x00;

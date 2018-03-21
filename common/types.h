@@ -9,6 +9,7 @@
   #define _TYPES_H_
 
 #include "macros.h"
+#include <stdint.h>
 
 /* boolean definition */
 typedef int bool;
