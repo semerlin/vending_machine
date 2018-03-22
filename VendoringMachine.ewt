@@ -2096,6 +2096,21 @@
   </configuration>
   <group>
     <name>board</name>
+    <group>
+      <name>wifi</name>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\esp8266.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\esp8266.h</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\wifi.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\wifi.h</name>
+      </file>
+    </group>
     <file>
       <name>$PROJ_DIR$\board\application.c</name>
     </file>
@@ -2168,6 +2183,12 @@
   </group>
   <group>
     <name>mqtt</name>
+    <file>
+      <name>$PROJ_DIR$\mqtt\mqtt.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mqtt\mqtt.h</name>
+    </file>
   </group>
   <group>
     <name>os</name>

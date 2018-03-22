@@ -7,7 +7,7 @@ BEGIN_DECLS
 
 typedef union
 {
-    typedef struct
+    struct
     {
         uint8_t reserved:1;
         uint8_t clear_session:1;
@@ -16,7 +16,7 @@ typedef union
         uint8_t will_retain:1;
         uint8_t password_flag:1;
         uint8_t username_flag:1;
-    }
+    }_flag;
     uint8_t flag;
 }connect_flag;
 

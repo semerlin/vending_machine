@@ -1,5 +1,12 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _ESP8266_H_
-#define _ESP8266_H_
+  #define _ESP8266_H_
 
 #include "types.h"
 
@@ -10,4 +17,4 @@ void esp8266_test(void);
 
 END_DECLS
 
-#endif
+#endif /* _ESP8266_H_ */

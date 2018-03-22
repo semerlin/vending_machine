@@ -2,6 +2,7 @@
   #define _SERIAL_H_
 
 #include "types.h"
+#include "FreeRTOS.h"
 
 /* serial parameter definition */
 typedef enum
