@@ -110,6 +110,10 @@ void mqtt_init(void)
     xRecvQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
 }
 
+/**
+ * @brief validation connect parameter
+ * @param param - connect parameter
+ */
 void check_connect_param(const connect_param *param)
 {
     if (NULL == param)
@@ -133,20 +137,74 @@ void check_connect_param(const connect_param *param)
         assert_param(NULL != param->will_topic);
         assert_param(NULL != param->will_msg);
     }
+
+    if (0x01 == flag->username_flag)
+    {
+        assert_param(NULL != param->username);
+    }
+
+    if (0x01 == flag->password_flag)
+    {
+        assert_param(NULL != param->password);
+    }
 }
 
+/**
+ * @brief calculate connect parameter length
+ * @param param - connect parameter
+ */
+static uint32_t calculate_connect_payload_len(const connect_param *param)
+{
+    uint32_t payload_len = 10;
+    if (NULL != param->client_id)
+    {
+        payload_len += (strlen(param->client_id) + 2);
+    }
+
+    if (0x01 == flag->will_flag)
+    {
+        /* add will topic and will message */
+        payload_len += (strlen(param->will_topic) + 2);
+        payload_len += (strlen(param->will_msg) + 2);
+    }
+
+    if (0x01 == flag->username_flag)
+    {
+        /* add username */
+        payload_len += (strlen(param->username) + 2);
+    }
+
+    if (0x01 == flag->password_flag)
+    {
+        /* add password */
+        payload_len += (strlen(param->password) + 2);
+    }
+
+    return payload_len;
+}
+
+/**
+ * @brief connect mqtt server
+ * @param param - connect parameter
+ */
 void mqtt_connect(const connect_param *param)
 {
     check_connect_param(param);
 
-    uint8_t data[MQTT_MAX_MSG_SIZE];
-    uint8_t *pdata = data;
+    mqtt_msg msg;
+    uint8_t *pdata = msg.data;
     uint16_t str_len = 0;
+    uint32_t payload_len = 0;
+
+    /* calculate payload length */
+    payload_len = calculate_connect_payload_len(param);
 
     /* packet data */
     *pdata ++ = TYPE_CONNECT;
-    *pdata ++ = 0;
-    for (tuint8 i = 0; i < sizeof(protocol_name) / sizeof(uint8_t); ++i)
+    uint8_t encode_len = encode_length(payload_len, pdata);
+    assert_param((payload_len + encode_len + 1) <= MQTT_MAX_MSG_SIZE);
+    pdata += encode_len;
+    for (uint8_t i = 0; i < sizeof(protocol_name) / sizeof(uint8_t); ++i)
     {
         *pdata ++ = protocol_name[i];
     }
@@ -157,10 +215,10 @@ void mqtt_connect(const connect_param *param)
     if (NULL != param->client_id)
     {
         str_len = strlen(param->client_id);
-        *pdata ++ = (uint8_t)(len >> 8);
-        *pdata ++ = (uint8_t)(len & 0xff);
+        *pdata ++ = (uint8_t)(str_len >> 8);
+        *pdata ++ = (uint8_t)(str_len & 0xff);
         strcpy(pdata, param->client_id);
-        pdata += (len + 1);
+        pdata += str_len;
     }
     else
     {
@@ -172,30 +230,48 @@ void mqtt_connect(const connect_param *param)
     {
         /* add will topic and will message */
         str_len = strlen(param->will_topic);
-        *pdata ++ = (uint8_t)(len >> 8);
-        *pdata ++ = (uint8_t)(len & 0xff);
+        *pdata ++ = (uint8_t)(str_len >> 8);
+        *pdata ++ = (uint8_t)(str_len & 0xff);
         strcpy(pdata, param->will_topic);
-        pdata += (len + 1);
+        pdata += str_len;
 
         str_len = strlen(param->will_msg);
-        *pdata ++ = (uint8_t)(len >> 8);
-        *pdata ++ = (uint8_t)(len & 0xff);
+        *pdata ++ = (uint8_t)(str_len >> 8);
+        *pdata ++ = (uint8_t)(str_len & 0xff);
         strcpy(pdata, param->will_msg);
-        pdata += (len + 1);
+        pdata += str_len;
     }
 
     if (0x01 == flag->username_flag)
     {
         /* add username */
+        str_len = strlen(param->username);
+        *pdata ++ = (uint8_t)(str_len >> 8);
+        *pdata ++ = (uint8_t)(str_len & 0xff);
+        strcpy(pdata, param->username);
+        pdata += str_len;
     }
 
     if (0x01 == flag->password_flag)
     {
         /* add password */
+        str_len = strlen(param->password);
+        *pdata ++ = (uint8_t)(str_len >> 8);
+        *pdata ++ = (uint8_t)(str_len & 0xff);
+        strcpy(pdata, param->password);
+        pdata += str_len;
     }
+
+    msg.size = payload_len + encode_len + 1;
 
     if (0x01 == flag->clear_session)
     {
         /* clear unack qos1 and qos2 message*/
     }
+
+    /* send message to queue */
+    xQueueSend(xSendQueue, &msg, 0);
 }
+
+
+
