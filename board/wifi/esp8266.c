@@ -24,7 +24,7 @@ static xQueueHandle xRecvQueue = NULL;
 #define ESP_MAX_MSG_SIZE     (32)
 
 /* timeout time(ms) */
-#define DEFAULT_TIMEOUT      (3000)
+#define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
 
 typedef enum
 {
@@ -54,11 +54,15 @@ static void vESP8266Response(void *pvParameters)
             {
                 *pData++ = data;
                 cnt++;
-                if(cnt >= 32)
+                if(cnt >= ESP_MAX_MSG_SIZE)
+                {
                     break;
+                }
             }
 
             /* get done, process data */
+            data_package[cnt - 1] = 0;
+            xQueueSend(xRecvQueue, data_package, portMAX_DELAY);
             pData = data_package;
             cnt = 0;
         }
@@ -94,25 +98,27 @@ bool esp8266_init(void)
         return FALSE;
     }
 
-    xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, g_serial, ESP8266_PRIORITY, NULL);  
+    xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
+                g_serial, ESP8266_PRIORITY, NULL);  
 
     return 0;
 }
 
-
 /**
  * @brief test esp8266 module
- * @return TRUE: test passed
- *         FALSE: test failed
+ * @param cmd - cmd to send
+ * @param time - timeout time
+ * @return TRUE: send success
+ *         FALSE: send failed
  */
-bool esp8266_test(void)
+static bool esp8266_send_ok(const char *cmd, TickType_t time)
 {
     assert_param(NULL != g_serial);
 
     uint8_t recv_buf[ESP_MAX_MSG_SIZE];
-    serial_putstring(g_serial, "AT", 2);
+    serial_putstring(g_serial, cmd, strlen(cmd));
 
-    if (pdPASS == xQueueReceive(xRecvQueue, recv_buf, DEFAULT_TIMEOUT / portTICK_PERIOD_MS))
+    if (pdPASS == xQueueReceive(xRecvQueue, recv_buf, time))
     {
         recv_buf[ESP_MAX_MSG_SIZE - 1] = 0;
         return strcmp((char *)recv_buf, "OK") ? FALSE : TRUE;
@@ -121,4 +127,13 @@ bool esp8266_test(void)
     return FALSE;
 }
 
+/**
+ * @brief write data
+ * @param data - data
+ * @param length - data length
+ */
+void esp8266_send(const char *data, uint32_t length)
+{
+    serial_putstring(get_serial(), data, length);
+}
 

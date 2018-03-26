@@ -13,7 +13,7 @@
 BEGIN_DECLS
 
 bool esp8266_init(void);
-bool esp8266_test(void);
+void esp8266_send(const char *data, uint32_t length);
 
 END_DECLS
 
