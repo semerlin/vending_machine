@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _SERIAL_H_
   #define _SERIAL_H_
 
@@ -56,21 +63,21 @@ typedef enum
 typedef struct _serial_t serial;
 
 /* interface */
-serial *Serial_Request(Port port);
-bool Serial_Open(serial *handle);
-void Serial_Close(serial *handle);
-void Serial_SetBaudrate(serial *handle, Baudrate baudrate);
-void Serial_SetParity(serial *handle, Parity parity);
-void Serial_SetStopBits(serial *handle, StopBits stopBits);
-void Serial_SetDataBits(serial *handle, DataBits dataBits);
-void Serial_SetBufferLength(serial *handle, UBaseType_t rxLen, 
+serial *serial_request(Port port);
+bool serial_open(serial *handle);
+void serial_close(serial *handle);
+void serial_set_baudrate(serial *handle, Baudrate baudrate);
+void serial_set_parity(serial *handle, Parity parity);
+void serial_set_stopbits(serial *handle, StopBits stopBits);
+void serial_set_databits(serial *handle, DataBits dataBits);
+void serial_set_bufferlength(serial *handle, UBaseType_t rxLen, 
                             UBaseType_t txLen);
 
-bool Serial_GetChar(serial *handle, char *data, 
+bool serial_getchar(serial *handle, char *data, 
                     portTickType xBlockTime);
-bool Serial_PutChar(serial *handle, char data,
+bool serial_putchar(serial *handle, char data,
                     portTickType xBlockTime);
-void Serial_PutString(serial *handle, const char *string,
+void serial_putstring(serial *handle, const char *string,
                       uint32_t length);
 
 #endif

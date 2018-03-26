@@ -11,8 +11,8 @@
 #include "queue.h"
 
 /* send and recive queue */
-xQueueHandle xSendQueue = NULL;
-xQueueHandle xRecvQueue = NULL;
+static xQueueHandle xSendQueue = NULL;
+static xQueueHandle xRecvQueue = NULL;
 
 #define MQTT_MAX_MSG_NUM     (10)
 #define MQTT_MAX_MSG_SIZE    (128)
@@ -101,10 +101,22 @@ static uint32_t decode_length(uint8_t *decode)
 /**
  * @brief initialize mqtt protocol
  */
-void mqtt_init(void)
+bool mqtt_init(void)
 {
     xSendQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
+    if (NULL == xSendQueue)
+    {
+        return FALSE;
+    }
+
     xRecvQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
+    if (NULL == xRecvQueue)
+    {
+        vPortFree(xSendQueue);
+        return FALSE;
+    }
+
+    return TRUE:
 }
 
 /**

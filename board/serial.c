@@ -1,4 +1,10 @@
-/* Scheduler includes. */
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "semphr.h"
@@ -26,7 +32,7 @@ static xQueueHandle xCharsForTx[Port_Count];
  * @brief get system serial resource
  * @return serial handle
  */
-serial *Serial_Request(Port port)
+serial *serial_request(Port port)
 {
     assert_param(port < Port_Count);
     serial *pserial = pvPortMalloc(sizeof(serial) / sizeof(char));
@@ -46,7 +52,7 @@ serial *Serial_Request(Port port)
  * @brief open serial port
  * @param serial handle
  */
-bool Serial_Open(serial *handle)
+bool serial_open(serial *handle)
 {
     assert_param(handle != NULL);
     assert_param(serial->port < Port_Count);
@@ -98,7 +104,7 @@ bool Serial_Open(serial *handle)
  * @brief close serial port
  * @param serial port handle
  */
-void Serial_Close(serial *handle)
+void serial_close(serial *handle)
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
@@ -132,7 +138,7 @@ void Serial_Close(serial *handle)
  * @param handle: serial handle
  * @param baudrate: baudrate
  */
-void Serial_SetBaudrate(serial *handle, Baudrate baudrate)
+void serial_set_baudrate(serial *handle, Baudrate baudrate)
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
@@ -144,7 +150,7 @@ void Serial_SetBaudrate(serial *handle, Baudrate baudrate)
  * @param handle: serial handle
  * @param parity: parity
  */
-void Serial_SetParity(serial *handle, Parity parity)
+void serial_set_parity(serial *handle, Parity parity)
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
@@ -169,7 +175,7 @@ void Serial_SetParity(serial *handle, Parity parity)
  * @param handle: serial handle
  * @param stopBits: stop bits
  */
-void Serial_SetStopBits(serial *handle, StopBits stopBits)
+void serial_set_stopbits(serial *handle, StopBits stopBits)
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
@@ -194,7 +200,7 @@ void Serial_SetStopBits(serial *handle, StopBits stopBits)
  * @param handle: serial handle
  * @param dataBits: data bits
  */
-void Serial_setDataBits(serial *handle, DataBits dataBits)
+void serial_set_databits(serial *handle, DataBits dataBits)
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
@@ -214,7 +220,7 @@ void Serial_setDataBits(serial *handle, DataBits dataBits)
  * @param rxLen: rx buffer length
  * @param txLen: tx buffer length
  */
-void Serial_SetBufferLength(serial *handle, UBaseType_t rxLen, 
+void serial_set_bufferlength(serial *handle, UBaseType_t rxLen, 
                             UBaseType_t txLen)
 {
     assert_param(handle != NULL);
@@ -227,7 +233,7 @@ void Serial_SetBufferLength(serial *handle, UBaseType_t rxLen,
  * @brief get a char from serial port
  * @return TRUE: success FALSE: timeout
  */
-bool Serial_GetChar(serial *handle, char *data, 
+bool serial_getchar(serial *handle, char *data, 
                     portTickType xBlockTime)
 {
     assert_param(handle != NULL);
@@ -242,7 +248,7 @@ bool Serial_GetChar(serial *handle, char *data,
  * @brief put a char from serial port
  * @return TRUE: success FALSE: timeout
  */
-bool Serial_PutChar(serial *handle, char data,
+bool serial_putchar(serial *handle, char data,
                     portTickType xBlockTime)
 {
     assert_param(handle != NULL);
@@ -278,7 +284,7 @@ bool Serial_PutChar(serial *handle, char data,
  * @param string to put
  * @param string length
  */
-void Serial_PutString(serial *handle, const char *string,
+void serial_putstring(serial *handle, const char *string,
                       uint32_t length)
 {
     UNUSED(length);
@@ -318,7 +324,7 @@ void USART1_IRQHandler(void)
 		xQueueSendFromISR(xRxedChars[0], &cChar, &xHigherPriorityTaskWoken);
 	}	
 	
-    //check if there is any higher priority task need to wakeup
+    /* check if there is any higher priority task need to wakeup */
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -352,7 +358,7 @@ void USART2_IRQHandler(void)
 		xQueueSendFromISR(xRxedChars[1], &cChar, &xHigherPriorityTaskWoken);
 	}	
 	
-    //check if there is any higher priority task need to wakeup
+    /* check if there is any higher priority task need to wakeup */
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -386,7 +392,7 @@ void USART3_IRQHandler(void)
 		xQueueSendFromISR(xRxedChars[2], &cChar, &xHigherPriorityTaskWoken);
 	}	
 	
-    //check if there is any higher priority task need to wakeup
+    /* check if there is any higher priority task need to wakeup */
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
