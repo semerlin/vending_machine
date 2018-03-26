@@ -116,7 +116,7 @@ bool mqtt_init(void)
         return FALSE;
     }
 
-    return TRUE:
+    return TRUE;
 }
 
 /**

@@ -13,7 +13,7 @@
 BEGIN_DECLS
 
 bool esp8266_init(void);
-void esp8266_test(void);
+bool esp8266_test(void);
 
 END_DECLS
 

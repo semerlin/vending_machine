@@ -5,9 +5,13 @@
 *
 * See the COPYING file for the terms of usage and distribution.
 */
-#include <errno.h>
+#include <string.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 #include "esp8266.h"
 #include "serial.h"
+#include "global.h"
 
 /* esp8266 work in block mode */
 
@@ -35,21 +39,18 @@ typedef enum
 static void vESP8266Response(void *pvParameters)
 {
     const TickType_t xDelay = 3 / portTICK_PERIOD_MS;
-    Handle serial = pvParameters;
+    serial *pserial = pvParameters;
     uint8_t data_package[36];
-    uint8_t *pData = dataPackage;
+    uint8_t *pData = data_package;
     char data;
-    uint8 cnt = 0;
-    PM_Data pmData;
-    Sensor_Info sensorInfo = {PMS5003S , 0};
-    uint32 prevValue = 0;
+    uint8_t cnt = 0;
     for (;;)
     {
-        if(serial_getchar(serial, &data, portMAX_DELAY))
+        if(serial_getchar(pserial, &data, portMAX_DELAY))
         {
             *pData++ = data;
             cnt++;
-            while(serial_getchar(serial, &data, xDelay))
+            while(serial_getchar(pserial, &data, xDelay))
             {
                 *pData++ = data;
                 cnt++;
@@ -58,8 +59,7 @@ static void vESP8266Response(void *pvParameters)
             }
 
             /* get done, process data */
-
-            pData = dataPackage;
+            pData = data_package;
             cnt = 0;
         }
     }                                                                                                                                                                                                            
@@ -78,12 +78,12 @@ static __INLINE serial *get_serial(void)
  * @brief initialize esp8266
  * @return 0 means success, otherwise error code
  */
-int esp8266_init(void)
+bool esp8266_init(void)
 {
     g_serial = serial_request(COM1);
     if (NULL == g_serial)
     {
-        return -ENOMEM;
+        return FALSE;
     }
 
     xRecvQueue = xQueueCreate(ESP_MAX_MSG_NUM, ESP_MAX_MSG_SIZE);
@@ -91,7 +91,7 @@ int esp8266_init(void)
     {
         vPortFree(g_serial);
         g_serial = NULL;
-        return -ENOMEM;
+        return FALSE;
     }
 
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, g_serial, ESP8266_PRIORITY, NULL);  
@@ -115,7 +115,7 @@ bool esp8266_test(void)
     if (pdPASS == xQueueReceive(xRecvQueue, recv_buf, DEFAULT_TIMEOUT / portTICK_PERIOD_MS))
     {
         recv_buf[ESP_MAX_MSG_SIZE - 1] = 0;
-        return strcpy(recv_buf, "OK") ? FALSE : TRUE;
+        return strcmp((char *)recv_buf, "OK") ? FALSE : TRUE;
     }
 
     return FALSE;

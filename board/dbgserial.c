@@ -12,8 +12,8 @@ static serial *g_serial = NULL;
 void vDbgSerialSetup(void)
 {
     //init serial port
-    g_serial = Serial_Request(COM1);
-    Serial_Open(g_serial);
+    g_serial = serial_request(COM2);
+    serial_open(g_serial);
 }
 
 
