@@ -12,8 +12,45 @@
 
 BEGIN_DECLS
 
+/* esp8266 error message */
+#define ESP_ERR_NONE              0
+#define ESP_ERR_TIMEOUT           1
+#define ESP_ERR_PWD               2
+#define ESP_ERR_NOT_FOUND         3
+#define ESP_ERR_FAIL              4
+#define ESP_ERR_ALREADY           5
+
+typedef enum
+{
+    SAT = 0x01,
+    AP = 0x02,
+    BOTH = SAT | AP,
+    UNKNOWN = 0x04,
+}esp8266_mode;
+
+typedef enum
+{
+    Normal,
+    Transparent,
+}esp8266_transmode;
+
+typedef enum
+{
+    TCP,
+    UDP,
+    SSL
+}esp8266_connetmode;
+
+/* esp8266 interface */
 bool esp8266_init(void);
 void esp8266_send(const char *data, uint32_t length);
+int esp8266_setmode(esp8266_mode mode, TickType_t time);
+esp8266_mode esp8266_getmode(TickType_t time);
+int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time);
+void esp8266_disconnect_ap(TickType_t time);
+int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t ecn, TickType_t time);
+int esp8266_set_transmode(esp8266_transmode mode, TickType_t time);
+int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port);
 
 END_DECLS
 
