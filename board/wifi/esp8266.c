@@ -6,6 +6,7 @@
 * See the COPYING file for the terms of usage and distribution.
 */
 #include <string.h>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -66,11 +67,11 @@ static void vESP8266Response(void *pvParameters)
                 }
 
                 *pData = 0x00;
-                if (0 == strcmp(pData - 2, "\r\n"))
+                if (0 == strcmp((const char *)(pData - 2), "\r\n"))
                 {
                     /* get line data */
                     line++;
-                    if (0 == strcmp(pdata - 4, "OK\r\n"))
+                    if (0 == strcmp((const char *)(pData - 4), "OK\r\n"))
                     {
                         /* get done */
                         break;
@@ -82,7 +83,7 @@ static void vESP8266Response(void *pvParameters)
             /* get done, process data */
             node.size = line;
             xQueueSend(xRecvQueue, &node, portMAX_DELAY);
-            pData = node_data[0];
+            pData = node.data[0];
             cnt = 0;
             line = 0;
         }
@@ -110,7 +111,7 @@ bool esp8266_init(void)
         return FALSE;
     }
 
-    xRecvQueue = xQueueCreate(ESP_MAX_MSG_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
+    xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
         vPortFree(g_serial);
@@ -182,7 +183,7 @@ esp8266_mode esp8266_getmode(TickType_t time)
     at_node node;
     serial_putstring(g_serial, "AT+CWMODE_CUR?", 14);
 
-    if (pdPASS == xQueueReceive(xRecvQueue, node, time))
+    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
@@ -190,8 +191,8 @@ esp8266_mode esp8266_getmode(TickType_t time)
         }
         else
         {
-            uint8_t len = strlen(node.data[0]);
-            return (esp8266_mode)(node.data[len - 1] - '0');
+            uint8_t len = strlen((char const *)node.data[0]);
+            return (esp8266_mode)(node.data[0][len - 1] - '0');
         }
     }
 
@@ -214,7 +215,7 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
     sprintf(str_mode, "AT+CWJAP_DEF=%s,%s\r\n", ssid, pwd);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
 
-    if (pdPASS == xQueueReceive(xRecvQueue, node, time))
+    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
@@ -222,8 +223,8 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
         }
         else if (0 == strcmp((char *)node.data[node.size - 1], "FAIL"))
         {
-            uint8_t len = strlen(node.data[0]);
-            return node.data[len - 1] - '0';
+            uint8_t len = strlen((char const *)node.data[0]);
+            return node.data[0][len - 1] - '0';
         }
         else
         {
@@ -262,7 +263,7 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
     sprintf(str_mode, "AT+CWSAP_DEF=%s,%s,%d,%d\r\n", ssid, pwd, chl, ecn);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
 
-    if (pdPASS == xQueueReceive(xRecvQueue, node, time))
+    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
@@ -282,8 +283,10 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
  * @param mode - connect mode
  * @param ip - remote ip address
  * @param port - remote port
+ * @param time - timeout time
  */
-int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port)
+int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
+                    TickType_t time)
 {
     assert_param(NULL != g_serial);
 
@@ -292,7 +295,7 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port)
     sprintf(str_mode, "AT+CIPSTART=%d,%s,%d\r\n", mode, ip, port);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
 
-    if (pdPASS == xQueueReceive(xRecvQueue, node, time))
+    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
@@ -320,8 +323,7 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port)
 int esp8266_set_transmode(esp8266_transmode mode, TickType_t time)
 {
     assert_param(NULL != g_serial);
-
-    at_node node;
+    
     char str_mode[32];
     sprintf(str_mode, "AT+CIPMODE=%d\r\n", mode);
 

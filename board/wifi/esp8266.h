@@ -39,7 +39,7 @@ typedef enum
     TCP,
     UDP,
     SSL
-}esp8266_connetmode;
+}esp8266_connectmode;
 
 /* esp8266 interface */
 bool esp8266_init(void);
@@ -48,9 +48,11 @@ int esp8266_setmode(esp8266_mode mode, TickType_t time);
 esp8266_mode esp8266_getmode(TickType_t time);
 int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time);
 void esp8266_disconnect_ap(TickType_t time);
-int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t ecn, TickType_t time);
+int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, 
+                       uint8_t ecn, TickType_t time);
 int esp8266_set_transmode(esp8266_transmode mode, TickType_t time);
-int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port);
+int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
+                    TickType_t time);
 
 END_DECLS
 
