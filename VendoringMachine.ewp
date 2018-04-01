@@ -730,7 +730,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>lnk0t.icf</state>
+          <state>$TOOLKIT_DIR$\config\linker\ST\stm32f103x8.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -790,7 +790,7 @@
         </option>
         <option>
           <name>IlinkProgramEntryLabel</name>
-          <state></state>
+          <state>__iar_program_start</state>
         </option>
         <option>
           <name>DoFill</name>
@@ -1926,6 +1926,12 @@
       </file>
       <file>
         <name>$PROJ_DIR$\board\wifi\esp8266.h</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\simple_http.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\simple_http.h</name>
       </file>
       <file>
         <name>$PROJ_DIR$\board\wifi\wifi.c</name>
