@@ -64,6 +64,7 @@ typedef struct _serial_t serial;
 
 /* interface */
 serial *serial_request(Port port);
+void serial_release(serial *pserial);
 bool serial_open(serial *handle);
 void serial_close(serial *handle);
 void serial_set_baudrate(serial *handle, Baudrate baudrate);

@@ -49,6 +49,15 @@ serial *serial_request(Port port)
 }
 
 /**
+ * @brief release serial
+ * @param pserial - serial handle
+ */
+void serial_release(serial *pserial)
+{
+    vPortFree(pserial);
+}
+
+/**
  * @brief open serial port
  * @param serial handle
  */

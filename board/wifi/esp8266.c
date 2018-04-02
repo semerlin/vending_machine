@@ -91,15 +91,6 @@ static void vESP8266Response(void *pvParameters)
 }
 
 /**
- * @brief get serial handle
- * @return serial handle
- */
-static __INLINE serial *get_serial(void)
-{
-    return g_serial;
-}
-
-/**
  * @brief initialize esp8266
  * @return 0 means success, otherwise error code
  */
@@ -114,7 +105,7 @@ bool esp8266_init(void)
     xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
-        vPortFree(g_serial);
+        serial_release(g_serial);
         g_serial = NULL;
         return FALSE;
     }
@@ -153,7 +144,7 @@ static int esp8266_send_ok(const char *cmd, TickType_t time)
  */
 void esp8266_send(const char *data, uint32_t length)
 {
-    serial_putstring(get_serial(), data, length);
+    serial_putstring(g_serial, data, length);
 }
 
 /**
