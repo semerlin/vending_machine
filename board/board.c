@@ -71,7 +71,7 @@ static void clock_init(void)
  */
 static void misc_init(void)
 {
-    pinSet("power");
+    pin_set("power");
 }
 
 
