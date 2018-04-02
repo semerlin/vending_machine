@@ -5,18 +5,18 @@
 #include "pinconfig.h"
 
 
-static void clockInit(void);
-static void miscInit(void);
+static void clock_init(void);
+static void misc_init(void);
 
 //init function
-typedef void (*initFuc)(void);
+typedef void (*init_fuc)(void);
 
 //init sequence
-initFuc initSequence[] = 
+init_fuc init_sequence[] = 
 {
-    clockInit,
-    pinInit,
-    miscInit,
+    clock_init,
+    pin_init,
+    misc_init,
 };
 
 /**
@@ -24,11 +24,11 @@ initFuc initSequence[] =
  */
 void board_init(void)
 {
-    uint32_t len = sizeof(initSequence) / sizeof(initFuc);
+    uint32_t len = sizeof(init_sequence) / sizeof(init_fuc);
     for(int i = 0; i < len; ++i)
     {
-        assert_param(initSequence[i] != NULL);
-        initSequence[i]();
+        assert_param(init_sequence[i] != NULL);
+        init_sequence[i]();
         //TODO put some log information here
     }
 
@@ -38,7 +38,7 @@ void board_init(void)
 /**
  * @brief board clock init
  */
-static void clockInit(void)
+static void clock_init(void)
 {
     //config rcc
     RCC_DeInit();
@@ -66,7 +66,10 @@ static void clockInit(void)
     SCB_SetPriorityGrouping(3);
 }
 
-static void miscInit(void)
+/**
+ * @brief initialize other borad hardware
+ */
+static void misc_init(void)
 {
     pinSet("power");
 }

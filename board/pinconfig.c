@@ -21,8 +21,8 @@ typedef enum
 typedef struct
 {
     PIN_BUS bus;
-    uint32_t resetReg;
-    uint32_t enableReg;
+    uint32_t reset_reg;
+    uint32_t enable_reg;
 }PIN_CLOCK;
 
 
@@ -60,7 +60,7 @@ PIN_CONFIG pins[] =
 };
 
 /* clock arrays */
-PIN_CLOCK pinClocks[] = 
+PIN_CLOCK pin_clocks[] = 
 {
     {AHB, RCC_AHB_ENABLE_CRC, RCC_AHB_ENABLE_CRC},
     {APB2, RCC_APB2_RESET_IOPA, RCC_APB2_ENABLE_IOPA},
@@ -79,7 +79,7 @@ PIN_CLOCK pinClocks[] =
  * @param pin name
  * @return pin configuration
  */
-static const PIN_CONFIG *getPinConfig(const char *name)
+static const PIN_CONFIG *get_pinconfig(const char *name)
 {
     uint32_t len = sizeof(pins) / sizeof(PIN_CONFIG);
     for(uint32_t i = 0; i < len; ++i)
@@ -94,33 +94,33 @@ static const PIN_CONFIG *getPinConfig(const char *name)
 /**
  * @brief init pins
  */
-void pinInit(void)
+void pin_init(void)
 {
     //config pin clocks
-    uint32_t len = sizeof(pinClocks) / sizeof(PIN_CLOCK);
+    uint32_t len = sizeof(pin_clocks) / sizeof(PIN_CLOCK);
     for(uint32_t i = 0; i < len; ++i)
     {
-        switch(pinClocks[i].bus)
+        switch(pin_clocks[i].bus)
         {
         case AHB:
-            RCC_AHBPeripClockEnable(pinClocks[i].enableReg, TRUE);
+            RCC_AHBPeripClockEnable(pin_clocks[i].enable_reg, TRUE);
             break;
         case APB1:
-            RCC_APB1PeriphReset(pinClocks[i].resetReg, TRUE);
-            RCC_APB1PeriphReset(pinClocks[i].resetReg, FALSE);
-            RCC_APB1PeripClockEnable(pinClocks[i].enableReg, TRUE);
+            RCC_APB1PeriphReset(pin_clocks[i].reset_reg, TRUE);
+            RCC_APB1PeriphReset(pin_clocks[i].reset_reg, FALSE);
+            RCC_APB1PeripClockEnable(pin_clocks[i].enable_reg, TRUE);
             break;
         case APB2:
-            RCC_APB2PeriphReset(pinClocks[i].resetReg, TRUE);
-            RCC_APB2PeriphReset(pinClocks[i].resetReg, FALSE);
-            RCC_APB2PeripClockEnable(pinClocks[i].enableReg, TRUE);
+            RCC_APB2PeriphReset(pin_clocks[i].reset_reg, TRUE);
+            RCC_APB2PeriphReset(pin_clocks[i].reset_reg, FALSE);
+            RCC_APB2PeripClockEnable(pin_clocks[i].enable_reg, TRUE);
             break;
         default:
             break;
         }
     }
     
-    //config pins
+    /* config pins */
     len = sizeof(pins) / sizeof(PIN_CONFIG);
     for(uint32_t i = 0; i < len; ++i)
     {
@@ -132,9 +132,9 @@ void pinInit(void)
  * @brief set pin
  * @param pin name
  */
-void pinSet(const char *name)
+void pin_set(const char *name)
 {
-    const PIN_CONFIG *config = getPinConfig(name);
+    const PIN_CONFIG *config = get_pinconfig(name);
     assert_param(config != NULL);
     GPIO_SetPin(config->group, config->config.pin);
 
@@ -144,9 +144,9 @@ void pinSet(const char *name)
  * @brief reset pin
  * @param pin name
  */
-void pinReset(const char *name)
+void pin_reset(const char *name)
 {
-    const PIN_CONFIG *config = getPinConfig(name);
+    const PIN_CONFIG *config = get_pinconfig(name);
     assert_param(config != NULL);
     GPIO_ResetPin(config->group, config->config.pin);
 }
@@ -155,9 +155,9 @@ void pinReset(const char *name)
  * @brief check if pin is set
  * @param pin name
  */
-bool isPinSet(const char *name)
+bool is_pinset(const char *name)
 {
-    const PIN_CONFIG *config = getPinConfig(name);
+    const PIN_CONFIG *config = get_pinconfig(name);
     assert_param(config != NULL);
     if(GPIO_ReadPin(config->group, config->config.pin) != 0)
         return TRUE;
@@ -171,12 +171,12 @@ bool isPinSet(const char *name)
  * @param pin group
  * @param pin number
  */
-void getPinInfo(const char *name, uint8_t *group, uint8_t *num)
+void get_pininfo(const char *name, uint8_t *group, uint8_t *num)
 {
     assert_param(name != NULL);
     assert_param(group != NULL);
     assert_param(num != NULL);
-    const PIN_CONFIG *config = getPinConfig(name);
+    const PIN_CONFIG *config = get_pinconfig(name);
     assert_param(config != NULL);
     *group = config->group;
     *num = config->config.pin;

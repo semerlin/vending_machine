@@ -22,5 +22,13 @@ style=\"position:absolute;top:50%;left:60%\"></input></a></body></html>";
  */
 int http_init(void)
 {
-    return esp8266_setmode(AP, DEFAULT_TIMEOUT);
+    int err = ESP_ERR_OK;
+    err = esp8266_setmode(AP, DEFAULT_TIMEOUT);
+    if (ESP_ERR_OK != err)
+    {
+        return err;
+    }
+
+    return esp8266_set_softap("vendoring_machine", "123456", 5, 
+            3, DEFAULT_TIMEOUT);
 }

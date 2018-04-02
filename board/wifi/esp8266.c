@@ -131,7 +131,7 @@ static int esp8266_send_ok(const char *cmd, TickType_t time)
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        return strcmp((char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
+        return strcmp((const char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
     }
 
     return -ESP_ERR_TIMEOUT;
@@ -176,7 +176,7 @@ esp8266_mode esp8266_getmode(TickType_t time)
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
+        if (0 != strcmp((char *)node.data[node.size - 1], "OK"))
         {
             return UNKNOWN;    
         }
@@ -215,7 +215,7 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
         else if (0 == strcmp((char *)node.data[node.size - 1], "FAIL"))
         {
             uint8_t len = strlen((char const *)node.data[0]);
-            return node.data[0][len - 1] - '0';
+            return -(node.data[0][len - 1] - '0');
         }
         else
         {
@@ -251,7 +251,7 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
 
     at_node node;
     char str_mode[128];
-    sprintf(str_mode, "AT+CWSAP_DEF=%s,%s,%d,%d\r\n", ssid, pwd, chl, ecn);
+    sprintf(str_mode, "AT+CWSAP_CUR=%s,%s,%d,%d\r\n", ssid, pwd, chl, ecn);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
