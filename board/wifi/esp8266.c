@@ -131,10 +131,10 @@ static int esp8266_send_ok(const char *cmd, TickType_t time)
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        return strcmp((char *)node.data[node.size - 1], "OK") ? ESP_ERR_FAIL: ESP_ERR_NONE;
+        return strcmp((char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
     }
 
-    return ESP_ERR_TIMEOUT;
+    return -ESP_ERR_TIMEOUT;
 }
 
 /**
@@ -210,7 +210,7 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return -ESP_ERR_NONE;
+            return ESP_ERR_OK;
         }
         else if (0 == strcmp((char *)node.data[node.size - 1], "FAIL"))
         {
@@ -258,7 +258,7 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return -ESP_ERR_NONE;
+            return ESP_ERR_OK;
         }
         else
         {
@@ -290,7 +290,7 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return -ESP_ERR_NONE;
+            return ESP_ERR_OK;
         }
         else if (0 == strcmp((char *)node.data[node.size - 1], "ALREADY CONNECTED"))
         {

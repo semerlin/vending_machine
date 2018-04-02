@@ -13,7 +13,7 @@
 BEGIN_DECLS
 
 /* esp8266 error message */
-#define ESP_ERR_NONE              0
+#define ESP_ERR_OK                0
 #define ESP_ERR_TIMEOUT           1
 #define ESP_ERR_PWD               2
 #define ESP_ERR_NOT_FOUND         3
