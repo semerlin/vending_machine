@@ -29,34 +29,43 @@ typedef struct
 /* pin arrays */
 PIN_CONFIG pins[] = 
 {
-    {"power", GPIOA, 8, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"usart1_tx", GPIOA, 9, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
-    {"usart1_rx", GPIOA, 10, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
-    {"pms_reset", GPIOA, 11, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"pms_set", GPIOA, 12, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"sound", GPIOC, 1, GPIO_Speed_2MHz, GPIO_Mode_AIN},
-    {"gp2y1050", GPIOC, 3, GPIO_Speed_2MHz, GPIO_Mode_AIN},
-    {"voca", GPIOC, 2, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
-    {"vocb", GPIOC, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
-    {"spi1_nss", GPIOA, 4, GPIO_Speed_50MHz, GPIO_Mode_Out_PP},
-    {"spi1_sck", GPIOA, 5, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
-    {"spi1_miso", GPIOA, 6, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
-    {"spi1_mosi", GPIOA, 7, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
-    {"lcd_bkl", GPIOB, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"lcd_dc", GPIOB, 1, GPIO_Speed_50MHz, GPIO_Mode_Out_PP},
-    {"lcd_rst", GPIOB, 2, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"am2302", GPIOC, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-#ifdef __I2C_HARDWARE
-    {"i2c1_scl", GPIOB, 6, GPIO_Speed_50MHz, GPIO_Mode_AF_OD},
-    {"i2c1_sda", GPIOB, 7, GPIO_Speed_50MHz, GPIO_Mode_AF_OD},
-    {"i2c2_scl", GPIOB, 10, GPIO_Speed_50MHz, GPIO_Mode_AF_OD},
-    {"i2c2_sda", GPIOB, 11, GPIO_Speed_50MHz, GPIO_Mode_AF_OD},
-#else
-    {"i2c1_scl", GPIOB, 6, GPIO_Speed_2MHz, GPIO_Mode_Out_OD},
-    {"i2c1_sda", GPIOB, 7, GPIO_Speed_2MHz, GPIO_Mode_Out_OD},
-    {"i2c2_scl", GPIOB, 10, GPIO_Speed_2MHz, GPIO_Mode_Out_OD},
-    {"i2c2_sda", GPIOB, 11, GPIO_Speed_2MHz, GPIO_Mode_Out_OD},
-#endif
+    {"CON_L1", GPIOC, 9, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_L2", GPIOC, 8, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_L3", GPIOC, 7, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_L4", GPIOC, 6, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_R1", GPIOB, 12, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_R2", GPIOB, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_R3", GPIOB, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CON_R4", GPIOB, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"CH1_DET", GPIOA, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH2_DET", GPIOA, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH3_DET", GPIOA, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH4_DET", GPIOA, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH5_DET", GPIOA, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH6_DET", GPIOA, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH7_DET", GPIOC, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH8_DET", GPIOC, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH9_DET", GPIOB, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"CH10_DET", GPIOB, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"DEBUG_TX", GPIOA, 9, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
+    {"DEBUG_RX", GPIOA, 10, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"WIFI_TX", GPIOA, 2, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
+    {"WIFI_RX", GPIOA, 3, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"WIFI_RST", GPIOC, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"WIFI_EN", GPIOC, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"GPRS_TX", GPIOB, 10, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
+    {"GPRS_RX", GPIOB, 11, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"GPRS_PWR", GPIOC, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"LED1", GPIOB, 3, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"LED2", GPIOB, 4, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"LED3", GPIOB, 5, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"IR_IN", GPIOB, 2, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"SWITCH1", GPIOB, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"SWITCH2", GPIOB, 8, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"MODE_SET", GPIOB, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
+    {"LED_DATA", GPIOC, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"LED_ST", GPIOC, 1, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"LED_SH", GPIOC, 2, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
 };
 
 /* clock arrays */
@@ -66,12 +75,9 @@ PIN_CLOCK pin_clocks[] =
     {APB2, RCC_APB2_RESET_IOPA, RCC_APB2_ENABLE_IOPA},
     {APB2, RCC_APB2_RESET_IOPB, RCC_APB2_ENABLE_IOPB},
     {APB2, RCC_APB2_RESET_IOPC, RCC_APB2_ENABLE_IOPC},
-    {APB2, RCC_APB2_RESET_IOPD, RCC_APB2_ENABLE_IOPD},
     {APB2, RCC_APB2_RESET_USART1, RCC_APB2_ENABLE_USART1},
-    {APB2, RCC_APB2_RESET_ADC1, RCC_APB2_ENABLE_ADC1},
-    {APB2, RCC_APB2_RESET_SPI1, RCC_APB2_ENABLE_SPI1},
-    {APB1, RCC_APB1_RESET_I2C1, RCC_APB1_ENABLE_I2C1},
-    {APB1, RCC_APB1_RESET_I2C2, RCC_APB1_ENABLE_I2C2},
+    {APB2, RCC_APB1_RESET_USART2, RCC_APB1_ENABLE_USART2},
+    {APB2, RCC_APB1_RESET_USART3, RCC_APB1_ENABLE_USART3},
 };
 
 /**
@@ -159,10 +165,7 @@ bool is_pinset(const char *name)
 {
     const PIN_CONFIG *config = get_pinconfig(name);
     assert_param(config != NULL);
-    if(GPIO_ReadPin(config->group, config->config.pin) != 0)
-        return TRUE;
-    else
-        return FALSE;
+    return (GPIO_ReadPin(config->group, config->config.pin) != 0);
 }
 
 /**

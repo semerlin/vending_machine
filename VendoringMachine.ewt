@@ -2145,6 +2145,18 @@
       <name>$PROJ_DIR$\board\global.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\led_motor.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\led_motor.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\led_net.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\led_net.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\main.c</name>
     </file>
     <file>

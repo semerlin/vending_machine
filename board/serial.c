@@ -300,7 +300,7 @@ void serial_putstring(serial *handle, const char *string,
     
     const char *pNext = string;
     while(length--)
-        Serial_PutChar(handle, *pNext++, SERIAL_NO_BLOCK);
+        serial_putchar(handle, *pNext++, SERIAL_NO_BLOCK);
 }
 
 /**

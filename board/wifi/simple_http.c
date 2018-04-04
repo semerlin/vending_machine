@@ -29,6 +29,7 @@ int http_init(void)
         return err;
     }
 
-    return esp8266_set_softap("vendoring_machine", "123456", 5, 
+    return esp8266_set_softap("vendor", "123456", 5, 
             3, DEFAULT_TIMEOUT);
 }
+
