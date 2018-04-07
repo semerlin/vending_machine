@@ -96,7 +96,7 @@ static void vESP8266Response(void *pvParameters)
  */
 bool esp8266_init(void)
 {
-    g_serial = serial_request(COM1);
+    g_serial = serial_request(COM2);
     if (NULL == g_serial)
     {
         return FALSE;

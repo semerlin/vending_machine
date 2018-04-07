@@ -181,7 +181,8 @@
         <debug>1</debug>
         <option>
           <name>CCDefines</name>
-          <state></state>
+          <state>__DEBUG</state>
+          <state>__ENABLE_TRACE</state>
         </option>
         <option>
           <name>CCPreprocFile</name>

@@ -175,6 +175,7 @@ uint8_t USART_GetAddress(USART_Group group);
 void USART_SetPrescaler(USART_Group group, uint8_t prescaler);
 bool USART_IsFlagOn(USART_Group group, uint16_t intFlag);
 void USART_ClearFlag(USART_Group group, uint16_t intFlag);
+void USART_WriteData_Wait(USART_Group group, uint8_t data);
 void USART_WriteData(USART_Group group, uint8_t data);
 uint8_t USART_ReadData(USART_Group group);
 void USART_SetWakeupMethod(USART_Group group, uint16_t method);

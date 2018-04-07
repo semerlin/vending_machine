@@ -163,7 +163,7 @@ void USART_Setup(USART_Group group, const USART_Config *config)
 
 void USART_StructInit(USART_Config *config)
 {   
-    config->baudRate = 9600;
+    config->baudRate = 115200;
     config->wordLength = USART_WordLength_8;
     config->parity = USART_Parity_None;
     config->stopBits = USART_StopBits_1;
@@ -252,6 +252,23 @@ void USART_ClearFlag(USART_Group group, uint16_t flag)
 }
 
 /**
+ * @param write data and wait written done
+ * @param group: usart group
+ * @param data
+ */
+void USART_WriteData_Wait(USART_Group group, uint8_t data)
+{
+    assert_param(group < UASRT_Count);
+    
+    USART_T * const UsartX = USARTx[group];
+    
+    UsartX->DR = data;
+    
+    /* wait data written */
+    while(!(UsartX->SR & SR_TXE));
+}
+
+/**
  * @param write data
  * @param group: usart group
  * @param data
@@ -263,9 +280,6 @@ void USART_WriteData(USART_Group group, uint8_t data)
     USART_T * const UsartX = USARTx[group];
     
     UsartX->DR = data;
-    
-    //wait data written
-    //while(!(UsartX->SR & SR_TXE));
 }
 
 /**

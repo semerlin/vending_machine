@@ -3,15 +3,17 @@
 #include "types.h"
 #include "stm32f10x_cfg.h"
 #include "pinconfig.h"
+#include "dbgserial.h"
+#include "trace.h"
 
 
 static void clock_init(void);
 static void misc_init(void);
 
-//init function
+/* init function */
 typedef void (*init_fuc)(void);
 
-//init sequence
+/* init sequence */
 init_fuc init_sequence[] = 
 {
     clock_init,
@@ -29,7 +31,6 @@ void board_init(void)
     {
         assert_param(init_sequence[i] != NULL);
         init_sequence[i]();
-        //TODO put some log information here
     }
 
     return;
@@ -71,7 +72,8 @@ static void clock_init(void)
  */
 static void misc_init(void)
 {
-    pin_set("power");
+    dbg_serial_setup();
+    TRACE("initialize board success\n");
 }
 
 

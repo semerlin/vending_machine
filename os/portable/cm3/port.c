@@ -185,9 +185,9 @@ void vPortSetupTimerInterrupt( void )
  */
 void vPortValidateInterruptPriority( void )
 {
-    uint32 currentInterrupt;
-    uint8 groupPriority;
-    uint8 subPriority;
+    uint32_t currentInterrupt;
+    uint8_t groupPriority;
+    uint8_t subPriority;
 
     /* obtain the number of the currently executing interrupt. */
     currentInterrupt = __get_IPSR();

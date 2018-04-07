@@ -129,17 +129,17 @@ void check_connect_param(const connect_param *param)
 
     if (NULL == param->client_id)
     {
-        assert_param(0x01 == param->flag.clear_session);
+        assert_param(0x01 == param->flag._flag.clear_session);
     }
 
     if (0x00 == param->flag._flag.will_flag)
     {
-        assert_param(0 == flag->will_qos);
-        assert_param(0 == flag->will_retain);
+        assert_param(0 == param->flag._flag.will_qos);
+        assert_param(0 == param->flag._flag.will_retain);
     }
     else
     {
-        assert_param(flag->will_qos < 0x03);
+        assert_param(param->flag._flag.will_qos < 0x03);
         assert_param(NULL != param->will_topic);
         assert_param(NULL != param->will_msg);
     }

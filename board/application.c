@@ -2,10 +2,6 @@
 #include "global.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "serial.h"
-#include <string.h>
-#include "environment.h"
-#include "dbgserial.h"
 
 void ApplicationStartup()
 {

@@ -64,7 +64,7 @@ void serial_release(serial *pserial)
 bool serial_open(serial *handle)
 {
     assert_param(handle != NULL);
-    assert_param(serial->port < Port_Count);
+    assert_param(handle->port < Port_Count);
     
     NVIC_Config nvicConfig = {USART1_IRQChannel, USART1_PRIORITY, 0, TRUE};
     
@@ -296,8 +296,6 @@ bool serial_putchar(serial *handle, char data,
 void serial_putstring(serial *handle, const char *string,
                       uint32_t length)
 {
-    UNUSED(length);
-    
     const char *pNext = string;
     while(length--)
         serial_putchar(handle, *pNext++, SERIAL_NO_BLOCK);

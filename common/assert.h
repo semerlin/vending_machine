@@ -12,7 +12,7 @@
 
 BEGIN_DECLS
 
-#ifdef __ENABLE_ASSERT
+#ifdef __DEBUG
     /**
      * @brief the assert macro is used for function's parameters check.
      * @param file: file name

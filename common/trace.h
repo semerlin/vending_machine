@@ -21,8 +21,12 @@ BEGIN_DECLS
      * @param fmt: trace message
      */
     /* external function */
-    extern void trace(const char *file, long line, const char *fmt, ...);
-    #define TRECE(fmt, ...) trace(__FILE__, STR(__LINE__), fmt, ##__VA_ARGS__)
+    /*
+      extern void trace(const char *file, long line, const char *fmt, ...);
+      #define TRECE(fmt, ...) trace(__FILE__, STR(__LINE__), fmt, ##__VA_ARGS__)
+    */
+    extern void trace(const char *fmt, ...);
+    #define TRACE(fmt, ...) trace(fmt, ##__VA_ARGS__)
 #else
     #define TRACE(fmt, ...)
 #endif
