@@ -1,9 +1,21 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include "stm32f10x_cfg.h"
 #include "dbgserial.h"
 #include "global.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+/* serial output mutex */
+//SemaphoreHandle_t xSerialMutex = NULL;
 
 /**
  * @brief init debug serial port
@@ -18,6 +30,8 @@ void dbg_serial_setup(void)
     USART_EnableInt(USART1, USART_IT_RXNE, TRUE);
     NVIC_Init(&nvicConfig);
     USART_Enable(USART1, TRUE);
+    
+    //xSerialMutex = xSemaphoreCreateMutex();
 }
 
 /**

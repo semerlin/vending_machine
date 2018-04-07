@@ -1,7 +1,8 @@
 #ifndef FREERTOS_CONFIG_H
   #define FREERTOS_CONFIG_H
 
-#include "environment.h"
+#include "assert.h"
+#include "trace.h"
 
 /* application specific definitions */
 #define configUSE_PREEMPTION		1

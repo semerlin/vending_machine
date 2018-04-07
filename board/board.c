@@ -1,3 +1,10 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #include <string.h>
 #include "board.h"
 #include "types.h"
@@ -8,7 +15,6 @@
 
 
 static void clock_init(void);
-static void misc_init(void);
 
 /* init function */
 typedef void (*init_fuc)(void);
@@ -18,7 +24,7 @@ init_fuc init_sequence[] =
 {
     clock_init,
     pin_init,
-    misc_init,
+    dbg_serial_setup,
 };
 
 /**
@@ -33,6 +39,7 @@ void board_init(void)
         init_sequence[i]();
     }
 
+    TRACE("initialize board finish\n");
     return;
 }
 
@@ -65,15 +72,6 @@ static void clock_init(void)
     
     //setup interrupt grouping, we only use group priority
     SCB_SetPriorityGrouping(3);
-}
-
-/**
- * @brief initialize other borad hardware
- */
-static void misc_init(void)
-{
-    dbg_serial_setup();
-    TRACE("initialize board success\n");
 }
 
 
