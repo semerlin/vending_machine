@@ -89,7 +89,7 @@ PIN_CLOCK pin_clocks[] =
 
 /**
  * @brief get pin configuration by name
- * @param pin name
+ * @param name - pin name
  * @return pin configuration
  */
 static const PIN_CONFIG *get_pinconfig(const char *name)
@@ -143,7 +143,7 @@ void pin_init(void)
 
 /**
  * @brief set pin
- * @param pin name
+ * @param name - pin name
  */
 void pin_set(const char *name)
 {
@@ -155,7 +155,7 @@ void pin_set(const char *name)
 
 /**
  * @brief reset pin
- * @param pin name
+ * @param name - pin name
  */
 void pin_reset(const char *name)
 {
@@ -165,8 +165,25 @@ void pin_reset(const char *name)
 }
 
 /**
+ * @brief toggle pin 
+ * @param name - pin name
+ */
+void pin_toggle(const char *name)
+{
+    const PIN_CONFIG *config = get_pinconfig(name);
+    assert_param(config != NULL);
+    if (GPIO_ReadPin(config->group, config->config.pin) != 0)
+    {
+        GPIO_ResetPin(config->group, config->config.pin);
+    }
+    else
+    {
+        GPIO_SetPin(config->group, config->config.pin);
+    }
+}
+/**
  * @brief check if pin is set
- * @param pin name
+ * @param name - pin name
  */
 bool is_pinset(const char *name)
 {
@@ -177,9 +194,9 @@ bool is_pinset(const char *name)
 
 /**
  * @brief get pin information
- * @param pin name
- * @param pin group
- * @param pin number
+ * @param name - pin name
+ * @param group - pin group
+ * @param num - pin number
  */
 void get_pininfo(const char *name, uint8_t *group, uint8_t *num)
 {
