@@ -13,6 +13,8 @@
 #include "dbgserial.h"
 #include "trace.h"
 
+#undef __MODULE
+#define __MODULE   "[board]"
 
 static void clock_init(void);
 

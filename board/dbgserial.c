@@ -71,7 +71,7 @@ void assert_failed(const char *file, const char *line, const char *exp)
 #endif
 
 #ifdef __ENABLE_TRACE
-void trace(const char *fmt, ...)
+void trace(const char *module, const char *fmt, ...)
 {
     char buf[64];
     va_list argptr;
@@ -79,6 +79,8 @@ void trace(const char *fmt, ...)
     va_start(argptr, fmt);
     cnt = vsprintf(buf, fmt, argptr);
     va_end(argptr);
+    dbg_putstring(module, strlen(module));
+    dbg_putchar(' ');
     dbg_putstring(buf, cnt);
 }
 #endif
