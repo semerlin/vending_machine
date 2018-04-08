@@ -11,6 +11,8 @@
 #include "types.h"
 #include "FreeRTOS.h"
 
+BEGIN_DECLS
+
 /* serial parameter definition */
 typedef enum
 { 
@@ -81,5 +83,7 @@ bool serial_putchar(serial *handle, char data,
 void serial_putstring(serial *handle, const char *string,
                       uint32_t length);
 
-#endif
+END_DECLS
+
+#endif /* _SERIAL_H_ */
 

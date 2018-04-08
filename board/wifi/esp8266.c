@@ -13,6 +13,10 @@
 #include "esp8266.h"
 #include "serial.h"
 #include "global.h"
+#include "trace.h"
+
+#undef __TRACE_MODULE
+#define __TRACE_MODULE "[esp8266]"
 
 /* esp8266 work in block mode */
 
@@ -96,15 +100,18 @@ static void vESP8266Response(void *pvParameters)
  */
 bool esp8266_init(void)
 {
+    TRACE("initialize esp8266...\n");
     g_serial = serial_request(COM2);
     if (NULL == g_serial)
     {
+        TRACE("initialize failed, can't open serial \'COM2\'\n");
         return FALSE;
     }
 
     xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
+        TRACE("initialize failed, can't create queue\'COM2\'\n");
         serial_release(g_serial);
         g_serial = NULL;
         return FALSE;
@@ -128,13 +135,19 @@ static int esp8266_send_ok(const char *cmd, TickType_t time)
 
     at_node node;
     serial_putstring(g_serial, cmd, strlen(cmd));
+    int ret = ESP_ERR_OK;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        return strcmp((const char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
+        ret = strcmp((const char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
+    }
+    else
+    {
+        ret = -ESP_ERR_TIMEOUT;
     }
 
-    return -ESP_ERR_TIMEOUT;
+    TRACE("send cmd: \"%s\", status: %d\n", cmd, -ret);
+    return ret;
 }
 
 /**
@@ -172,22 +185,20 @@ esp8266_mode esp8266_getmode(TickType_t time)
     assert_param(NULL != g_serial);
 
     at_node node;
-    serial_putstring(g_serial, "AT+CWMODE_CUR?", 14);
+    serial_putstring(g_serial, "AT+CWMODE_CUR?\r\n", 16);
+    esp8266_mode mode = UNKNOWM;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        if (0 != strcmp((char *)node.data[node.size - 1], "OK"))
-        {
-            return UNKNOWN;    
-        }
-        else
+        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
             uint8_t len = strlen((char const *)node.data[0]);
-            return (esp8266_mode)(node.data[0][len - 1] - '0');
+            mode = (esp8266_mode)(node.data[0][len - 1] - '0');
         }
     }
 
-    return UNKNOWN;
+    TRACE("send cmd: AT+CWMODE_CUR?, mode: %d\n", cmd, mode);
+    return mode;
 }
 
 /**
@@ -205,25 +216,27 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
     char str_mode[64];
     sprintf(str_mode, "AT+CWJAP_DEF=%s,%s\r\n", ssid, pwd);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
+    int ret = -ESP_ERR_FAIL;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return ESP_ERR_OK;
+            ret = ESP_ERR_OK;
         }
         else if (0 == strcmp((char *)node.data[node.size - 1], "FAIL"))
         {
             uint8_t len = strlen((char const *)node.data[0]);
-            return -(node.data[0][len - 1] - '0');
-        }
-        else
-        {
-            return -ESP_ERR_FAIL;
+            ret = -(node.data[0][len - 1] - '0');
         }
     }
+    else
+    {
+        ret = -ESP_ERR_TIMEOUT;
+    }
 
-    return -ESP_ERR_TIMEOUT;
+    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    return ret;
 }
 
 /**
@@ -253,20 +266,22 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
     char str_mode[128];
     sprintf(str_mode, "AT+CWSAP_CUR=%s,%s,%d,%d\r\n", ssid, pwd, chl, ecn);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
+    int ret = -ESP_ERR_FAIL;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return ESP_ERR_OK;
-        }
-        else
-        {
-            return -ESP_ERR_FAIL;
+            ret = ESP_ERR_OK;
         }
     }
+    else
+    {
+        ret = -ESP_ERR_TIMEOUT;
+    }
 
-    return -ESP_ERR_TIMEOUT;
+    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    return ret;
 }
 
 /**
@@ -285,25 +300,26 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
     char str_mode[128];
     sprintf(str_mode, "AT+CIPSTART=%d,%s,%d\r\n", mode, ip, port);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
+    int ret = -ESP_ERR_FAIL;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
         if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
         {
-            return ESP_ERR_OK;
+            ret = ESP_ERR_OK;
         }
         else if (0 == strcmp((char *)node.data[node.size - 1], "ALREADY CONNECTED"))
         {
-            return -ESP_ERR_ALREADY;
-        }
-        else
-        {
-            return -ESP_ERR_FAIL;
+            ret = -ESP_ERR_ALREADY;
         }
     }
+    else
+    {
+        ret = -ESP_ERR_TIMEOUT;
+    }
 
-    return -ESP_ERR_TIMEOUT;
-
+    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    return ret;
 }
 
 /**

@@ -1,5 +1,12 @@
-#ifndef FREERTOS_CONFIG_H
-  #define FREERTOS_CONFIG_H
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
+#ifndef _FREERTOS_CONFIG_H
+  #define _FREERTOS_CONFIG_H
 
 #include "assert.h"
 #include "trace.h"
@@ -50,4 +57,5 @@ extern void assert_failed(const char *file, const char *line, const char *exp);
 
 
 #endif /* FREERTOS_CONFIG_H */
+
 

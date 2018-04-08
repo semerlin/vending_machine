@@ -17,4 +17,4 @@ int http_init(void);
 END_DECLS
 
 
-#endif /* _HTTP_H_ */
+#endif /* _SIMPLE_HTTP_H_ */

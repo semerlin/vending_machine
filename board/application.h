@@ -8,7 +8,13 @@
 #ifndef _APPLICATION_H_
   #define _APPLICATION_H_
 
+#include "types.h"
+
+BEGIN_DECLS
+
 void ApplicationStartup();
 
+END_DECLS
 
-#endif
+#endif /* _APPLICATION_H_ */
+

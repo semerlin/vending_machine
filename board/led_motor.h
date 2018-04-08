@@ -18,4 +18,5 @@ void led_motor_turn_off(uint8_t num);
 END_DECLS
 
 
-#endif
+#endif /* _LED_MOTOR_H_ */
+

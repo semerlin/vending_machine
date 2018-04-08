@@ -8,6 +8,12 @@
 #ifndef _BOARD_H_
   #define _BOARD_H_
 
-extern void board_init(void);
+#include "types.h"
 
-#endif
+BEGIN_DECLS
+
+void board_init(void);
+
+END_DECLS
+
+#endif /* _BOARD_H_ */

@@ -10,7 +10,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "trace.h"
+#include "esp8266.h"
 
+#undef __TRACE_MODULE
+#define __TRACE_MODULE  "[init]"
 /**
  * @brief initialize system
  * @param pvParameters - task parameter
@@ -18,6 +21,20 @@
 static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\n");
+
+    if (!esp8266_init())
+    {
+        TRACE("start application failed\n");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    if (ESP_ERR_OK != http_init(void))
+    {
+        TRACE("start application failed\n");
+        vTaskDelete(NULL);
+        return;
+    }
     vTaskDelete(NULL);
 }
 

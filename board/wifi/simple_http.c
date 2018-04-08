@@ -8,6 +8,10 @@
 #include "FreeRTOS.h"
 #include "simple_http.h"
 #include "esp8266.h"
+#include "trace.h"
+
+#undef __TRACE_MODULE
+#define __TRACE_MODULE  "[http]"
 
 /* default timeout time */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
@@ -22,14 +26,16 @@ style=\"position:absolute;top:50%;left:60%\"></input></a></body></html>";
  */
 int http_init(void)
 {
+    TRACE("initialize http...\n");
     int err = ESP_ERR_OK;
     err = esp8266_setmode(AP, DEFAULT_TIMEOUT);
-    if (ESP_ERR_OK != err)
+    if (ESP_ERR_OK == err)
     {
-        return err;
+        err = esp8266_set_softap("vendor", "123456", 5, 
+                3, DEFAULT_TIMEOUT);
     }
 
-    return esp8266_set_softap("vendor", "123456", 5, 
-            3, DEFAULT_TIMEOUT);
+    TRACE("http status: %d\n", -err);
+    return err;
 }
 

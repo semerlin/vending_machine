@@ -57,3 +57,4 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
 END_DECLS
 
 #endif /* _ESP8266_H_ */
+

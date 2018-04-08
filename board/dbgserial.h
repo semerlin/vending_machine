@@ -8,8 +8,14 @@
 #ifndef _DBGSERIAL_H_
   #define _DBGSERIAL_H_
 
+#include "types.h"
+
+BEGIN_DECLS
+
 void dbg_serial_setup(void);
 void dbug_putchar(char data);
 void dbg_putstring(const char *string, uint32_t length);
 
-#endif
+END_DECLS
+
+#endif /* _DBGSERIAL_H_ */
