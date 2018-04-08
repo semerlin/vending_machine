@@ -317,6 +317,7 @@
           <state>F:\outsource\VendingMachine\platform\cm3</state>
           <state>F:\outsource\VendingMachine\platform\stm32f10x\inc</state>
           <state>F:\outsource\VendingMachine\board</state>
+          <state>F:\outsource\VendingMachine\board\wifi</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>

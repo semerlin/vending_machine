@@ -11,6 +11,7 @@
 #include "task.h"
 #include "trace.h"
 #include "esp8266.h"
+#include "simple_http.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -28,13 +29,15 @@ static void vInitSystem(void *pvParameters)
         vTaskDelete(NULL);
         return;
     }
-
-    if (ESP_ERR_OK != http_init(void))
+    
+    
+    if (ESP_ERR_OK != http_init())
     {
         TRACE("start application failed\n");
         vTaskDelete(NULL);
         return;
     }
+
     vTaskDelete(NULL);
 }
 

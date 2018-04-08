@@ -43,6 +43,7 @@ typedef enum
 
 /* esp8266 interface */
 bool esp8266_init(void);
+int esp8266_send_ok(const char *cmd, TickType_t time);
 void esp8266_send(const char *data, uint32_t length);
 int esp8266_setmode(esp8266_mode mode, TickType_t time);
 esp8266_mode esp8266_getmode(TickType_t time);

@@ -38,7 +38,7 @@ void dbg_serial_setup(void)
  * @brief put char
  * @param data - data to put
  */
-void dbug_putchar(char data)
+void dbg_putchar(char data)
 {
     USART_WriteData_Wait(USART1, data);
 }
@@ -52,7 +52,7 @@ void dbg_putstring(const char *string, uint32_t length)
 {
     const char *pNext = string;
     while(length--)
-        dbug_putchar(*pNext++);
+        dbg_putchar(*pNext++);
 }
 
 

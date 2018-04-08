@@ -14,6 +14,7 @@
 #include "serial.h"
 #include "global.h"
 #include "trace.h"
+#include "pinconfig.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[esp8266]"
@@ -64,7 +65,8 @@ static void vESP8266Response(void *pvParameters)
                 if (cnt >= ESP_MAX_MSG_SIZE_PER_LINE)
                 {
 
-                    /* TODO: error happened, process it like get '\r\n', this is not good, fix it later */
+                    /* TODO: error happened, process it like get '\r\n', 
+                       this is not good, fix it later */
                     line++;
                     pData = node.data[line];
                     continue;
@@ -101,12 +103,14 @@ static void vESP8266Response(void *pvParameters)
 bool esp8266_init(void)
 {
     TRACE("initialize esp8266...\n");
+    pin_reset("WIFI_EN");
     g_serial = serial_request(COM2);
     if (NULL == g_serial)
     {
         TRACE("initialize failed, can't open serial \'COM2\'\n");
         return FALSE;
     }
+    serial_open(g_serial);
 
     xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
@@ -118,9 +122,12 @@ bool esp8266_init(void)
     }
 
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
-                g_serial, ESP8266_PRIORITY, NULL);  
-
-    return 0;
+                g_serial, ESP8266_PRIORITY, NULL);
+    pin_set("WIFI_EN");
+    
+    esp8266_send_ok("AT+RST\r\n", 30 / portTICK_PERIOD_MS);
+    
+    return TRUE;
 }
 
 /**
@@ -129,7 +136,7 @@ bool esp8266_init(void)
  * @param time - timeout time
  * @return 0 means connect success, otherwise failed
  */
-static int esp8266_send_ok(const char *cmd, TickType_t time)
+int esp8266_send_ok(const char *cmd, TickType_t time)
 {
     assert_param(NULL != g_serial);
 
@@ -186,7 +193,7 @@ esp8266_mode esp8266_getmode(TickType_t time)
 
     at_node node;
     serial_putstring(g_serial, "AT+CWMODE_CUR?\r\n", 16);
-    esp8266_mode mode = UNKNOWM;
+    esp8266_mode mode = UNKNOWN;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
@@ -197,7 +204,7 @@ esp8266_mode esp8266_getmode(TickType_t time)
         }
     }
 
-    TRACE("send cmd: AT+CWMODE_CUR?, mode: %d\n", cmd, mode);
+    TRACE("send cmd: AT+CWMODE_CUR?, mode: %d\n", mode);
     return mode;
 }
 

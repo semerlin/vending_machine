@@ -14,7 +14,7 @@
 
 /* task priority definition */
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
-#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 1)
+#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 2)
 
 /* task stack definition */
 #define INIT_SYSTEM_STACK_SIZE       (configMINIMAL_STACK_SIZE)

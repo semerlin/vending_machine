@@ -13,7 +13,7 @@
 BEGIN_DECLS
 
 void dbg_serial_setup(void);
-void dbug_putchar(char data);
+void dbg_putchar(char data);
 void dbg_putstring(const char *string, uint32_t length);
 
 END_DECLS

@@ -343,7 +343,7 @@ void USART2_IRQHandler(void)
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     portCHAR cChar;
 
-    if(USART_IsFlagOn(USART2, USART_IT_TXE))
+    if(USART_IsFlagOn(USART2, USART_FLAG_TXE))
     {
         /* The interrupt was caused by the THR becoming empty.  Are there any
         more characters to transmit? */
@@ -359,7 +359,7 @@ void USART2_IRQHandler(void)
     }
 	
     /* The interrupt was caused by the RX not empty. */
-	if(USART_IsFlagOn(USART2, USART_IT_RXNE))
+	if(USART_IsFlagOn(USART2, USART_FLAG_RXNE))
 	{
 		cChar = USART_ReadData(USART2);
 		xQueueSendFromISR(xRxedChars[1], &cChar, &xHigherPriorityTaskWoken);
@@ -377,7 +377,7 @@ void USART3_IRQHandler(void)
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     portCHAR cChar;
 
-    if(USART_IsFlagOn(USART3, USART_IT_TXE))
+    if(USART_IsFlagOn(USART3, USART_FLAG_TXE))
     {
         /* The interrupt was caused by the THR becoming empty.  Are there any
         more characters to transmit? */
@@ -393,7 +393,7 @@ void USART3_IRQHandler(void)
     }
 	
     /* The interrupt was caused by the RX not empty. */
-	if(USART_IsFlagOn(USART1, USART_IT_RXNE))
+	if(USART_IsFlagOn(USART1, USART_FLAG_RXNE))
 	{
 		cChar = USART_ReadData(USART3);
 		xQueueSendFromISR(xRxedChars[2], &cChar, &xHigherPriorityTaskWoken);
