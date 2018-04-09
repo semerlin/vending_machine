@@ -14,11 +14,13 @@
 
 /* task priority definition */
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
-#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 2)
+#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 3)
+#define MOTOR_PRIORITY               (tskIDLE_PRIORITY + 2)
 
 /* task stack definition */
 #define INIT_SYSTEM_STACK_SIZE       (configMINIMAL_STACK_SIZE)
 #define ESP8266_STACK_SIZE           (configMINIMAL_STACK_SIZE)
+#define MOTOR_STACK_SIZE             (configMINIMAL_STACK_SIZE)
 
 
 /* interrupt priority */

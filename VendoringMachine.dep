@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>3295477980</fileChecksum>
+  <fileChecksum>1146246768</fileChecksum>
   <configuration>
     <name>Debug</name>
     <outputs>
@@ -229,6 +229,14 @@
       <file>$PROJ_DIR$\os\include\queue.h</file>
       <file>$PROJ_DIR$\os\include\semphr.h</file>
       <file>$PROJ_DIR$\os\include\StackMacros.h</file>
+      <file>$PROJ_DIR$\board\motorctl.c</file>
+      <file>$PROJ_DIR$\board\motorctl.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\motorctl.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\motorctl.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\stm32f10x_exti.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\stm32f10x_exti.pbi</file>
+      <file>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_exti.h</file>
+      <file>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_exti.c</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
@@ -289,7 +297,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 80 163 151 184 122 60 211 202 221 220 199 160 59 39 5 28 194 76 214 1 166 147 128 70 114 120 164 206 161 210 193 102 150 203 208 219</file>
+          <file> 80 151 184 122 60 211 221 59 161 193 163 199 160 39 5 28 210 76 214 1 166 147 128 70 114 120 164 206 202 194 220 102 150 203 208 219</file>
         </tool>
       </inputs>
     </file>
@@ -298,7 +306,7 @@
       <inputs>
         <tool>
           <name>ILINK</name>
-          <file> 51 121 86 108 24 98 19 9 109 37 100 72 38 47 71 53 133 135 127 58 3 21 41 77 64 123 84 90 88 40 83 50 67 103 111 129 11 45 136 87 48 119</file>
+          <file> 51 121 86 108 24 98 19 9 109 37 100 72 38 226 47 71 53 133 135 127 58 3 21 227 41 77 64 123 84 90 88 40 83 50 67 103 111 129 11 45 136 87 48 119</file>
         </tool>
       </inputs>
     </file>
@@ -432,7 +440,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 28 60 194 151 150 80 122 59 163 199 141 120 5 202 219 166 214 1 189 190 173 188 175 169 180 176 168 161 184 128 70 211 210 193 162 164 206 203 208</file>
+          <file> 28 60 194 151 150 80 122 59 199 141 120 5 163 202 219 166 214 1 189 190 173 188 175 169 180 176 168 161 184 128 70 211 210 193 162 164 206 203 208</file>
         </tool>
       </inputs>
     </file>
@@ -459,7 +467,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 211 60 175 160 80 122 28 163 190 168 199 221 5 188 180 220 162 166 120 164 206 59 184 128 70 150 203 208 151 189 173 194 169 176 161 210 202 193</file>
+          <file> 211 60 169 203 160 80 122 150 208 220 151 173 163 221 28 5 120 189 194 176 162 166 164 206 59 184 128 70 190 188 175 180 168 199 161 210 202 193</file>
         </tool>
       </inputs>
     </file>
@@ -513,7 +521,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 163 210 114 169 145 59 128 151 173 150 220 76 199 60 70 189 194 176 184 164 162 166 221 39 5 80 122 190 188 175 180 168 161 120 206 202 208 102 28 211 203 193</file>
+          <file> 161 199 210 114 180 163 145 59 128 188 150 220 76 60 70 190 175 168 164 162 166 221 184 39 5 80 122 151 189 173 194 169 176 120 206 202 208 102 28 211 203 193</file>
         </tool>
       </inputs>
     </file>
@@ -567,7 +575,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 163 60 180 59 128 188 184 190 175 168 206 162 161 70 151 189 173 194 169 176 199 120 202 208 153 166 28 5 80 122 150 164 210 152 211 203 193</file>
+          <file> 163 60 180 59 128 188 184 190 175 168 206 162 161 70 151 189 173 194 169 176 120 202 208 153 166 28 5 80 122 150 199 164 210 152 211 203 193</file>
         </tool>
       </inputs>
     </file>
@@ -1240,6 +1248,52 @@
         <tool>
           <name>BICOMP</name>
           <file> 59 214 184 70 60 28 222 128 39 211 194 193 102 199 200 80 5 122 150 120 163 203 20 164 206 151 161 210 202 208 219</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\motorctl.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 226</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 225</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 224 163 161 120 59 60 5 128 70 80 122 184 28 199 164 150 151 211 206 203 210 194 208 193 202 214 219 221 220 147 166</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 5 206 150 120 214 147 163 28 60 80 122 210 199 221 151 166 161 59 184 128 70 164 202 208 219 220 224 211 203 194 193</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_exti.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 227</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 228</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 229 163 161 120 59 60 5 128 70 80 122 184 28 181 162 150 151 189 190 173 188 194 175 169 180 176 168</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 163 5 180 60 188 190 175 168 162 161 80 122 59 151 189 173 194 169 176 181 28 120 184 128 70 150 229</file>
         </tool>
       </inputs>
     </file>

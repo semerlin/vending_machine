@@ -112,7 +112,8 @@ bool esp8266_init(void)
     }
     serial_open(g_serial);
 
-    xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
+    xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, 
+                              sizeof(at_node) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
         TRACE("initialize failed, can't create queue\'COM2\'\n");

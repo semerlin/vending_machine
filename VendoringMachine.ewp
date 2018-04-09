@@ -1982,6 +1982,12 @@
       <name>$PROJ_DIR$\board\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\motorctl.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\motorctl.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\pinconfig.c</name>
     </file>
     <file>
@@ -2139,6 +2145,9 @@
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_crc.h</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_exti.h</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_flash.h</name>
         </file>
         <file>
@@ -2185,6 +2194,9 @@
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_crc.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_exti.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_flash.c</name>
