@@ -62,7 +62,7 @@ static void hc595_senddata(uint16_t data)
         {
             pin_reset("LED_DATA");
         }
-        data << 1;
+        data <<= 1;
         sh_transition();
     }
     st_transition();
@@ -99,7 +99,7 @@ void led_motor_turn_off(uint8_t num)
     assert_param(num < LED_NUM);
     TRACE("turn off led: %d\n", num);
     led_status &= ~(1 << num);
-    hc595_sendstatus(led_status);
+    hc595_senddata(led_status);
 }
 
 
