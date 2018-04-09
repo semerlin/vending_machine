@@ -37,12 +37,25 @@ static void vTimerCallback(TimerHandle_t pxTimer)
 }
 
 /**
+ * @brief initialize net led
+ */
+void led_net_init(void)
+{
+    TRACE("initialize net led...");
+    for (int i = 0; i < LED_NUM; ++i)
+    {
+        pin_set(led_names[i]);
+    }
+}
+
+/**
  * @brief turn on led
  * @param num - led number(0-2)
  */
 void led_net_turn_on(uint8_t num)
 {
     assert_param(num < LED_NUM);
+    TRACE("turn on led: %d\n", num);
     pin_set(led_names[num]);
 }
 
@@ -53,6 +66,7 @@ void led_net_turn_on(uint8_t num)
 void led_net_turn_off(uint8_t num)
 {
     assert_param(num < LED_NUM);
+    TRACE("turn off led: %d\n", num);
     pin_reset(led_names[num]);
 }
 
@@ -64,6 +78,7 @@ void led_net_turn_off(uint8_t num)
 void led_net_flashing(uint8_t num, TickType_t interval)
 {
     assert_param(num < LED_NUM);
+    TRACE("flashing led: %d\n, interval: %d\n", num, interval);
     if (NULL != led_timers[num])
     {
         if (pdPASS != xTimerStart(led_timers[num], 0))
@@ -91,11 +106,12 @@ void led_net_flashing(uint8_t num, TickType_t interval)
 
 /**
  * @brief stop led flashing
- * num - led number(0-2)
+ * @param num - led number(0-2)
  */
 void led_net_stop_flashing(uint8_t num)
 {
     assert_param(num < LED_NUM);
     assert_param(NULL != led_timers[num]);
+    TRACE("stop flashing led: %d\n", num);
     xTimerStop(led_timers[num], 0);
 }

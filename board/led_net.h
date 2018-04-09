@@ -12,6 +12,7 @@
 
 BEGIN_DECLS
 
+void led_net_init(void);
 void led_net_turn_on(uint8_t num);
 void led_net_turn_off(uint8_t num);
 void led_net_flashing(uint8_t num, TickType_t interval);
