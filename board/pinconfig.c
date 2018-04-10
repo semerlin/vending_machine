@@ -9,6 +9,7 @@
 #include "pinconfig.h"
 #include "stm32f10x_cfg.h"
 
+
 /* pin configure structure */
 typedef struct 
 {
@@ -38,44 +39,44 @@ typedef struct
 /* pin arrays */
 PIN_CONFIG pins[] = 
 {
-    {"CON_L1", GPIOC, 9, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_L2", GPIOC, 8, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_L3", GPIOC, 7, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_L4", GPIOC, 6, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_R1", GPIOB, 12, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_R2", GPIOB, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_R3", GPIOB, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CON_R4", GPIOB, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"CH1_DET", GPIOA, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH2_DET", GPIOA, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH3_DET", GPIOA, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH4_DET", GPIOA, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH5_DET", GPIOA, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH6_DET", GPIOA, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH7_DET", GPIOC, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH8_DET", GPIOC, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH9_DET", GPIOB, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"CH10_DET", GPIOB, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
+    {"CON_L1", GPIOC, 9, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_L2", GPIOC, 8, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_L3", GPIOC, 7, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_L4", GPIOC, 6, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_R1", GPIOB, 12, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_R2", GPIOB, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_R3", GPIOB, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CON_R4", GPIOB, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"CH1_DET", GPIOA, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH2_DET", GPIOA, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH3_DET", GPIOA, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH4_DET", GPIOA, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH5_DET", GPIOA, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH6_DET", GPIOA, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH7_DET", GPIOC, 4, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH8_DET", GPIOC, 5, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH9_DET", GPIOB, 0, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"CH10_DET", GPIOB, 1, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
     {"MOT_DET", GPIOC, 3, GPIO_Speed_2MHz, GPIO_Mode_IPD, TRUE, Trigger_Rising},
-    {"DEBUG_TX", GPIOA, 9, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, 0},
-    {"DEBUG_RX", GPIOA, 10, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"WIFI_TX", GPIOA, 2, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, 0},
-    {"WIFI_RX", GPIOA, 3, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"WIFI_RST", GPIOC, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"WIFI_EN", GPIOC, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"GPRS_TX", GPIOB, 10, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, 0},
-    {"GPRS_RX", GPIOB, 11, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"GPRS_PWR", GPIOC, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"LED1", GPIOB, 3, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"LED2", GPIOB, 4, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"LED3", GPIOB, 5, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
+    {"DEBUG_TX", GPIOA, 9, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, Trigger_None},
+    {"DEBUG_RX", GPIOA, 10, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"WIFI_TX", GPIOA, 2, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, Trigger_None},
+    {"WIFI_RX", GPIOA, 3, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"WIFI_RST", GPIOC, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"WIFI_EN", GPIOC, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"GPRS_TX", GPIOB, 10, GPIO_Speed_50MHz, GPIO_Mode_AF_PP, FALSE, Trigger_None},
+    {"GPRS_RX", GPIOB, 11, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"GPRS_PWR", GPIOC, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"LED1", GPIOB, 3, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"LED2", GPIOB, 4, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"LED3", GPIOB, 5, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
     {"IR_IN", GPIOB, 2, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, TRUE, Trigger_Falling},
-    {"SWITCH1", GPIOB, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"SWITCH2", GPIOB, 8, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"MODE_SET", GPIOB, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, 0},
-    {"LED_DATA", GPIOC, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"LED_ST", GPIOC, 1, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
-    {"LED_SH", GPIOC, 2, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, 0},
+    {"SWITCH1", GPIOB, 7, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"SWITCH2", GPIOB, 8, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"MODE_SET", GPIOB, 6, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING, FALSE, Trigger_None},
+    {"LED_DATA", GPIOC, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"LED_ST", GPIOC, 1, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
+    {"LED_SH", GPIOC, 2, GPIO_Speed_2MHz, GPIO_Mode_Out_PP, FALSE, Trigger_None},
 };
 
 /* clock arrays */
@@ -144,7 +145,7 @@ void pin_init(void)
         GPIO_Setup(pins[i].group, &pins[i].config);
         if (pins[i].exti_enable)
         {
-            GPIO_ExtiConfig(pins[i].group, pins[i].config.pin);
+            GPIO_EXTIConfig(pins[i].group, pins[i].config.pin);
             EXTI_EnableLine_INT(pins[i].config.pin, TRUE);
             EXTI_SetTrigger(pins[i].config.pin, pins[i].edge);
         }

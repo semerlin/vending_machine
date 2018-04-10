@@ -60,7 +60,7 @@ uint8_t GPIO_ReadPin(GPIO_Group group, uint8_t pin);
 void GPIO_SetPin(GPIO_Group group, uint8_t pin);
 void GPIO_ResetPin(GPIO_Group group, uint8_t pin);
 void GPIO_LockPin(GPIO_Group group, uint8_t pin);
-void GPIO_EXTIConfig(GPOIO_Group group, uint8_t pin);
+void GPIO_EXTIConfig(GPIO_Group group, uint8_t pin);
 
 
 #endif /* _STM32F10X_GPIO_H_ */

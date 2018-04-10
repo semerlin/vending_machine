@@ -191,7 +191,7 @@ void GPIO_LockPin(GPIO_Group group, uint8_t pin)
  * @param group - port group
  * @param pin - pin number
  */
-void GPIO_EXTIConfig(GPOIO_Group group, uint8_t pin)
+void GPIO_EXTIConfig(GPIO_Group group, uint8_t pin)
 {
     assert_param(group < GPIO_Count);
     assert_param(pin < 16);
@@ -199,7 +199,7 @@ void GPIO_EXTIConfig(GPOIO_Group group, uint8_t pin)
     uint8_t pos = (pin >> 2);
     uint8_t offset = pin - (pos << 2);
     offset <<= 2;
-    AFIO->EXTIR[pos] = (((uint8_t)group) << offset);
+    AFIO->EXTICR[pos] = (((uint8_t)group) << offset);
 }
 
 

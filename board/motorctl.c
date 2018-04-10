@@ -43,7 +43,7 @@ void EXTI3_IRQHandler(void)
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     uint8_t pin_num = 0;
     get_pininfo("MOT_DET", NULL, &pin_num);
-    xSemaphoreGiveFromISR(xMotorWorking, &xHigerPriorityTaskWoken);
+    xSemaphoreGiveFromISR(xMotorWorking, &xHigherPriorityTaskWoken);
     /* check if there is any higher priority task need to wakeup */
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
     EXTI_ClrPending(pin_num);
@@ -73,7 +73,7 @@ static void vMotorCtl(void *pvParameters)
                 TRACE("motor working...\n");
                 xSemaphoreGive(xMotorWorking);
             }
-            esle
+            else
             {
                 TRACE("motor working timeout!\n");
             }
@@ -135,7 +135,7 @@ uint16_t motor_getstatus(void)
     uint16_t status = 0xffff;
     for (int i = 0; i < MOTOR_NUM; ++i)
     {
-        if (!is_pinset(motor_dect[num]))
+        if (!is_pinset(motor_dect[i]))
         {
             status &= ~(1 << i);
         }

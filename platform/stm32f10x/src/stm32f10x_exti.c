@@ -71,7 +71,7 @@ void EXTI_EnableLine_EVENT(uint8_t line, bool flag)
  * @param line - event line
  * @param edge - trigger mode
  */
-void EXTI_SetTrigger(uint8_t line, Triger_Edge edge)
+void EXTI_SetTrigger(uint8_t line, Trigger_Edge edge)
 {
     assert_param(line < MAX_LINE);
 
@@ -91,7 +91,7 @@ void EXTI_SetTrigger(uint8_t line, Triger_Edge edge)
  * @param line - event line
  * @param edge - trigger mode
  */
-void EXTI_ClrTrigger(uint8_t line, Triger_Edge edge)
+void EXTI_ClrTrigger(uint8_t line, Trigger_Edge edge)
 {
     assert_param(line < MAX_LINE);
 
@@ -126,7 +126,7 @@ bool EXTI_IsPending(uint8_t line)
 {
     assert_param(line < MAX_LINE);
 
-    return (0 != (EXTI->PR & (1 << line));
+    return (0 != (EXTI->PR & (1 << line)));
 }
 
 /**
