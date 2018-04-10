@@ -14,7 +14,8 @@ BEGIN_DECLS
 
 void motor_init(void);
 void motor_start(uint8_t num);
-void motor_stop(uint8_t num);
+bool motor_isopen(uint8_t num);
+uint16_t motor_getstatus(void);
 
 END_DECLS
 

@@ -25,6 +25,7 @@
 #define _MODULE_ADC
 #define _MODULE_SPI
 #define _MODULE_I2C
+#define _MODULE_EXTI
 
 /**********************************************************/
 #ifdef _MODULE_CRC
@@ -70,6 +71,11 @@
 #ifdef _MODULE_I2C
   #include "stm32f10x_i2c.h"
 #endif
+
+#ifdef _MODULE_EXTI
+  #include "stm32f10x_exti.h"
+#endif
+
 
 #endif /* _STM32F10x_CFG_H_ */
 
