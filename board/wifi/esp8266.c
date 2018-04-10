@@ -124,10 +124,8 @@ bool esp8266_init(void)
 
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
                 g_serial, ESP8266_PRIORITY, NULL);
-    pin_set("WIFI_EN");
-    
-    esp8266_send_ok("AT+RST\r\n", 30 / portTICK_PERIOD_MS);
-    
+    //pin_set("WIFI_EN");
+     
     return TRUE;
 }
 
@@ -154,7 +152,8 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: \"%s\", status: %d\n", cmd, -ret);
+    TRACE("send cmd: %s", cmd);
+    TRACE("status: %d\n", -ret);
     return ret;
 }
 
@@ -205,7 +204,8 @@ esp8266_mode esp8266_getmode(TickType_t time)
         }
     }
 
-    TRACE("send cmd: AT+CWMODE_CUR?, mode: %d\n", mode);
+    TRACE("send cmd: AT+CWMODE_CUR?\n");
+    TRACE("mode: %d\n", mode);
     return mode;
 }
 
@@ -243,7 +243,8 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    TRACE("send cmd: %s", str_mode);
+    TRACE("status: %d\n", -ret);
     return ret;
 }
 
@@ -288,7 +289,8 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    TRACE("send cmd: %s", str_mode);
+    TRACE("status: %d\n", -ret);
     return ret;
 }
 
@@ -326,7 +328,8 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: %s, status: %d\n", str_mode, -ret);
+    TRACE("send cmd: %s", str_mode);
+    TRACE("status: %d\n", -ret);
     return ret;
 }
 

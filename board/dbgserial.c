@@ -15,7 +15,7 @@
 #include "semphr.h"
 
 /* serial output mutex */
-//SemaphoreHandle_t xSerialMutex = NULL;
+SemaphoreHandle_t xSerialMutex = NULL;
 
 /**
  * @brief init debug serial port
@@ -31,7 +31,7 @@ void dbg_serial_setup(void)
     NVIC_Init(&nvicConfig);
     USART_Enable(USART1, TRUE);
     
-    //xSerialMutex = xSemaphoreCreateMutex();
+    xSerialMutex = xSemaphoreCreateMutex();
 }
 
 /**
@@ -79,9 +79,11 @@ void trace(const char *module, const char *fmt, ...)
     va_start(argptr, fmt);
     cnt = vsprintf(buf, fmt, argptr);
     va_end(argptr);
+    xSemaphoreTake(xSerialMutex, portMAX_DELAY);
     dbg_putstring(module, strlen(module));
     dbg_putchar(' ');
     dbg_putstring(buf, cnt);
+    xSemaphoreGive(xSerialMutex);
 }
 #endif
 

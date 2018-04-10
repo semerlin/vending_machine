@@ -13,7 +13,7 @@
 #include "trace.h"
 #include "pinconfig.h"
 #include "global.h"
-#include "stm32f10x_exti.h"
+#include "stm32f10x_cfg.h"
 
 
 #undef __TRACE_MODULE
@@ -25,7 +25,7 @@ const char *motor_left[] = {"CON_L1", "CON_L2", "CON_L3", "CON_L4"};
 const char *motor_right[] = {"CON_R1", "CON_R2", "CON_R3", "CON_R4"};
 const char *motor_dect[] = {"CH1_DET", "CH2_DET", "CH3_DET", "CH4_DET",
 "CH5_DET", "CH6_DET", "CH7_DET", "CH8_DET", "CH9_DET", "CH10_DET"};
-
+#define MOTOR_DET_PIN_NAME  "MOT_DET"
 
 /* motor control message queue */
 static xQueueHandle xMotorQueue = NULL;
@@ -42,7 +42,7 @@ void EXTI3_IRQHandler(void)
 {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     uint8_t pin_num = 0;
-    get_pininfo("MOT_DET", NULL, &pin_num);
+    get_pininfo(MOTOR_DET_PIN_NAME, NULL, &pin_num);
     xSemaphoreGiveFromISR(xMotorWorking, &xHigherPriorityTaskWoken);
     /* check if there is any higher priority task need to wakeup */
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
@@ -102,6 +102,16 @@ void motor_init(void)
     xMotorWorking = xSemaphoreCreateBinary();
     xTaskCreate(vMotorCtl, "MotorCtl", MOTOR_STACK_SIZE, 
                 NULL, MOTOR_PRIORITY, NULL);
+    
+    /* set pin interrupt */
+    uint8_t pin_group = 0, pin_num = 0;
+    get_pininfo(MOTOR_DET_PIN_NAME, &pin_group, &pin_num);
+    EXTI_ClrPending(pin_num);
+    GPIO_EXTIConfig((GPIO_Group)pin_group, pin_num);
+    EXTI_SetTrigger(pin_num, Trigger_Rising);
+    NVIC_Config nvicConfig = {EXTI3_IRQChannel, USART1_PRIORITY, 0, TRUE};
+    NVIC_Init(&nvicConfig);
+    EXTI_EnableLine_INT(pin_num, TRUE);
 }
 
 /**

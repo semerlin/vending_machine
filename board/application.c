@@ -12,9 +12,34 @@
 #include "trace.h"
 #include "esp8266.h"
 #include "simple_http.h"
+#include "motorctl.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
+
+/**
+ * @brief network initialize task
+ * @param pvParameter - task parameter
+ */
+static void vInitNetwork(void *pvParameters)
+{
+    TRACE("initialize network...\n");
+    esp8266_init();
+    esp8266_send_ok("AT+RST\r\n", 30 / portTICK_PERIOD_MS);
+    http_init();
+    
+    vTaskDelete(NULL);
+}
+
+/**
+ * @brief initialize network
+ */
+static __INLINE void network_init(void)
+{
+    xTaskCreate(vInitNetwork, "Init", INIT_NETWORK_STACK_SIZE, NULL, 
+                INIT_NETWORK_PRIORITY, NULL);
+}
+
 /**
  * @brief initialize system
  * @param pvParameters - task parameter
@@ -22,22 +47,9 @@
 static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\n");
-
-    if (!esp8266_init())
-    {
-        TRACE("start application failed\n");
-        vTaskDelete(NULL);
-        return;
-    }
+    network_init();
+    motor_init();
     
-    
-    if (ESP_ERR_OK != http_init())
-    {
-        TRACE("start application failed\n");
-        vTaskDelete(NULL);
-        return;
-    }
-
     vTaskDelete(NULL);
 }
 

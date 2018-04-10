@@ -199,7 +199,7 @@ void GPIO_EXTIConfig(GPIO_Group group, uint8_t pin)
     uint8_t pos = (pin >> 2);
     uint8_t offset = pin - (pos << 2);
     offset <<= 2;
-    AFIO->EXTICR[pos] = (((uint8_t)group) << offset);
+    AFIO->EXTICR[pos] |= (((uint32_t)group) << offset);
 }
 
 
