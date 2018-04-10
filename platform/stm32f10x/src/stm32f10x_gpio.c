@@ -21,14 +21,27 @@ typedef struct
 	volatile uint32_t LCKR;
 }GPIO_T;
 
+typedef struct 
+{
+	volatile uint32_t EVCR;
+	volatile uint32_t MAPR;
+	volatile uint32_t EXTICR[4];
+    uint32_t RESERVED0;
+	volatile uint32_t MAPR2;
+}AFIO_T;
+
+
+
 /* GPIO group array */
 static GPIO_T * const GPIOx[] = {(GPIO_T *)GPIOA_BASE, 
-                                      (GPIO_T *)GPIOB_BASE,
-                                      (GPIO_T *)GPIOC_BASE,
-                                      (GPIO_T *)GPIOD_BASE,
-                                      (GPIO_T *)GPIOE_BASE,
-                                      (GPIO_T *)GPIOF_BASE,
-                                      (GPIO_T *)GPIOG_BASE};
+                                 (GPIO_T *)GPIOB_BASE,
+                                 (GPIO_T *)GPIOC_BASE,
+                                 (GPIO_T *)GPIOD_BASE,
+                                 (GPIO_T *)GPIOE_BASE,
+                                 (GPIO_T *)GPIOF_BASE,
+                                 (GPIO_T *)GPIOG_BASE};
+
+static AFIO_T * const AFIO = (AFIO_T *)AFIO_BASE;
 
 
 
@@ -44,10 +57,10 @@ void GPIO_Setup(GPIO_Group group, const GPIO_Config *config)
     
     GPIO_T * const GpioX = GPIOx[group];
  
-    //config pin mode
+    /* config pin mode */
     if((config->mode & 0x10) == 0x10)
     {
-        //output
+        /* output */
         if(config->pin < 8)
         {
             GpioX->CRL &= ~(0x0f << (config->pin << 2));
@@ -64,7 +77,7 @@ void GPIO_Setup(GPIO_Group group, const GPIO_Config *config)
     }
     else
     {
-        //input
+        /* input */
         if(config->pin < 8)
         {
             GpioX->CRL &= ~(0x0f << (config->pin << 2));
@@ -173,20 +186,20 @@ void GPIO_LockPin(GPIO_Group group, uint8_t pin)
     tmp = GpioX->LCKR;
 }
 
+/**
+ * @brief config gpio exti source
+ * @param group - port group
+ * @param pin - pin number
+ */
+void GPIO_EXTIConfig(GPOIO_Group group, uint8_t pin)
+{
+    assert_param(group < GPIO_Count);
+    assert_param(pin < 16);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    uint8_t pos = (pin >> 2);
+    uint8_t offset = pin - (pos << 2);
+    offset <<= 2;
+    AFIO->EXTIR[pos] = (((uint8_t)group) << offset);
+}
 
 

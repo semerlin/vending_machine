@@ -53,7 +53,7 @@
 
 /* APB2 bus peripheral address */
 #define AFIO_BASE        (APB2PHERIP_BASE + 0x0000)
-#define EXIT_BASE        (APB2PHERIP_BASE + 0x0400)
+#define EXTI_BASE        (APB2PHERIP_BASE + 0x0400)
 #define GPIOA_BASE       (APB2PHERIP_BASE + 0x0800)
 #define GPIOB_BASE       (APB2PHERIP_BASE + 0x0C00)
 #define GPIOC_BASE       (APB2PHERIP_BASE + 0x1000)

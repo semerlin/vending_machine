@@ -8,36 +8,136 @@
 #include "stm32f10x_exti.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
+#include "assert.h"
 
-#if 0
-/* wwdg structure */
+/* exti structure */
 typedef struct 
 {
-    volatile uint16_t CR;
-	uint16_t RESERVE0;
-    volatile uint16_t CFR;
-	uint16_t RESERVE1;
-	volatile uint16_t SR;
-	uint16_t RESERVE2;
-}WWDG_T;
+    volatile uint32_t IMR;
+    volatile uint32_t EMR;
+    volatile uint32_t RTSR;
+    volatile uint32_t FTSR;
+    volatile uint32_t SWIER;
+    volatile uint32_t PR;
+}EXTI_T;
 
-WWDG_T *WWDG = (WWDG_T *)WWDG_BASE;
+EXTI_T *EXTI = (EXTI_T *)EXTI_BASE;
+
+#define MAX_LINE   (20)
 
 
-/* wwdg bit band */
-#define WWDG_OFFSET (WWDG_BASE - PERIPH_BASE)
-/* CR register bit band */
-#define CR_OFFSET (WWDG_OFFSET + 0x00)
-#define CR_WDGA (PERIPH_BB_BASE + CR_OFFSET * 32 + 0x07 * 4)
+/**
+ * @brief enable line interrupt
+ * @param line - interrupt line
+ * @param flag - TRUE: enable
+ *               FALSE: disable
+ */
+void EXTI_EnableLine_INT(uint8_t line, bool flag)
+{
+    assert_param(line < MAX_LINE);
 
-/* CFR register bit band */
-#define CFR_OFFSET (WWDG_OFFSET + 0x04)
-#define CFR_EWI (PERIPH_BB_BASE + CFR_OFFSET * 32 + 0x09 * 4)
+    if (flag)
+    {
+        EXTI->IMR |= (1 << line);
+    }
+    else
+    {
+        EXTI->IMR &= ~(1 << line);
+    }
+}
 
-/* SR register bit band */
-#define SR_OFFSET (WWDG_OFFSET + 0x08)
-#define SR_EWIF (PERIPH_BB_BASE + SR_OFFSET * 32 + 0x01 * 4)
+/**
+ * @brief enable line event 
+ * @param line - event line
+ * @param flag - TRUE: enable
+ *               FALSE: disable
+ */
+void EXTI_EnableLine_EVENT(uint8_t line, bool flag)
+{
+    assert_param(line < MAX_LINE);
 
-/* register operation bits definition */
-#define CFR_WDGTB   (0x03 << 7)
-#endif
+    if (flag)
+    {
+        EXTI->EMR |= (1 << line);
+    }
+    else
+    {
+        EXTI->EMR &= ~(1 << line);
+    }
+}
+
+/**
+ * @brief set line trigger mode
+ * @param line - event line
+ * @param edge - trigger mode
+ */
+void EXTI_SetTrigger(uint8_t line, Triger_Edge edge)
+{
+    assert_param(line < MAX_LINE);
+
+    if (0 != (edge & Trigger_Rising))
+    {
+        EXTI->RTSR |= (1 << line);
+    }
+
+    if (0 != (edge & Trigger_Falling))
+    {
+        EXTI->FTSR |= (1 << line);
+    }
+}
+
+/**
+ * @brief clear line trigger mode
+ * @param line - event line
+ * @param edge - trigger mode
+ */
+void EXTI_ClrTrigger(uint8_t line, Triger_Edge edge)
+{
+    assert_param(line < MAX_LINE);
+
+    if (0 != (edge & Trigger_Rising))
+    {
+        EXTI->RTSR &= ~(1 << line);
+    }
+
+    if (0 != (edge & Trigger_Falling))
+    {
+        EXTI->FTSR &= ~(1 << line);
+    }
+}
+
+/**
+ * @brief generate software interrupt event
+ * @param line - event line
+ */
+void EXTI_SetSoftInt(uint8_t line)
+{
+    assert_param(line < MAX_LINE);
+
+    EXTI->SWIER |= (1 << line);
+}
+
+/**
+ * @brief check interrupt pending status
+ * @param line - interrupt line
+ * @return pending status
+ */
+bool EXTI_IsPending(uint8_t line)
+{
+    assert_param(line < MAX_LINE);
+
+    return (0 != (EXTI->PR & (1 << line));
+}
+
+/**
+ * @brief clear interrupt pending status
+ * @param line - interrupt line
+ */
+void EXTI_ClrPending(uint8_t line)
+{
+    assert_param(line < MAX_LINE);
+
+    EXTI->PR |= (1 << line);
+}
+
+
