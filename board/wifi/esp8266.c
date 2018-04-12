@@ -28,7 +28,7 @@ serial *g_serial = NULL;
 static xQueueHandle xRecvQueue = NULL;
 #define ESP_MAX_NODE_NUM              (2)
 #define ESP_MAX_MSG_LINE              (4)
-#define ESP_MAX_MSG_SIZE_PER_LINE     (16)
+#define ESP_MAX_MSG_SIZE_PER_LINE     (20)
 
 typedef struct
 {
@@ -124,7 +124,7 @@ bool esp8266_init(void)
 
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
                 g_serial, ESP8266_PRIORITY, NULL);
-    //pin_set("WIFI_EN");
+    pin_set("WIFI_EN");
      
     return TRUE;
 }
@@ -145,7 +145,7 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        ret = strcmp((const char *)node.data[node.size - 1], "OK") ? -ESP_ERR_FAIL: ESP_ERR_OK;
+        ret = strcmp((const char *)node.data[node.size - 1], "OK\r\n") ? -ESP_ERR_FAIL: ESP_ERR_OK;
     }
     else
     {
@@ -272,14 +272,14 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t e
     assert_param(NULL != g_serial);
 
     at_node node;
-    char str_mode[128];
-    sprintf(str_mode, "AT+CWSAP_CUR=%s,%s,%d,%d\r\n", ssid, pwd, chl, ecn);
+    char str_mode[64];
+    sprintf(str_mode, "AT+CWSAP=\"%s\",\"%s\",%d,%d\r\n", ssid, pwd, chl, ecn);
     serial_putstring(g_serial, str_mode, strlen(str_mode));
     int ret = -ESP_ERR_FAIL;
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
+        if (0 == strcmp((char *)node.data[node.size - 1], "OK\r\n"))
         {
             ret = ESP_ERR_OK;
         }
@@ -314,11 +314,11 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
 
     if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
     {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
+        if (0 == strcmp((char *)node.data[node.size - 1], "OK\r\n"))
         {
             ret = ESP_ERR_OK;
         }
-        else if (0 == strcmp((char *)node.data[node.size - 1], "ALREADY CONNECTED"))
+        else if (0 == strcmp((char *)node.data[node.size - 1], "ALREADY CONNECTED\r\n"))
         {
             ret = -ESP_ERR_ALREADY;
         }

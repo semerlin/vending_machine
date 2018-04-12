@@ -29,10 +29,11 @@ int http_init(void)
     TRACE("initialize http...\n");
     int err = ESP_ERR_OK;
     err = esp8266_setmode(AP, DEFAULT_TIMEOUT);
+    err = esp8266_send_ok("AT+RST\r\n", 3000 / portTICK_PERIOD_MS);
     if (ESP_ERR_OK == err)
     {
-        err = esp8266_set_softap("vendor", "123456", 5, 
-                3, DEFAULT_TIMEOUT);
+        err = esp8266_set_softap("vendor", "0123456789", 11, 
+                0, DEFAULT_TIMEOUT);
     }
 
     TRACE("http status: %d\n", -err);

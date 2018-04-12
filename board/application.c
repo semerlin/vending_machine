@@ -25,7 +25,8 @@ static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\n");
     esp8266_init();
-    esp8266_send_ok("AT+RST\r\n", 30 / portTICK_PERIOD_MS);
+    //esp8266_send_ok("AT+RST\r\n", 3000 / portTICK_PERIOD_MS);
+    esp8266_send_ok("ATE0\r\n", 3000 / portTICK_PERIOD_MS);
     http_init();
     
     vTaskDelete(NULL);
@@ -48,7 +49,7 @@ static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\n");
     network_init();
-    motor_init();
+    //motor_init();
     
     vTaskDelete(NULL);
 }
