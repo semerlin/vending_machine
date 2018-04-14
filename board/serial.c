@@ -11,19 +11,18 @@
 #include "stm32f10x_cfg.h"
 #include "serial.h"
 #include "global.h"
+#include "dbgserial.h"
 
 /* serial handle definition */
 struct _serial_t
 {
     Port port;
     UBaseType_t rxBufLen;
-    UBaseType_t txBufLen;
     USART_Config config;
 };
 
 /* The queue used to hold received characters. */
 static xQueueHandle xRxedChars[Port_Count];
-static xQueueHandle xCharsForTx[Port_Count];
 
 #define SERIAL_NO_BLOCK						((portTickType)0)
 #define SERIAL_TX_BLOCK_TIME				(10 / portTICK_RATE_MS)
@@ -41,7 +40,6 @@ serial *serial_request(Port port)
         return NULL;
     }
     pserial->port = port;
-    pserial->txBufLen = 64;
     pserial->rxBufLen = 64;
     USART_StructInit(&pserial->config);
 
@@ -71,11 +69,8 @@ bool serial_open(serial *handle)
     /* Create the queues used to hold Rx/Tx characters */
 	xRxedChars[handle->port] = xQueueCreate(handle->rxBufLen, 
                                             (UBaseType_t)sizeof(portCHAR));
-	xCharsForTx[handle->port] = xQueueCreate(handle->txBufLen, 
-                                             (UBaseType_t)sizeof(portCHAR));
                                              
-    if((xRxedChars[handle->port] != NULL) && 
-       (xCharsForTx[handle->port] != NULL))
+    if (NULL != xRxedChars[handle->port])
     {
         switch(handle->port)
         {
@@ -138,7 +133,6 @@ void serial_close(serial *handle)
         break;
     }
     vQueueDelete(xRxedChars[pserial->port]);
-    vQueueDelete(xCharsForTx[pserial->port]);
     vPortFree(handle);
 }
 
@@ -235,7 +229,6 @@ void serial_set_bufferlength(serial *handle, UBaseType_t rxLen,
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
     pserial->rxBufLen = rxLen;
-    pserial->txBufLen = txLen;
 }
 
 /**
@@ -262,30 +255,23 @@ bool serial_putchar(serial *handle, char data,
 {
     assert_param(handle != NULL);
     serial *pserial = (serial *)handle;
-    //send char to queue
-	if(xQueueSend(xCharsForTx[pserial->port], &data, xBlockTime ) == pdPASS)
-	{
-        /* enable txe interrupt, so when transmit data register is empty,
-           an interrupt occured */
-        switch(pserial->port)
-        {
-        case COM1:
-            USART_EnableInt(USART1, USART_IT_TXE, TRUE);
-            break;
-        case COM2:
-            USART_EnableInt(USART2, USART_IT_TXE, TRUE);
-            break;
-        case COM3:
-            USART_EnableInt(USART3, USART_IT_TXE, TRUE);
-            break;
-        default:
-            return FALSE;
-            break;
-        }
-        return TRUE;
-	}
-	else
-		return FALSE;
+    
+    switch(pserial->port)
+    {
+    case COM1:
+        USART_WriteData_Wait(USART2, data);
+        break;
+    case COM2:
+        USART_WriteData_Wait(USART2, data);
+        break;
+    case COM3:
+        USART_WriteData_Wait(USART2, data);
+        break;
+    default:
+        return FALSE;
+        break;
+    }
+    return TRUE;
 }
 
 /**
@@ -308,21 +294,6 @@ void USART1_IRQHandler(void)
 {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     portCHAR cChar;
-
-    if(USART_IsFlagOn(USART1, USART_FLAG_TXE))
-    {
-        /* The interrupt was caused by the THR becoming empty.  Are there any
-        more characters to transmit? */
-        if(xQueueReceiveFromISR(xCharsForTx[0], &cChar, 
-                                &xHigherPriorityTaskWoken) == pdTRUE)
-		{
-			/* A character was retrieved from the queue so can be sent to the
-			THR now. */
-			USART_WriteData(USART1, cChar);
-		}
-		else
-			USART_EnableInt(USART1, USART_IT_TXE, FALSE);
-    }
 	
     /* The interrupt was caused by the RX not empty. */
 	if(USART_IsFlagOn( USART1, USART_FLAG_RXNE))
@@ -343,21 +314,6 @@ void USART2_IRQHandler(void)
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     portCHAR cChar;
 
-    if(USART_IsFlagOn(USART2, USART_FLAG_TXE))
-    {
-        /* The interrupt was caused by the THR becoming empty.  Are there any
-        more characters to transmit? */
-        if(xQueueReceiveFromISR(xCharsForTx[1], &cChar, 
-                                &xHigherPriorityTaskWoken) == pdTRUE)
-		{
-			/* A character was retrieved from the queue so can be sent to the
-			THR now. */
-			USART_WriteData(USART2, cChar);
-		}
-		else
-			USART_EnableInt(USART2, USART_IT_TXE, FALSE);
-    }
-	
     /* The interrupt was caused by the RX not empty. */
 	if(USART_IsFlagOn(USART2, USART_FLAG_RXNE))
 	{
@@ -376,21 +332,6 @@ void USART3_IRQHandler(void)
 {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     portCHAR cChar;
-
-    if(USART_IsFlagOn(USART3, USART_FLAG_TXE))
-    {
-        /* The interrupt was caused by the THR becoming empty.  Are there any
-        more characters to transmit? */
-        if(xQueueReceiveFromISR(xCharsForTx[2], &cChar, 
-                                &xHigherPriorityTaskWoken) == pdTRUE)
-		{
-			/* A character was retrieved from the queue so can be sent to the
-			THR now. */
-			USART_WriteData(USART3, cChar);
-		}
-		else
-			USART_EnableInt(USART3, USART_IT_TXE, FALSE);
-    }
 	
     /* The interrupt was caused by the RX not empty. */
 	if(USART_IsFlagOn(USART1, USART_FLAG_RXNE))
