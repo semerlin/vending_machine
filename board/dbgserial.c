@@ -24,11 +24,11 @@ void dbg_serial_setup(void)
 {
     USART_Config config;
     USART_StructInit(&config);
-    
-    NVIC_Config nvicConfig = {USART1_IRQChannel, USART1_PRIORITY, 0, TRUE};
+
+    config.rxEnable = FALSE;
     USART_Setup(USART1, &config);
-    USART_EnableInt(USART1, USART_IT_RXNE, TRUE);
-    NVIC_Init(&nvicConfig);
+    USART_EnableInt(USART1, USART_IT_RXNE, FALSE);
+    USART_EnableInt(USART1, USART_IT_TXE, FALSE);
     USART_Enable(USART1, TRUE);
     
     xSerialMutex = xSemaphoreCreateMutex();
@@ -73,7 +73,7 @@ void assert_failed(const char *file, const char *line, const char *exp)
 #ifdef __ENABLE_TRACE
 void trace(const char *module, const char *fmt, ...)
 {
-    char buf[64];
+    char buf[80];
     va_list argptr;
     int cnt;
     va_start(argptr, fmt);
