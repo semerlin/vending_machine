@@ -25,19 +25,77 @@
 serial *g_serial = NULL;
 
 /* recive queue */
-static xQueueHandle xRecvQueue = NULL;
-#define ESP_MAX_NODE_NUM              (2)
-#define ESP_MAX_MSG_LINE              (4)
-#define ESP_MAX_MSG_SIZE_PER_LINE     (20)
+static xQueueHandle xStatusQueue = NULL;
+static xQueueHandle xTcpQueue = NULL;
+static xQueueHandle xAtQueue = NULL;
+
+#define ESP_MAX_NODE_NUM              (4)
+#define ESP_MAX_MSG_SIZE_PER_LINE     (64)
 
 typedef struct
 {
     uint8_t size;
-    uint8_t data[ESP_MAX_MSG_LINE][ESP_MAX_MSG_SIZE_PER_LINE];
+    uint8_t data[ESP_MAX_MSG_SIZE_PER_LINE];
 }at_node;
 
 /* timeout time(ms) */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
+
+/**
+ * @brief send at command
+ * @param cmd - at command
+ * @param length - command length
+ */
+static void send_at_cmd(const char *cmd, uint32_t length)
+{
+    xQueueReset(xStatusQueue);
+    xQueueReset(xAtQueue);
+    TRACE("send: %s", cmd);
+    serial_putstring(g_serial, cmd, length);
+}
+
+/**
+ * @brief process line data
+ * @param data - line data
+ */
+static void process_line(const at_node *node)
+{
+    
+    uint8_t status;
+    if (node->size > 0)
+    {
+        if (0 == strcmp((const char *)node->data, "OK"))
+        {
+            /* at command status */
+            status = ESP_ERR_OK;
+            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+        }
+        else if (0 == strcmp((const char *)node->data, "FAIL"))
+        {
+            /* at command status */
+            TRACE("data = FAIL\n");
+            status = ESP_ERR_FAIL;
+            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+        }
+        else if (0 == strcmp((const char *)node->data, "ERROR"))
+        {
+            /* at command status */
+            status = ESP_ERR_FAIL;
+            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+        }
+        else if (0 == strcmp((const char *)node->data, "ALREADY CONNECTED"))
+        {
+            /* at command status */
+            status = ESP_ERR_ALREADY;
+            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+        }
+        else
+        {
+            /* at command parameter */
+            xQueueSend(xAtQueue, node->data, portMAX_DELAY);
+        }
+    }
+}
 
 /**
  * @brief pms5003 data process task
@@ -48,50 +106,61 @@ static void vESP8266Response(void *pvParameters)
     const TickType_t xDelay = 3 / portTICK_PERIOD_MS;
     serial *pserial = pvParameters;
     at_node node;
-    uint8_t line = 0;
-    uint8_t *pData = node.data[line];
+    node.size = 0;
+    uint8_t *pData = node.data;
     char data;
-    uint8_t cnt = 0;
+    /* skip startup data */
     for (;;)
     {
         if (serial_getchar(pserial, &data, portMAX_DELAY))
         {
             *pData++ = data;
-            cnt++;
-            while (serial_getchar(pserial, &data, xDelay))
+            node.size ++; 
+#if 0
+            if (0)
+            //if ('+' == data)
             {
-                *pData++ = data;
-                cnt++;
-                if (cnt >= ESP_MAX_MSG_SIZE_PER_LINE)
+                /* tcp data */
+                while (serial_getchar(pserial, &data, xDelay))
                 {
+                    *pData++ = data;
+                    node.size ++;
+                    assert_param(node.size < ESP_MAX_MSG_SIZE_PER_LINE);
 
-                    /* TODO: error happened, process it like get '\r\n', 
-                       this is not good, fix it later */
-                    line++;
-                    pData = node.data[line];
-                    continue;
-                }
-
-                *pData = 0x00;
-                if (0 == strcmp((const char *)(pData - 2), "\r\n"))
-                {
-                    /* get line data */
-                    line++;
-                    if (0 == strcmp((const char *)(pData - 4), "OK\r\n"))
+                    *pData = 0x00;
+                    if (0 == strcmp((const char *)(pData - 2), "\r\n"))
                     {
-                        /* get done */
-                        break;
+                        /* get line data */
+                        if (0 == strcmp((const char *)(pData - 4), "OK\r\n"))
+                        {
+                            /* get done */
+                            break;
+                        }
+                        pData = node.data;
                     }
-                    pData = node.data[line];
                 }
             }
+            else
+#endif
+            {
+                /* at command data */
+                while (serial_getchar(pserial, &data, xDelay))
+                {
+                    *pData++ = data;
+                    node.size ++;
+                    assert_param(node.size < ESP_MAX_MSG_SIZE_PER_LINE);
 
-            /* get done, process data */
-            node.size = line;
-            xQueueSend(xRecvQueue, &node, portMAX_DELAY);
-            pData = node.data[0];
-            cnt = 0;
-            line = 0;
+                    if (0 == strncmp((const char *)(pData - 2), "\r\n", 2))
+                    {
+                        /* get line data */
+                        node.data[node.size - 2] = '\0';
+                        node.size -= 2;
+                        process_line(&node);
+                        pData = node.data;
+                        node.size = 0;
+                    }
+                }
+            }
         }
     }
 }
@@ -104,6 +173,10 @@ bool esp8266_init(void)
 {
     TRACE("initialize esp8266...\n");
     pin_reset("WIFI_EN");
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    pin_set("WIFI_EN");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
     g_serial = serial_request(COM2);
     if (NULL == g_serial)
     {
@@ -112,19 +185,19 @@ bool esp8266_init(void)
     }
     serial_open(g_serial);
 
-    xRecvQueue = xQueueCreate(ESP_MAX_NODE_NUM, 
-                              sizeof(at_node) / sizeof(uint8_t));
-    if (NULL == xRecvQueue)
+    xStatusQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_NODE_NUM);
+    xAtQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
+    xTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
+    if ((NULL == xStatusQueue) || (NULL == xAtQueue) || (NULL == xTcpQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\n");
         serial_release(g_serial);
         g_serial = NULL;
         return FALSE;
     }
-
+    
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
-                g_serial, ESP8266_PRIORITY, NULL);
-    pin_set("WIFI_EN");
+            g_serial, ESP8266_PRIORITY, NULL);
      
     return TRUE;
 }
@@ -139,21 +212,23 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
 {
     assert_param(NULL != g_serial);
 
-    at_node node;
-    serial_putstring(g_serial, cmd, strlen(cmd));
+    uint8_t status;
+    send_at_cmd(cmd, strlen(cmd));
     int ret = ESP_ERR_OK;
 
-    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
-        ret = strcmp((const char *)node.data[node.size - 1], "OK\r\n") ? -ESP_ERR_FAIL: ESP_ERR_OK;
+        ret = -status;
     }
     else
     {
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: %s", cmd);
-    TRACE("status: %d\n", -ret);
+    if (0 != ret)
+    {
+        TRACE("status: %d\n", -ret);
+    }
     return ret;
 }
 
@@ -191,20 +266,21 @@ esp8266_mode esp8266_getmode(TickType_t time)
 {
     assert_param(NULL != g_serial);
 
-    at_node node;
-    serial_putstring(g_serial, "AT+CWMODE_CUR?\r\n", 16);
+    uint8_t status;
+    uint8_t buf[ESP_MAX_MSG_SIZE_PER_LINE];
+    buf[0] = UNKNOWN + '0';
+    send_at_cmd("AT+CWMODE_CUR?\r\n", 16);
     esp8266_mode mode = UNKNOWN;
 
-    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
+        if (ESP_ERR_OK == status)
         {
-            uint8_t len = strlen((char const *)node.data[0]);
-            mode = (esp8266_mode)(node.data[0][len - 1] - '0');
+            xQueueReceive(xAtQueue, buf, 0);
+            mode = (esp8266_mode)(buf[0] - '0');
         }
     }
 
-    TRACE("send cmd: AT+CWMODE_CUR?\n");
     TRACE("mode: %d\n", mode);
     return mode;
 }
@@ -220,22 +296,20 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
 {
     assert_param(NULL != g_serial);
 
-    at_node node;
     char str_mode[64];
-    sprintf(str_mode, "AT+CWJAP_DEF=%s,%s\r\n", ssid, pwd);
-    serial_putstring(g_serial, str_mode, strlen(str_mode));
+    sprintf(str_mode, "AT+CWJAP_CUR=%s,%s\r\n", ssid, pwd);
+    send_at_cmd(str_mode, strlen(str_mode));
     int ret = -ESP_ERR_FAIL;
 
-    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
+    uint8_t status;
+    uint8_t buf[ESP_MAX_MSG_SIZE_PER_LINE];
+    buf[0] = ESP_ERR_FAIL + '0';
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK"))
+        if (ESP_ERR_OK != status)
         {
-            ret = ESP_ERR_OK;
-        }
-        else if (0 == strcmp((char *)node.data[node.size - 1], "FAIL"))
-        {
-            uint8_t len = strlen((char const *)node.data[0]);
-            ret = -(node.data[0][len - 1] - '0');
+            xQueueReceive(xAtQueue, buf, 0);
+            ret = -(buf[0] - '0');
         }
     }
     else
@@ -243,8 +317,10 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
         ret = -ESP_ERR_TIMEOUT;
     }
 
-    TRACE("send cmd: %s", str_mode);
-    TRACE("status: %d\n", -ret);
+    if (0 != ret)
+    {
+        TRACE("status: %d\n", -ret);
+    }
     return ret;
 }
 
@@ -267,31 +343,36 @@ void esp8266_disconnect_ap(TickType_t time)
  * @param ecn - password encode type
  * @return 0 means connect success, otherwise failed
  */
-int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, uint8_t ecn, TickType_t time)
+int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, 
+                       esp8266_ecn ecn, TickType_t time)
 {
     assert_param(NULL != g_serial);
 
-    at_node node;
     char str_mode[64];
-    sprintf(str_mode, "AT+CWSAP=\"%s\",\"%s\",%d,%d\r\n", ssid, pwd, chl, ecn);
-    serial_putstring(g_serial, str_mode, strlen(str_mode));
-    int ret = -ESP_ERR_FAIL;
+    sprintf(str_mode, "AT+CWSAP_CUR=\"%s\",\"%s\",%d,%d\r\n", 
+            ssid, pwd, chl, ecn);
+    
+    return esp8266_send_ok(str_mode, time);
+}
 
-    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
-    {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK\r\n"))
-        {
-            ret = ESP_ERR_OK;
-        }
-    }
-    else
-    {
-        ret = -ESP_ERR_TIMEOUT;
-    }
+/**
+ * @brief set software ap address
+ * @param ssid - ap ssid
+ * @param pwd - ap password
+ * @param chl - ap channel
+ * @param ecn - password encode type
+ * @return 0 means connect success, otherwise failed
+ */
+int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask,
+                       TickType_t time)
+{
+    assert_param(NULL != g_serial);
 
-    TRACE("send cmd: %s", str_mode);
-    TRACE("status: %d\n", -ret);
-    return ret;
+    char str_mode[64];
+    sprintf(str_mode, "AT+CIPAP_CUR=\"%s\",\"%s\",\"%s\"\r\n", 
+            ip, gateway, netmask);
+    
+    return esp8266_send_ok(str_mode, time);
 }
 
 /**
@@ -306,47 +387,56 @@ int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
 {
     assert_param(NULL != g_serial);
 
-    at_node node;
     char str_mode[128];
     sprintf(str_mode, "AT+CIPSTART=%d,%s,%d\r\n", mode, ip, port);
-    serial_putstring(g_serial, str_mode, strlen(str_mode));
-    int ret = -ESP_ERR_FAIL;
-
-    if (pdPASS == xQueueReceive(xRecvQueue, &node, time))
-    {
-        if (0 == strcmp((char *)node.data[node.size - 1], "OK\r\n"))
-        {
-            ret = ESP_ERR_OK;
-        }
-        else if (0 == strcmp((char *)node.data[node.size - 1], "ALREADY CONNECTED\r\n"))
-        {
-            ret = -ESP_ERR_ALREADY;
-        }
-    }
-    else
-    {
-        ret = -ESP_ERR_TIMEOUT;
-    }
-
-    TRACE("send cmd: %s", str_mode);
-    TRACE("status: %d\n", -ret);
-    return ret;
+    
+    return esp8266_send_ok(str_mode, time);
 }
 
 /**
  * @brief set esp8266 transport mode
  * @param mode - transport mode
  * @param time - timeout time
+ * @return error code
  */
 int esp8266_set_transmode(esp8266_transmode mode, TickType_t time)
 {
     assert_param(NULL != g_serial);
     
-    char str_mode[32];
+    char str_mode[16];
     sprintf(str_mode, "AT+CIPMODE=%d\r\n", mode);
 
     return esp8266_send_ok(str_mode, time);
 }
 
+/**
+ * @brief create server
+ * @param port - listen port
+ * @param time - timeout time
+ * @return error code
+ */
+int esp8266_listen(uint16_t port, TickType_t time)
+{
+    assert_param(NULL != g_serial);
+    
+    char str_mode[24];
+    sprintf(str_mode, "AT+CIPSERVER=1,%d\r\n", port);
+
+    return esp8266_send_ok(str_mode, time);
+}
+
+/* @brief close server
+ * @param time - timeout time
+ * @return error code
+ */
+int esp8266_close(uint16_t port, TickType_t time)
+{
+    assert_param(NULL != g_serial);
+    
+    char str_mode[24];
+    sprintf(str_mode, "AT+CIPSERVER=0,%d\r\n", port);
+
+    return esp8266_send_ok(str_mode, time);
+}
 
 

@@ -17,6 +17,15 @@
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
 
+
+#define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
+
+/* ap configueation */
+#define AP_NAME              "vendor"
+#define AP_PWD               "88888888"
+#define AP_CHL               11
+#define AP_ENC               WPA2_PSK
+
 /**
  * @brief network initialize task
  * @param pvParameter - task parameter
@@ -25,8 +34,12 @@ static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\n");
     esp8266_init();
-    //esp8266_send_ok("AT+RST\r\n", 3000 / portTICK_PERIOD_MS);
-    esp8266_send_ok("ATE0\r\n", 3000 / portTICK_PERIOD_MS);
+    esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT);
+    esp8266_setmode(BOTH, DEFAULT_TIMEOUT);
+    /* need restart after set esp8266 mode */
+    //esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT);
+    esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, AP_ENC, DEFAULT_TIMEOUT);
+
     http_init();
     
     vTaskDelete(NULL);
