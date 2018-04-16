@@ -15,9 +15,12 @@
 #include "global.h"
 #include "trace.h"
 #include "pinconfig.h"
+#include "dbgserial.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[esp8266]"
+
+//#define _PRINT_DETAIL 
 
 /* esp8266 work in block mode */
 
@@ -28,9 +31,12 @@ serial *g_serial = NULL;
 static xQueueHandle xStatusQueue = NULL;
 static xQueueHandle xTcpQueue = NULL;
 static xQueueHandle xAtQueue = NULL;
+static xQueueHandle xConnectQueue = NULL;
+static xQueueHandle xDisconnectQueue = NULL;
 
 #define ESP_MAX_NODE_NUM              (4)
 #define ESP_MAX_MSG_SIZE_PER_LINE     (64)
+#define ESP_MAX_CONNECT_NUM           (5)
 
 typedef struct
 {
@@ -40,6 +46,11 @@ typedef struct
 
 /* timeout time(ms) */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
+
+static uint16_t tcp_id = 0;
+
+static bool in_tcp_state = FALSE;
+static bool in_tcp_data = FALSE;
 
 /**
  * @brief send at command
@@ -55,50 +66,133 @@ static void send_at_cmd(const char *cmd, uint32_t length)
 }
 
 /**
+ * @brief check if data is client connected
+ * @param data - data to check
+ * @return connected or not
+ */
+static bool is_client_connected(const char *data, uint16_t *id)
+{
+    const char *pdata = data;
+    while (*pdata != '\0')
+    {
+        if (',' == *pdata)
+        {
+            if (0 == strcmp(pdata + 1, "CONNECT"))
+            {
+                *id = *(pdata - 1) - '0';
+                return TRUE;
+            }
+        }
+        
+        pdata ++;
+    }
+    
+    return FALSE;
+}
+
+/**
+ * @brief check if data is client disconnected
+ * @param data - data to check
+ * @return connected or not
+ */
+static bool is_client_disconnected(const char *data, uint16_t *id)
+{
+    const char *pdata = data;
+    while (*pdata != '\0')
+    {
+        if (',' == *pdata)
+        {
+            if (0 == strcmp(pdata + 1, "CLOSE"))
+            {
+                *id = *(pdata - 1) - '0';
+                return TRUE;
+            }
+        }
+        
+        pdata ++;
+    }
+    
+    return FALSE;
+}
+
+/**
  * @brief process line data
  * @param data - line data
  */
 static void process_line(const at_node *node)
 {
-    
     uint8_t status;
+    uint16_t connect_id;
+    uint16_t disconnect_id;
     if (node->size > 0)
     {
         if (0 == strcmp((const char *)node->data, "OK"))
         {
             /* at command status */
             status = ESP_ERR_OK;
-            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+            xQueueSend(xStatusQueue, &status, 0);
         }
         else if (0 == strcmp((const char *)node->data, "FAIL"))
         {
             /* at command status */
-            TRACE("data = FAIL\n");
             status = ESP_ERR_FAIL;
-            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+            xQueueSend(xStatusQueue, &status, 0);
         }
         else if (0 == strcmp((const char *)node->data, "ERROR"))
         {
             /* at command status */
             status = ESP_ERR_FAIL;
-            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+            xQueueSend(xStatusQueue, &status, 0);
         }
         else if (0 == strcmp((const char *)node->data, "ALREADY CONNECTED"))
         {
             /* at command status */
             status = ESP_ERR_ALREADY;
-            xQueueSend(xStatusQueue, &status, portMAX_DELAY);
+            xQueueSend(xStatusQueue, &status, 0);
+        }
+        else if (0 == strcmp((const char *)node->data, "SEND OK"))
+        {
+            /* at command status */
+            status = ESP_ERR_OK;
+            xQueueSend(xStatusQueue, &status, 0);
+        }
+        else if (is_client_connected((const char *)node->data, &connect_id))
+        {
+            xQueueSend(xConnectQueue, &connect_id, 0);
+        }
+        else if (is_client_disconnected((const char *)node->data, &disconnect_id))
+        {
+            xQueueSend(xConnectQueue, &connect_id, 0);
         }
         else
         {
             /* at command parameter */
-            xQueueSend(xAtQueue, node->data, portMAX_DELAY);
+            xQueueSend(xAtQueue, node->data, 0);
         }
     }
 }
 
 /**
- * @brief pms5003 data process task
+ * @brief calculate tcp length
+ * @param data - data to process
+ * @return tcp length
+ */
+static uint16_t calc_tcp_id(const char *data)
+{
+    uint16_t val = 0;
+    const char *pdata = data + 1;
+    while (',' != *pdata)
+    {
+        val *= 10;
+        val += (*pdata - '0');
+        pdata ++;
+    }
+    
+    return val;
+}
+
+/**
+ * @brief esp8266 data process task
  * @param serial handle
  */
 static void vESP8266Response(void *pvParameters)
@@ -109,47 +203,44 @@ static void vESP8266Response(void *pvParameters)
     node.size = 0;
     uint8_t *pData = node.data;
     char data;
-    /* skip startup data */
     for (;;)
     {
         if (serial_getchar(pserial, &data, portMAX_DELAY))
         {
+            /* init state */
+            pData = node.data;
+            node.size = 0;
+            in_tcp_data = FALSE;
+            in_tcp_state = FALSE;
+            
+#ifdef _PRINT_DETAIL
+            dbg_putchar(data);
+#endif
+            
+            /* receive data */
             *pData++ = data;
             node.size ++; 
-#if 0
-            if (0)
-            //if ('+' == data)
+            while (serial_getchar(pserial, &data, xDelay))
             {
-                /* tcp data */
-                while (serial_getchar(pserial, &data, xDelay))
-                {
-                    *pData++ = data;
-                    node.size ++;
-                    assert_param(node.size < ESP_MAX_MSG_SIZE_PER_LINE);
-
-                    *pData = 0x00;
-                    if (0 == strcmp((const char *)(pData - 2), "\r\n"))
-                    {
-                        /* get line data */
-                        if (0 == strcmp((const char *)(pData - 4), "OK\r\n"))
-                        {
-                            /* get done */
-                            break;
-                        }
-                        pData = node.data;
-                    }
-                }
-            }
-            else
+#ifdef _PRINT_DETAIL
+                dbg_putchar(data);
 #endif
-            {
-                /* at command data */
-                while (serial_getchar(pserial, &data, xDelay))
+                *pData++ = data;
+                node.size ++;
+                if (!in_tcp_state)
                 {
-                    *pData++ = data;
-                    node.size ++;
-                    assert_param(node.size < ESP_MAX_MSG_SIZE_PER_LINE);
-
+                    if (node.size >= 4)
+                    {
+                        if (0 == strncmp((const char *)node.data, "+IPD", 4))
+                        {
+                            /* get tcp data */
+                            in_tcp_state = TRUE;
+                            pData = node.data;
+                            node.size = 0;
+                            continue;
+                        }
+                    }
+                    
                     if (0 == strncmp((const char *)(pData - 2), "\r\n", 2))
                     {
                         /* get line data */
@@ -158,6 +249,23 @@ static void vESP8266Response(void *pvParameters)
                         process_line(&node);
                         pData = node.data;
                         node.size = 0;
+                    }
+                }
+                else
+                {
+                    if (!in_tcp_data)
+                    {
+                        /* wait : */
+                        if (':' == data)
+                        {
+                            tcp_id = calc_tcp_id((const char *)node.data);
+                            in_tcp_data = TRUE;
+                        }
+                    }
+                    else
+                    {
+                        /*receive tcp data */
+                        xQueueSend(xTcpQueue, &data, 0);
                     }
                 }
             }
@@ -187,7 +295,8 @@ bool esp8266_init(void)
 
     xStatusQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_NODE_NUM);
     xAtQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
-    xTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM, sizeof(at_node) / sizeof(uint8_t));
+    xTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
+    xConnectQueue = xQueueCreate(ESP_MAX_CONNECT_NUM, 1);
     if ((NULL == xStatusQueue) || (NULL == xAtQueue) || (NULL == xTcpQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\n");
@@ -237,9 +346,26 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
  * @param data - data
  * @param length - data length
  */
-void esp8266_send(const char *data, uint32_t length)
+int esp8266_send(const char *data, uint32_t length, TickType_t time)
 {
+    uint8_t status;
     serial_putstring(g_serial, data, length);
+    int ret = ESP_ERR_OK;
+
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
+    {
+        ret = -status;
+    }
+    else
+    {
+        ret = -ESP_ERR_TIMEOUT;
+    }
+
+    if (0 != ret)
+    {
+        TRACE("status: %d\n", -ret);
+    }
+    return ret;
 }
 
 /**
@@ -425,7 +551,8 @@ int esp8266_listen(uint16_t port, TickType_t time)
     return esp8266_send_ok(str_mode, time);
 }
 
-/* @brief close server
+/**
+ * @brief close server
  * @param time - timeout time
  * @return error code
  */
@@ -439,4 +566,94 @@ int esp8266_close(uint16_t port, TickType_t time)
     return esp8266_send_ok(str_mode, time);
 }
 
+/**
+ * @brief wait client connect to server
+ * @param time - timeout time
+ * @return connect id
+ */
+int esp8266_wait_connect(TickType_t time, uint16_t *id)
+{
+    assert_param(NULL != id);
+    if (xQueueReceive(xConnectQueue, id, time))
+    {
+        return ESP_ERR_OK;
+    }
 
+    return -ESP_ERR_TIMEOUT; 
+}
+
+/**
+ * @brief wait client disconnect from server
+ * @param time - timeout time
+ * @return connect id
+ */
+int esp8266_wait_disconnect(TickType_t time, uint16_t *id)
+{
+    assert_param(NULL != id);
+    if (xQueueReceive(xDisconnectQueue, id, time))
+    {
+        return ESP_ERR_OK;
+    }
+
+    return -ESP_ERR_TIMEOUT; 
+}
+
+/**
+ * @brief get tcp data
+ * @param data - tcp data
+ * @param xBlockTime - timeout time
+ */
+int esp8266_getchar(char *data, TickType_t xBlockTime)
+{
+    assert_param(NULL != xTcpQueue);
+    return xQueueReceive(xTcpQueue, data, xBlockTime);
+}
+
+/**
+ * @brief prepare send tcp data
+ * @param chl - connected channel
+ * @param length - send length
+ * @param time - timeout time
+ */
+int esp8266_prepare_send(uint16_t chl, uint16_t length, TickType_t time)
+{
+    char str_mode[20];
+    sprintf(str_mode, "AT+CIPSEND=%d,%d\r\n", chl, length);
+    
+    return esp8266_send_ok(str_mode, time);
+}
+
+/**
+ * @brief get tcp id
+ * @return tcp id
+ */
+uint16_t esp8266_tcp_id(void)
+{
+    return tcp_id;
+}
+
+/**
+ * @brief disconnect tcp,udp,ssl connection
+ * @param id - link id
+ * @param time - timeout time
+ */
+int esp8266_disconnect(uint16_t id, TickType_t time)
+{
+    char str_mode[22];
+    sprintf(str_mode, "AT+CIPCLOSE=%d\r\n", id);
+    
+    return esp8266_send_ok(str_mode, time);
+}
+
+/**
+ * @brief set tcp timeout time
+ * @param time - timeout time
+ * @param time - timeout time
+ */
+int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time)
+{
+    char str_mode[22];
+    sprintf(str_mode, "AT+CIPSTO=%d\r\n", timeout);
+    
+    return esp8266_send_ok(str_mode, time);
+}

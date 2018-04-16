@@ -22,9 +22,9 @@
 
 /* ap configueation */
 #define AP_NAME              "vendor"
-#define AP_PWD               "88888888"
-#define AP_CHL               11
-#define AP_ENC               WPA2_PSK
+#define AP_PWD               "12345678"
+#define AP_CHL               5
+#define AP_ENC               OPEN
 
 /**
  * @brief network initialize task
