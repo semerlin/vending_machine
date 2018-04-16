@@ -13,6 +13,7 @@
 #include "esp8266.h"
 #include "simple_http.h"
 #include "motorctl.h"
+#include "wifi.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -41,6 +42,7 @@ static void vInitNetwork(void *pvParameters)
     esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, AP_ENC, DEFAULT_TIMEOUT);
 
     http_init();
+    wifi_init();
     
     vTaskDelete(NULL);
 }

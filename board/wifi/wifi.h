@@ -12,6 +12,8 @@
 
 BEGIN_DECLS
 
+int wifi_init(void);
+void wifi_connect_ap(const char *ssid, const char *pwd);
 
 END_DECLS
 
