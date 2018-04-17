@@ -9,6 +9,13 @@
 #include "mqtt.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "esp8266.h"
+#include "trace.h"
+
+
+#undef __TRACE_MODULE
+#define __TRACE_MODULE  "[mqtt]"
+
 
 /* send and recive queue */
 static xQueueHandle xSendQueue = NULL;
@@ -187,6 +194,16 @@ static uint32_t calculate_connect_payload_len(const connect_param *param)
     }
 
     return payload_len;
+}
+
+/**
+ * @brief connect to mqtt server
+ * @param ip - server ip address
+ * @param port - server port number
+ */
+int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port)
+{
+    return esp8266_connect(id, "TCP", ip, port, 3000 / portTICK_PERIOD_MS);
 }
 
 /**

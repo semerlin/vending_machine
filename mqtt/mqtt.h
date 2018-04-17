@@ -31,6 +31,9 @@ typedef struct
     uint16_t alive_time;
 }connect_param;
 
+
+int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port);
+
 END_DECLS
 
 

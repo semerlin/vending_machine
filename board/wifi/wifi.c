@@ -70,7 +70,11 @@ int wifi_init(void)
     return 0;
 }
 
-
+/**
+ * @brief connect ap
+ * @param ssid - ap name
+ * @param pwd - ap password
+ */
 void wifi_connect_ap(const char *ssid, const char *pwd)
 {
     assert_param(NULL != xApInfoQueue);

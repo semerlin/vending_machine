@@ -36,18 +36,17 @@ typedef enum
 
 typedef enum
 {
-    TCP,
-    UDP,
-    SSL
-}esp8266_connectmode;
-
-typedef enum
-{
     OPEN,
     WPA_PSK,
     WPA2_PSK,
     WPA_WPA2_PSK,
 }esp8266_ecn;
+
+typedef enum
+{
+    in,
+    out,
+}esp8266_condir;
 
 /* esp8266 interface */
 bool esp8266_init(void);
@@ -61,12 +60,12 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl,
 int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask,
                        TickType_t time);
 int esp8266_set_transmode(esp8266_transmode mode, TickType_t time);
-int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
+int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port,
                     TickType_t time);
 int esp8266_listen(uint16_t port, TickType_t time);
 int esp8266_close(uint16_t port, TickType_t time);
 int esp8266_prepare_send(uint16_t chl, uint16_t length, TickType_t time);
-uint16_t esp8266_tcp_id(void);
+uint16_t esp8266_tcp_id(esp8266_condir dir);
 int esp8266_disconnect(uint16_t id, TickType_t time);
 int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time);
 int esp8266_wait_disconnect(TickType_t time, uint16_t *id);

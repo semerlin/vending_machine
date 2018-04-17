@@ -23,6 +23,18 @@
 #define _PRINT_DETAIL 
 
 /* esp8266 work in block mode */
+static struct
+{
+    const char *status_str;
+    uint8_t code;
+}status_code[] = 
+{
+    {"OK", ESP_ERR_OK},
+    {"FAIL", ESP_ERR_FAIL},
+    {"ERROR", ESP_ERR_FAIL},
+    {"ALREADY CONNECTED", ESP_ERR_ALREADY},
+    {"SEND OK", ESP_ERR_OK},
+};
 
 typedef enum
 {
@@ -52,10 +64,77 @@ typedef struct
     char data[ESP_MAX_MSG_SIZE_PER_LINE];
 }tcp_node;
 
+
+/* connect information */
+typedef struct
+{
+    bool is_valid;
+    uint8_t direction;
+    uint16_t id;
+    bool is_working;
+}connect_info;
+
+/* support at most 10 connects */
+connect_info connects[10];
+
 /* timeout time(ms) */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
 
-static uint16_t tcp_id = 0;
+
+/**
+ * @brief add connect information to list
+ * @param direction - connect direction
+ * @param id - connect id
+ */
+static void add_connect(esp8266_condir direction, uint16_t id)
+{
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        if (!connects[i].is_valid)
+        {
+            connects[i].is_valid = TRUE;
+            connects[i].direction = direction;
+            connects[i].id = id;
+            connects[i].is_working = FALSE;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief remove connect from list
+ * @param id - connect id
+ */
+static void remove_connect(uint16_t id)
+{
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        if (connects[i].is_valid && (connects[i].id == id))
+        {
+            connects[i].is_valid = FALSE;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief set id working
+ * @param id - connect id
+ */
+static void set_id_working(uint16_t id)
+{
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        if (connects[i].id == id)
+        {
+            connects[i].is_working = TRUE;
+            break;
+        }
+    }
+}
 
 /**
  * @brief send at command
@@ -70,49 +149,119 @@ static void send_at_cmd(const char *cmd, uint32_t length)
     serial_putstring(g_serial, cmd, length);
 }
 
+/* process function type define */
+typedef bool (*process_func)(const char *data, uint8_t len);
+
+/**
+ * @brief process status
+ * @param data - data to process
+ * @param len - data length
+ */
+static bool try_process_status(const char *data, uint8_t len)
+{
+    uint8_t status = 0;
+    int count = sizeof(status_code) / (sizeof(status_code[0]));
+    for (int i = 0; i < count; ++i)
+    {
+        if (0 == strncmp(data, status_code[i].status_str, len - 2))
+        {
+            status = ESP_ERR_OK;
+            xQueueSend(xStatusQueue, &status, 0);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief parse id from data
+ * @param data - data to parse
+ */
+static uint16_t parse_id(const char *data)
+{
+    const char *pdata = data;
+    uint16_t val = 0;
+    while (',' != *pdata)
+    {
+        val *= 10;
+        val += (*pdata - '0'); 
+    }
+    
+    return val;
+}
+
+/**
+ * @brief process connect
+ * @param data - data to process
+ * @param len - data length
+ */
+static bool try_process_connect(const char *data, uint8_t len)
+{
+    /* find ',' first */
+    const char *pdata = data;
+    uint16_t id = 0;
+    while (('\0' != *pdata) && (',' != *pdata))
+    {
+        pdata ++;
+    }
+
+    if (*pdata != '\0')
+    {
+        pdata++;
+        if (0 == strncmp(pdata, "CONNECT", 7))
+        {
+            id = parse_id(data);
+            add_connect(in, id);
+            return TRUE;
+        }
+        else if (0 == strncmp(pdata, "CLOSED", 6))
+        {
+            id = parse_id(data);
+            remove_connect(id);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief process default 
+ * @param data - data to process
+ * @param len - data length
+ */
+static bool try_process_default(const char *data, uint8_t len)
+{
+    /* at command parameter */
+    xQueueSend(xAtQueue, data, 0);
+
+    return TRUE;
+}
+
+/* process functions list */
+process_func process_funcs[4] = 
+{
+    try_process_status,
+    try_process_connect,
+    try_process_default,
+    NULL
+};
+
 /**
  * @brief process line data
  * @param data - line data
  */
 static void process_line(const char *data, uint8_t len)
 {
-    uint8_t status;
     if (len > 2)
     {
-        if (0 == strncmp(data, "OK", 2))
+        for (int i = 0; NULL != process_funcs[i]; ++i)
         {
-            /* at command status */
-            status = ESP_ERR_OK;
-            xQueueSend(xStatusQueue, &status, 0);
-        }
-        else if (0 == strncmp(data, "FAIL", 4))
-        {
-            /* at command status */
-            status = ESP_ERR_FAIL;
-            xQueueSend(xStatusQueue, &status, 0);
-        }
-        else if (0 == strncmp(data, "ERROR", 5))
-        {
-            /* at command status */
-            status = ESP_ERR_FAIL;
-            xQueueSend(xStatusQueue, &status, 0);
-        }
-        else if (0 == strncmp(data, "ALREADY CONNECTED", 17))
-        {
-            /* at command status */
-            status = ESP_ERR_ALREADY;
-            xQueueSend(xStatusQueue, &status, 0);
-        }
-        else if (0 == strncmp(data, "SEND OK", 7))
-        {
-            /* at command status */
-            status = ESP_ERR_OK;
-            xQueueSend(xStatusQueue, &status, 0);
-        }
-        else
-        {
-            /* at command parameter */
-            xQueueSend(xAtQueue, data, 0);
+            if (process_funcs[i](data, len))
+            {
+                break;
+            }
         }
     }
 }
@@ -250,7 +399,7 @@ static void vESP8266Response(void *pvParameters)
             *pData++ = data;
             node_size ++;
 #ifdef _PRINT_DETAIL
-                dbg_putchar(data);
+            dbg_putchar(data);
 #endif
             while (serial_getchar(pserial, &data, xDelay))
             {
@@ -273,7 +422,7 @@ static void vESP8266Response(void *pvParameters)
                     if (process_tcp_head(node_data, node_size, &link_id, 
                                          &tcp_size) > 0)
                     {
-                        tcp_id = link_id;
+                        set_id_working(link_id);
                         pData = node_data;
                         node_size = 0;
                     }
@@ -548,13 +697,13 @@ int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask,
  * @param port - remote port
  * @param time - timeout time
  */
-int esp8266_connect(esp8266_connectmode mode, const char *ip, uint16_t port,
+int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port,
                     TickType_t time)
 {
     assert_param(NULL != g_serial);
 
-    char str_mode[128];
-    sprintf(str_mode, "AT+CIPSTART=%d,%s,%d\r\n", mode, ip, port);
+    char str_mode[64];
+    sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", id, mode, ip, port);
     
     return esp8266_send_ok(str_mode, time);
 }
@@ -647,9 +796,18 @@ int esp8266_prepare_send(uint16_t chl, uint16_t length, TickType_t time)
  * @brief get tcp id
  * @return tcp id
  */
-uint16_t esp8266_tcp_id(void)
+uint16_t esp8266_tcp_id(esp8266_condir dir)
 {
-    return tcp_id;
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        if ((connects[i].direction == dir) &&
+            connects[i].is_working)
+        {
+            return connects[i].id;
+        }
+    }
+    return 0xffff;
 }
 
 /**
@@ -677,3 +835,4 @@ int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time)
     
     return esp8266_send_ok(str_mode, time);
 }
+
