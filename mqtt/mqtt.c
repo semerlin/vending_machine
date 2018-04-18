@@ -8,9 +8,11 @@
 #include <string.h>
 #include "mqtt.h"
 #include "FreeRTOS.h"
+#include "task.h"
 #include "queue.h"
 #include "esp8266.h"
 #include "trace.h"
+#include "global.h"
 
 
 #undef __TRACE_MODULE
@@ -21,7 +23,7 @@
 static xQueueHandle xSendQueue = NULL;
 static xQueueHandle xRecvQueue = NULL;
 
-#define MQTT_MAX_MSG_NUM     (10)
+#define MQTT_MAX_MSG_NUM     (6)
 #define MQTT_MAX_MSG_SIZE    (128)
 
 typedef struct
@@ -106,6 +108,40 @@ static uint32_t decode_length(uint8_t *decode)
 }
 
 /**
+ * @brief mqtt send task
+ * @param pvParameters - task parameters
+ */
+void vMqttSend(void *pvParameters)
+{
+    mqtt_msg msg;
+    for (;;)
+    {
+        xQueueReceive(xSendQueue, &msg, portMAX_DELAY);
+        esp8266_write((const char *)msg.data, msg.size, 
+                      1000 / portTICK_PERIOD_MS);
+    }
+}
+
+/**
+ * @brief mqtt receive task
+ * @param pvParameters - task parameters
+ */
+void vMqttRecv(void *pvParameters)
+{
+    char data[65];
+    uint16_t len;
+    for (;;)
+    {
+        if (ESP_ERR_OK == esp8266_recv(out, data, &len, portMAX_DELAY))
+        {
+        }
+        
+         
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+/**
  * @brief initialize mqtt protocol
  */
 bool mqtt_init(void)
@@ -122,6 +158,11 @@ bool mqtt_init(void)
         vPortFree(xSendQueue);
         return FALSE;
     }
+    
+    xTaskCreate(vMqttSend, "MqttSend", MQTT_STACK_SIZE, 
+            NULL, MQTT_PRIORITY, NULL);
+    xTaskCreate(vMqttRecv, "MqttRecv", MQTT_STACK_SIZE, 
+            NULL, MQTT_PRIORITY, NULL);
 
     return TRUE;
 }

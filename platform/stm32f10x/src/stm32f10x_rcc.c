@@ -985,7 +985,7 @@ void RCC_CloseLSI(void)
  */
 uint8_t RCC_GetResetFlag(void)
 {
-    return ((RCC->CSR & CSR_RESET) >> 26) & 0xff;
+    return ((RCC->CSR & (uint32_t)CSR_RESET) >> 26) & 0xff;
 }
 
 /**

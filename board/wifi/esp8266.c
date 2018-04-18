@@ -70,7 +70,7 @@ typedef struct
 typedef struct
 {
     bool is_valid;
-    uint8_t direction;
+    esp8266_condir direction;
     uint16_t id;
     bool is_working;
 }connect_info;
@@ -135,6 +135,25 @@ static void set_id_working(uint16_t id)
             break;
         }
     }
+}
+
+/**
+ * @brief get connect direction
+ * @param id - connect id
+ * @return connect direction
+ */
+static esp8266_condir get_id_direction(uint16_t id)
+{
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        if (connects[i].id == id)
+        {
+            return connects[i].direction;
+        }
+    }
+    
+    return unknown;
 }
 
 /**
@@ -369,7 +388,19 @@ static int process_tcp_data(uint16_t id, char *data, uint16_t len)
     node.link_id = id;
     node.size = len;
     strncpy(node.data, data, len);
-    xQueueSend(xTcpQueue, &node, 0);
+    esp8266_condir dir = get_id_direction(id);
+    switch (dir)
+    {
+    case in:
+        xQueueSend(xInTcpQueue, &node, 0);
+        break;
+    case out:
+        xQueueSend(xOutTcpQueue, &node, 0);
+        break;
+    default:
+        break;
+    }
+    
     return 0;
 }
 
@@ -483,7 +514,10 @@ bool esp8266_init(void)
     xOutTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
                              sizeof(tcp_node) / sizeof(char));
 
-    if ((NULL == xStatusQueue) || (NULL == xAtQueue) || (NULL == xTcpQueue))
+    if ((NULL == xStatusQueue) || 
+        (NULL == xAtQueue) || 
+        (NULL == xInTcpQueue) ||
+        (NULL == xOutTcpQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\n");
         serial_release(g_serial);
@@ -715,6 +749,8 @@ int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port
         add_connect(out, id);
         set_id_working(id);
     }
+    
+    return ret;
 }
 
 /**

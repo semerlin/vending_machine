@@ -26,6 +26,7 @@
 #define _MODULE_SPI
 #define _MODULE_I2C
 #define _MODULE_EXTI
+#define _MODULE_SIG
 
 /**********************************************************/
 #ifdef _MODULE_CRC
@@ -74,6 +75,10 @@
 
 #ifdef _MODULE_EXTI
   #include "stm32f10x_exti.h"
+#endif
+
+#ifdef _MODULE_EXTI
+  #include "stm32f10x_sig.h"
 #endif
 
 

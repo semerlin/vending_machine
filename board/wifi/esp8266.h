@@ -46,6 +46,7 @@ typedef enum
 {
     in,
     out,
+    unknown,
 }esp8266_condir;
 
 /* esp8266 interface */

@@ -19,6 +19,7 @@
 #define AP_PRIORITY                  (tskIDLE_PRIORITY + 1)
 #define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 3)
 #define MOTOR_PRIORITY               (tskIDLE_PRIORITY + 2)
+#define MQTT_PRIORITY                (tskIDLE_PRIORITY + 2)
 
 /* task stack definition */
 #define INIT_SYSTEM_STACK_SIZE       (configMINIMAL_STACK_SIZE)
@@ -27,6 +28,7 @@
 #define AP_STACK_SIZE                (configMINIMAL_STACK_SIZE)
 #define ESP8266_STACK_SIZE           (configMINIMAL_STACK_SIZE)
 #define MOTOR_STACK_SIZE             (configMINIMAL_STACK_SIZE)
+#define MQTT_STACK_SIZE              (configMINIMAL_STACK_SIZE)
 
 
 /* interrupt priority */
