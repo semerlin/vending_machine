@@ -772,7 +772,8 @@ int esp8266_close(uint16_t port, TickType_t time)
  */
 int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime)
 {
-    assert_param(NULL != xTcpQueue);
+    assert_param(NULL != xInTcpQueue);
+    assert_param(NULL != xOutTcpQueue);
     
     tcp_node node;
     xQueueHandle tcp_queue = NULL;

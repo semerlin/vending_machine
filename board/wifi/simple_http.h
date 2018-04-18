@@ -13,8 +13,6 @@
 BEGIN_DECLS
 
 int http_init(void);
-void http_start(void);
-void http_stop(void);
 
 END_DECLS
 
