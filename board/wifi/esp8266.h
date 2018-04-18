@@ -69,7 +69,7 @@ uint16_t esp8266_tcp_id(esp8266_condir dir);
 int esp8266_disconnect(uint16_t id, TickType_t time);
 int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time);
 int esp8266_wait_disconnect(TickType_t time, uint16_t *id);
-int esp8266_recv(char *data, uint16_t *len, TickType_t xBlockTime);
+int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime);
 int esp8266_write(const char *data, uint32_t length, TickType_t time);
 
 END_DECLS

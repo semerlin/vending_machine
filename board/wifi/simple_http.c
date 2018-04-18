@@ -79,19 +79,24 @@ static void vHttpd(void *pvParameters)
     uint16_t len;
     char apname[32];
     char password[32];
+    uint16_t id = 0xffff;
     for (;;)
     {
-        if (ESP_ERR_OK == esp8266_recv(data, &len, portMAX_DELAY))
+        if (ESP_ERR_OK == esp8266_recv(in, data, &len, portMAX_DELAY))
         {
             if (0 == strncmp(data, "GET / HTTP/1.1", 14))
             {
-                while (ESP_ERR_OK == esp8266_recv(data, &len, xDelay));
-                if (ESP_ERR_OK == esp8266_prepare_send(esp8266_tcp_id(in), 
-                                               strlen(set_page), 
-                                               DEFAULT_TIMEOUT))
+                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
+                id = esp8266_tcp_id(in);
+                if (0xffff != id)
                 {
-                    esp8266_write(set_page, strlen(set_page), DEFAULT_TIMEOUT);
-                    esp8266_disconnect(esp8266_tcp_id(in), DEFAULT_TIMEOUT);
+                    if (ESP_ERR_OK == esp8266_prepare_send(id, 
+                                                   strlen(set_page), 
+                                                   DEFAULT_TIMEOUT))
+                    {
+                        esp8266_write(set_page, strlen(set_page), DEFAULT_TIMEOUT);
+                        esp8266_disconnect(id, DEFAULT_TIMEOUT);
+                    }
                 }
             }
             else if (0 == strncmp(data, "GET /setting?", 13))
@@ -100,17 +105,25 @@ static void vHttpd(void *pvParameters)
                 password[0] = 0;
                 parse_name_and_pwd(data, apname, password);
                 wifi_connect_ap(apname, password);
-                while (ESP_ERR_OK == esp8266_recv(data, &len, xDelay));
-                esp8266_disconnect(esp8266_tcp_id(in), DEFAULT_TIMEOUT);
+                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
+                id = esp8266_tcp_id(in);
+                if (0xffff != id)
+                {
+                    esp8266_disconnect(id, DEFAULT_TIMEOUT);
+                }
             }
             else
             {
-                while (ESP_ERR_OK == esp8266_recv(data, &len, xDelay));
-                esp8266_disconnect(esp8266_tcp_id(in), DEFAULT_TIMEOUT);
+                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
+                id = esp8266_tcp_id(in);
+                if (0xffff != id)
+                {
+                    esp8266_disconnect(id, DEFAULT_TIMEOUT);
+                }
             }
         }
         
-        
+         
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     //esp8266_close(80, DEFAULT_TIMEOUT);

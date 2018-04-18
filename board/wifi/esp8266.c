@@ -50,7 +50,8 @@ serial *g_serial = NULL;
 
 /* recive queue */
 static xQueueHandle xStatusQueue = NULL;
-static xQueueHandle xTcpQueue = NULL;
+static xQueueHandle xInTcpQueue = NULL;
+static xQueueHandle xOutTcpQueue = NULL;
 static xQueueHandle xAtQueue = NULL;
 
 #define ESP_MAX_NODE_NUM              (4)
@@ -477,8 +478,11 @@ bool esp8266_init(void)
 
     xStatusQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_NODE_NUM);
     xAtQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
-    xTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
+    xInTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
                              sizeof(tcp_node) / sizeof(char));
+    xOutTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
+                             sizeof(tcp_node) / sizeof(char));
+
     if ((NULL == xStatusQueue) || (NULL == xAtQueue) || (NULL == xTcpQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\n");
@@ -705,7 +709,12 @@ int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port
     char str_mode[64];
     sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", id, mode, ip, port);
     
-    return esp8266_send_ok(str_mode, time);
+    int ret = esp8266_send_ok(str_mode, time);
+    if (ESP_ERR_OK == ret)
+    {
+        add_connect(out, id);
+        set_id_working(id);
+    }
 }
 
 /**
@@ -761,12 +770,22 @@ int esp8266_close(uint16_t port, TickType_t time)
  * @param len - data length
  * @param xBlockTime - timeout time
  */
-int esp8266_recv(char *data, uint16_t *len, TickType_t xBlockTime)
+int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime)
 {
     assert_param(NULL != xTcpQueue);
     
     tcp_node node;
-    if (xQueueReceive(xTcpQueue, &node, xBlockTime))
+    xQueueHandle tcp_queue = NULL;
+    if (in == dir)
+    {
+        tcp_queue = xInTcpQueue;
+    }
+    else
+    {
+        tcp_queue = xOutTcpQueue;
+    }
+
+    if (xQueueReceive(tcp_queue, &node, xBlockTime))
     {
         strncpy(data, node.data, node.size);
         *len = node.size;
@@ -794,6 +813,7 @@ int esp8266_prepare_send(uint16_t chl, uint16_t length, TickType_t time)
 
 /**
  * @brief get tcp id
+ * @param dir - connect direction
  * @return tcp id
  */
 uint16_t esp8266_tcp_id(esp8266_condir dir)
