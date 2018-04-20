@@ -55,7 +55,7 @@ typedef struct
     void (*pubcomp)(uint16_t id);
     void (*suback)(uint8_t status, uint16_t id);
     void (*unsuback)(uint16_t id);
-    void (*pingresp)(uint16_t id);
+    void (*pingresp)(void);
 }mqtt_driver;
 
 bool mqtt_init(void);

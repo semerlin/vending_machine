@@ -140,9 +140,8 @@ static void mqtt_unsuback(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pingresp(uint16_t id)
+static void mqtt_pingresp(void)
 {
-    UNUSED(id);
 }
 
 /**
@@ -195,15 +194,6 @@ static uint32_t decode_length(uint8_t *decode)
     }while (0 != (*decode & 0x80));
 
     return value;
-}
-
-/**
- * @brief default connect acknowledge function
- * @param status - connect status
- */
-static void connack_default(uint8_t status)
-{
-    TRACE("connack: %d\n", status);
 }
 
 /**
@@ -469,7 +459,17 @@ static void refresh_driver(void)
 
     if (NULL == g_driver.suback)
     {
-        g_driver.sunack = mqtt_sunack;
+        g_driver.suback = mqtt_suback;
+    }
+    
+    if (NULL == g_driver.unsuback)
+    {
+        g_driver.unsuback = mqtt_unsuback;
+    }
+    
+    if (NULL == g_driver.pingresp)
+    {
+        g_driver.pingresp = mqtt_pingresp;
     }
 }
 
@@ -486,6 +486,8 @@ void mqtt_attach(const mqtt_driver *driver)
     g_driver.pubrel = driver->pubrel;
     g_driver.pubcomp = driver->pubcomp;
     g_driver.suback = driver->suback;
+    g_driver.unsuback = driver->unsuback;
+    g_driver.pingresp = driver->pingresp;
     refresh_driver();
 }
 
