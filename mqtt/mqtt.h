@@ -1,9 +1,24 @@
+/**
+* This file is part of the vendoring machine project.
+*
+* Copyright 2018, Huang Yang <elious.huang@gmail.com>. All rights reserved.
+*
+* See the COPYING file for the terms of usage and distribution.
+*/
 #ifndef _MQTT_H_
   #define _MQTT_H_
 
 #include "types.h"
 
 BEGIN_DECLS
+
+/* status */
+#define MQTT_ERR_OK             (0x00)
+#define MQTT_ERR_VERSION        (0x01)
+#define MQTT_ERR_CLIENTID       (0x02)
+#define MQTT_ERR_SERVICE        (0x03)
+#define MQTT_ERR_NAME_PWD       (0x04)
+#define MQTT_ERR_AUTHORIZE      (0x05)
 
 typedef union
 {
@@ -31,8 +46,31 @@ typedef struct
     uint16_t alive_time;
 }connect_param;
 
+typedef struct
+{
+    void (*connack)(uint8_t status);
+    void (*puback)(uint16_t id);
+    void (*pubrec)(uint16_t id);
+    void (*pubrel)(uint16_t id);
+    void (*pubcomp)(uint16_t id);
+    void (*suback)(uint8_t status, uint16_t id);
+    void (*unsuback)(uint16_t id);
+    void (*pingresp)(uint16_t id);
+}mqtt_driver;
 
+bool mqtt_init(void);
+void mqtt_attach(const mqtt_driver *driver);
+void mqtt_detach(void);
 int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port);
+bool mqtt_is_connected(void);
+void mqtt_connect(const connect_param *param);
+void mqtt_publish(const char *topic, const char *content, uint8_t dup,
+                  uint8_t qos, uint8_t retain);
+void mqtt_subscribe(const char *topic, uint8_t qos);
+void mqtt_unsubscribe(const char *topic);
+void mqtt_pingreq(void);
+
+
 
 END_DECLS
 
