@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>STM32F103xB	ST STM32F103xB</state>
+          <state>STM32F103x8	ST STM32F103x8</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>STM32F103xB	ST STM32F103xB</state>
+          <state>STM32F103x8	ST STM32F103x8</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -318,6 +318,7 @@
           <state>F:\outsource\VendingMachine\platform\stm32f10x\inc</state>
           <state>F:\outsource\VendingMachine\board</state>
           <state>F:\outsource\VendingMachine\board\wifi</state>
+          <state>F:\outsource\VendingMachine\mqtt</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -605,7 +606,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>3</version>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -613,7 +614,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>VendoringMachine.srec</state>
+          <state>VendoringMachine.hex</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -621,7 +622,7 @@
         </option>
         <option>
           <name>OOCObjCopyEnable</name>
-          <state>0</state>
+          <state>1</state>
         </option>
       </data>
     </settings>
@@ -732,7 +733,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$TOOLKIT_DIR$\config\linker\ST\stm32f103xB.icf</state>
+          <state>$TOOLKIT_DIR$\config\linker\ST\stm32f103x8.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -2175,6 +2176,9 @@
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_scb.h</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_sig.h</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_spi.h</name>
         </file>
         <file>
@@ -2218,6 +2222,9 @@
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_scb.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_sig.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_spi.c</name>

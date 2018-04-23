@@ -41,7 +41,7 @@ static void vTimerCallback(TimerHandle_t pxTimer)
  */
 void led_net_init(void)
 {
-    TRACE("initialize net led...");
+    TRACE("initialize net led...\r\n");
     for (int i = 0; i < LED_NUM; ++i)
     {
         pin_set(led_names[i]);
@@ -55,7 +55,7 @@ void led_net_init(void)
 void led_net_turn_on(uint8_t num)
 {
     assert_param(num < LED_NUM);
-    TRACE("turn on led: %d\n", num);
+    TRACE("turn on led: %d\r\n", num);
     pin_set(led_names[num]);
 }
 
@@ -66,7 +66,7 @@ void led_net_turn_on(uint8_t num)
 void led_net_turn_off(uint8_t num)
 {
     assert_param(num < LED_NUM);
-    TRACE("turn off led: %d\n", num);
+    TRACE("turn off led: %d\r\n", num);
     pin_reset(led_names[num]);
 }
 
@@ -78,12 +78,12 @@ void led_net_turn_off(uint8_t num)
 void led_net_flashing(uint8_t num, TickType_t interval)
 {
     assert_param(num < LED_NUM);
-    TRACE("flashing led: %d\n, interval: %d\n", num, interval);
+    TRACE("flashing led: %d, interval: %d\r\n", num, interval);
     if (NULL != led_timers[num])
     {
         if (pdPASS != xTimerStart(led_timers[num], 0))
         {
-            TRACE("start timer failed\n");
+            TRACE("start timer failed\r\n");
         }
     }
     else
@@ -92,13 +92,13 @@ void led_net_flashing(uint8_t num, TickType_t interval)
                                     vTimerCallback);
         if (NULL == led_timers[num])
         {
-            TRACE("create timer failed\n");
+            TRACE("create timer failed\r\n");
         }
         else
         {
             if (pdPASS != xTimerStart(led_timers[num], 0))
             {
-                TRACE("start timer failed\n");
+                TRACE("start timer failed\r\n");
             }
         }
     }
@@ -112,6 +112,6 @@ void led_net_stop_flashing(uint8_t num)
 {
     assert_param(num < LED_NUM);
     assert_param(NULL != led_timers[num]);
-    TRACE("stop flashing led: %d\n", num);
+    TRACE("stop flashing led: %d\r\n", num);
     xTimerStop(led_timers[num], 0);
 }

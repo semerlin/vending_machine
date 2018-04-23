@@ -41,7 +41,7 @@ void board_init(void)
         init_sequence[i]();
     }
 
-    TRACE("initialize board finish\n");
+    TRACE("initialize board finish\r\n");
     return;
 }
 

@@ -73,7 +73,7 @@ static void vHttpd(void *pvParameters)
 {
     //esp8266_send_ok("AT+CIPSERVERMAXCONN=1\r\n", DEFAULT_TIMEOUT);
     esp8266_listen(80, DEFAULT_TIMEOUT);
-    esp8266_set_tcp_timeout(10, DEFAULT_TIMEOUT);
+    esp8266_set_tcp_timeout(20, DEFAULT_TIMEOUT);
     const TickType_t xDelay = 300 / portTICK_PERIOD_MS;
     char data[65];
     uint16_t len;
@@ -104,13 +104,15 @@ static void vHttpd(void *pvParameters)
                 apname[0] = 0;
                 password[0] = 0;
                 parse_name_and_pwd(data, apname, password);
-                wifi_connect_ap(apname, password);
+                TRACE("get setting:%s(%s)\r\n", apname, password);
                 while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
                 id = esp8266_tcp_id(in);
                 if (0xffff != id)
                 {
                     esp8266_disconnect(id, DEFAULT_TIMEOUT);
                 }
+                
+                wifi_connect_ap(apname, password);
             }
             else
             {
@@ -136,7 +138,7 @@ static void vHttpd(void *pvParameters)
 int http_init(void)
 {
     int err;
-    TRACE("initialize http...\n");
+    TRACE("initialize http...\r\n");
     err = esp8266_send_ok("AT+CIPMUX=1\r\n", DEFAULT_TIMEOUT);
     if (ESP_ERR_OK == err)
     {
@@ -149,7 +151,7 @@ int http_init(void)
         }
     }
 
-    TRACE("http status: %d\n", -err);
+    TRACE("http status: %d\r\n", -err);
     return err;
 }
 

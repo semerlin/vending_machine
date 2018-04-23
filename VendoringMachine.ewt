@@ -2350,6 +2350,9 @@
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_scb.h</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_sig.h</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\platform\stm32f10x\inc\stm32f10x_spi.h</name>
         </file>
         <file>
@@ -2393,6 +2396,9 @@
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_scb.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_sig.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\platform\stm32f10x\src\stm32f10x_spi.c</name>

@@ -10,6 +10,6 @@
 
 #include "types.h"
 
-void Get_ChipID(char *data);
+void Get_ChipID(uint32_t *data, uint8_t *len);
 
 #endif

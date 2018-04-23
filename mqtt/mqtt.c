@@ -20,7 +20,7 @@
 #define __TRACE_MODULE  "[mqtt]"
 
 /* mqtt driver */
-mqtt_driver g_driver;
+static mqtt_driver g_driver;
 
 /* send and recive queue */
 static xQueueHandle xSendQueue = NULL;
@@ -117,19 +117,6 @@ static void mqtt_suback(uint8_t status, uint16_t id)
 }
 
 /**
- * @brief initialize mqtt default driver
- */
-static void init_mqtt_driver(void)
-{
-    g_driver.connack = mqtt_connack;
-    g_driver.puback = mqtt_puback;
-    g_driver.pubrec = mqtt_pubrec;
-    g_driver.pubrel = mqtt_pubrel;
-    g_driver.pubcomp = mqtt_pubcomp;
-    g_driver.suback = mqtt_suback;
-}
-
-/**
  * @brief connack default process function
  */
 static void mqtt_unsuback(uint16_t id)
@@ -142,6 +129,21 @@ static void mqtt_unsuback(uint16_t id)
  */
 static void mqtt_pingresp(void)
 {
+}
+
+/**
+ * @brief initialize mqtt default driver
+ */
+static void init_mqtt_driver(void)
+{
+    g_driver.connack = mqtt_connack;
+    g_driver.puback = mqtt_puback;
+    g_driver.pubrec = mqtt_pubrec;
+    g_driver.pubrel = mqtt_pubrel;
+    g_driver.pubcomp = mqtt_pubcomp;
+    g_driver.suback = mqtt_suback;
+    g_driver.unsuback = mqtt_unsuback;
+    g_driver.pingresp = mqtt_pingresp;
 }
 
 /**
@@ -215,6 +217,7 @@ void process_connack(const char *data, uint8_t len)
             g_is_connected = FALSE;
         }
         g_driver.connack(data[3]);
+        TRACE("CONNACK: %d\r\n", data[3]);
     }
 }
 
@@ -232,7 +235,7 @@ void process_puback(const char *data, uint8_t len)
         uuid <<= 8;
         uuid += data[3];
         g_driver.puback(uuid);
-        TRACE("PUBACK: %d\n", uuid);
+        TRACE("PUBACK: %d\r\n", uuid);
     }
 }
 
@@ -250,7 +253,7 @@ void process_pubrec(const char *data, uint8_t len)
         uuid <<= 8;
         uuid += data[3];
         g_driver.pubrec(uuid);
-        TRACE("PUBREC: %d\n", uuid);
+        TRACE("PUBREC: %d\r\n", uuid);
     }
 }
 
@@ -268,7 +271,7 @@ void process_pubrel(const char *data, uint8_t len)
         uuid <<= 8;
         uuid += data[3];
         g_driver.pubrel(uuid);
-        TRACE("PUBREL: %d\n", uuid);
+        TRACE("PUBREL: %d\r\n", uuid);
     }
 }
 
@@ -286,7 +289,7 @@ void process_pubcomp(const char *data, uint8_t len)
         uuid <<= 8;
         uuid += data[3];
         g_driver.pubcomp(uuid);
-        TRACE("PUBCOMP: %d\n", uuid);
+        TRACE("PUBCOMP: %d\r\n", uuid);
     }
 }
 
@@ -305,7 +308,7 @@ void process_suback(const char *data, uint8_t len)
         uuid += data[3];
         uint8_t status = data[4];
         g_driver.suback(status, uuid);
-        TRACE("SUBACK: %d, %d\n", status, uuid);
+        TRACE("SUBACK: %d, %d\r\n", status, uuid);
     }
 }
 
@@ -323,7 +326,7 @@ void process_unsuback(const char *data, uint8_t len)
         uuid <<= 8;
         uuid += data[3];
         g_driver.unsuback(uuid);
-        TRACE("UNSUBACK: %d\n", uuid);
+        TRACE("UNSUBACK: %d\r\n", uuid);
     }
 }
 
@@ -335,7 +338,7 @@ void process_unsuback(const char *data, uint8_t len)
 void process_pingresp(const char *data, uint8_t len)
 {
     g_driver.pingresp();
-    TRACE("PINGRESP: 0\n");
+    TRACE("PINGRESP: 0\r\n");
 }
 
 /* function node */
@@ -353,6 +356,7 @@ func_node funcs[] =
     {TYPE_PUBREL, process_pubrel},
     {TYPE_PUBCOMP, process_pubcomp},
     {TYPE_SUBACK, process_suback},
+    {TYPE_UNSUBACK, process_unsuback},
     {TYPE_PINGRESP, process_pingresp},
 };
 
@@ -366,8 +370,13 @@ void vMqttSend(void *pvParameters)
     for (;;)
     {
         xQueueReceive(xSendQueue, &msg, portMAX_DELAY);
-        esp8266_write((const char *)msg.data, msg.size, 
+        if (ESP_ERR_OK == esp8266_prepare_send(2, msg.size, 
+                                                   3000 / portTICK_PERIOD_MS))
+        {
+            esp8266_write((const char *)msg.data, msg.size, 
                       1000 / portTICK_PERIOD_MS);
+        }
+        
     }
 }
 
@@ -594,6 +603,7 @@ bool mqtt_is_connected(void)
  */
 void mqtt_connect(const connect_param *param)
 {
+    TRACE("connecting...\r\n");
     check_connect_param(param);
 
     mqtt_msg msg;
@@ -615,8 +625,8 @@ void mqtt_connect(const connect_param *param)
     }
     *pdata ++ = PROTOCOL_LEVEL;
     *pdata ++ = param->flag.flag;
-    *pdata ++ = (uint8_t)(param->alive_time >> 8);
-    *pdata ++ = (uint8_t)(param->alive_time & 0xff);
+    *pdata ++ = (uint8_t)((param->alive_time) >> 8);
+    *pdata ++ = (uint8_t)((param->alive_time) & 0xff);
     if (NULL != param->client_id)
     {
         str_len = strlen(param->client_id);
@@ -735,7 +745,7 @@ void mqtt_publish(const char *topic, const char *content, uint8_t dup,
  * @param topic - topic to subscribe
  * @param qos - topic qos
  */
-void mqtt_subscribe(const char *topic, uint8_t qos)
+uint8_t mqtt_subscribe(const char *topic, uint8_t qos)
 {
     assert_param(NULL != topic);
     mqtt_msg msg;
@@ -771,6 +781,8 @@ void mqtt_subscribe(const char *topic, uint8_t qos)
 
     /* send message to queue */
     xQueueSend(xSendQueue, &msg, 0);
+    
+    return g_uuid;
 }
 
 /**
@@ -816,8 +828,6 @@ void mqtt_unsubscribe(const char *topic)
 
 /**
  * @brief pingreq topic from server
- * @param topic - topic to subscribe
- * @param qos - topic qos
  */
 void mqtt_pingreq(void)
 {
@@ -834,4 +844,21 @@ void mqtt_pingreq(void)
     xQueueSend(xSendQueue, &msg, 0);
 }
 
+/**
+ * @brief disconnect from server
+ */
+void mqtt_disconnect(void)
+{
+    mqtt_msg msg;
+    uint8_t *pdata = msg.data;
+
+    /* packet data */
+    *pdata ++ = TYPE_DISCONNECT;
+    *pdata ++ = 0x00;
+    
+    msg.size = 2;
+
+    /* send message to queue */
+    xQueueSend(xSendQueue, &msg, 0);
+}
 

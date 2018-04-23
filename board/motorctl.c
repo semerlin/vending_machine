@@ -63,22 +63,22 @@ static void vMotorCtl(void *pvParameters)
         {
             left = (num >> 2);
             right = num - (left << 2);
-            TRACE("start motor: %d\n", num);
+            TRACE("start motor: %d\r\n", num);
             pin_set(motor_left[left]);
             pin_set(motor_right[right]);
 
             /* wait motor working */
             if (pdTRUE == xSemaphoreTake(xMotorWorking, MOTOR_UP_TIME))
             {
-                TRACE("motor working...\n");
+                TRACE("motor working...\r\n");
                 xSemaphoreGive(xMotorWorking);
             }
             else
             {
-                TRACE("motor working timeout!\n");
+                TRACE("motor working timeout!\r\n");
             }
 
-            TRACE("stop motor: %d\n", num);
+            TRACE("stop motor: %d\r\n", num);
             pin_reset(motor_left[left]);
             pin_reset(motor_right[right]);
         }
@@ -91,7 +91,7 @@ static void vMotorCtl(void *pvParameters)
 void motor_init(void)
 {
     int i = 0;
-    TRACE("initialize motor...\n");
+    TRACE("initialize motor...\r\n");
     for (; i < sizeof(motor_left) / sizeof(char *); ++i)
     {
         pin_reset(motor_left[i]);

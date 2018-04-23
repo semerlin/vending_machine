@@ -20,6 +20,11 @@ BEGIN_DECLS
 #define MQTT_ERR_NAME_PWD       (0x04)
 #define MQTT_ERR_AUTHORIZE      (0x05)
 
+#define MQTT_SUB_QS0            (0x00)
+#define MQTT_SUB_QS1            (0x01)
+#define MQTT_SUB_QS2            (0x02)
+#define MQTT_SUB_ERR            (0x80)
+
 typedef union
 {
     struct
@@ -66,10 +71,10 @@ bool mqtt_is_connected(void);
 void mqtt_connect(const connect_param *param);
 void mqtt_publish(const char *topic, const char *content, uint8_t dup,
                   uint8_t qos, uint8_t retain);
-void mqtt_subscribe(const char *topic, uint8_t qos);
+uint8_t mqtt_subscribe(const char *topic, uint8_t qos);
 void mqtt_unsubscribe(const char *topic);
 void mqtt_pingreq(void);
-
+void mqtt_disconnect(void);
 
 
 END_DECLS

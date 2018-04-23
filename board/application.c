@@ -14,6 +14,7 @@
 #include "simple_http.h"
 #include "motorctl.h"
 #include "wifi.h"
+#include "mqtt.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -33,7 +34,7 @@
  */
 static void vInitNetwork(void *pvParameters)
 {
-    TRACE("initialize network...\n");
+    TRACE("initialize network...\r\n");
     esp8266_init();
     esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT);
     esp8266_setmode(BOTH, DEFAULT_TIMEOUT);
@@ -43,6 +44,7 @@ static void vInitNetwork(void *pvParameters)
 
     http_init();
     wifi_init();
+    mqtt_init();
     
     vTaskDelete(NULL);
 }
@@ -62,7 +64,7 @@ static __INLINE void network_init(void)
  */
 static void vInitSystem(void *pvParameters)
 {
-    TRACE("startup application...\n");
+    TRACE("startup application...\r\n");
     network_init();
     //motor_init();
     

@@ -20,7 +20,12 @@
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[esp8266]"
 
-#define _PRINT_DETAIL 
+//#define _PRINT_DETAIL 
+
+
+/* mqtt driver */
+static esp8266_driver g_driver;
+
 
 /* esp8266 work in block mode */
 static struct
@@ -54,7 +59,7 @@ static xQueueHandle xInTcpQueue = NULL;
 static xQueueHandle xOutTcpQueue = NULL;
 static xQueueHandle xAtQueue = NULL;
 
-#define ESP_MAX_NODE_NUM              (4)
+#define ESP_MAX_NODE_NUM              (6)
 #define ESP_MAX_MSG_SIZE_PER_LINE     (64)
 #define ESP_MAX_CONNECT_NUM           (5)
 
@@ -80,6 +85,47 @@ connect_info connects[10];
 
 /* timeout time(ms) */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
+
+/**
+ * @brief connedted default process function
+ */
+static void esp8266_ap_connect(void)
+{
+}
+
+/**
+ * @brief connedted default process function
+ */
+static void esp8266_ap_disconnect(void)
+{
+}
+
+/**
+ * @brief connedted default process function
+ */
+static void esp8266_server_connect(uint16_t id)
+{
+    UNUSED(id);
+}
+
+/**
+ * @brief connedted default process function
+ */
+static void esp8266_server_disconnect(uint16_t id)
+{
+    UNUSED(id);
+}
+
+/**
+ * @brief initialize esp8266 default driver
+ */
+static void init_esp8266_driver(void)
+{
+    g_driver.ap_connect = esp8266_ap_connect;
+    g_driver.ap_disconnect = esp8266_ap_disconnect;
+    g_driver.server_connect = esp8266_server_connect;
+    g_driver.server_disconnect = esp8266_server_disconnect;
+}
 
 
 /**
@@ -185,7 +231,7 @@ static bool try_process_status(const char *data, uint8_t len)
     {
         if (0 == strncmp(data, status_code[i].status_str, len - 2))
         {
-            status = ESP_ERR_OK;
+            status = status_code[i].code;
             xQueueSend(xStatusQueue, &status, 0);
             return TRUE;
         }
@@ -206,17 +252,18 @@ static uint16_t parse_id(const char *data)
     {
         val *= 10;
         val += (*pdata - '0'); 
+        pdata++;
     }
     
     return val;
 }
 
 /**
- * @brief process connect
+ * @brief process server connect
  * @param data - data to process
  * @param len - data length
  */
-static bool try_process_connect(const char *data, uint8_t len)
+static bool try_process_server_connect(const char *data, uint8_t len)
 {
     /* find ',' first */
     const char *pdata = data;
@@ -233,14 +280,39 @@ static bool try_process_connect(const char *data, uint8_t len)
         {
             id = parse_id(data);
             add_connect(in, id);
+            g_driver.server_connect(id);
             return TRUE;
         }
         else if (0 == strncmp(pdata, "CLOSED", 6))
         {
             id = parse_id(data);
             remove_connect(id);
+            g_driver.server_disconnect(id);
             return TRUE;
         }
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief process ap connect
+ * @param data - data to process
+ * @param len - data length
+ */
+static bool try_process_ap_connect(const char *data, uint8_t len)
+{
+    if (0 == strncmp(data, "WIFI CONNECTED", len - 2))
+    {
+        TRACE("ap connected\r\n");
+        g_driver.ap_connect();
+        return TRUE;
+    }
+    else if (0 == strncmp(data, "WIFI DISCONNECT", len - 2))
+    {
+        TRACE("ap disconnect\r\n");
+        g_driver.ap_disconnect();
+        return TRUE;
     }
 
     return FALSE;
@@ -260,10 +332,11 @@ static bool try_process_default(const char *data, uint8_t len)
 }
 
 /* process functions list */
-process_func process_funcs[4] = 
+process_func process_funcs[] = 
 {
     try_process_status,
-    try_process_connect,
+    try_process_server_connect,
+    try_process_ap_connect,
     try_process_default,
     NULL
 };
@@ -392,10 +465,10 @@ static int process_tcp_data(uint16_t id, char *data, uint16_t len)
     switch (dir)
     {
     case in:
-        xQueueSend(xInTcpQueue, &node, 0);
+        xQueueSend(xInTcpQueue, &node, 100 / portTICK_PERIOD_MS);
         break;
     case out:
-        xQueueSend(xOutTcpQueue, &node, 0);
+        xQueueSend(xOutTcpQueue, &node, 100 / portTICK_PERIOD_MS);
         break;
     default:
         break;
@@ -493,7 +566,8 @@ static void vESP8266Response(void *pvParameters)
  */
 bool esp8266_init(void)
 {
-    TRACE("initialize esp8266...\n");
+    TRACE("initialize esp8266...\r\n");
+    pin_set("WIFI_RST");
     pin_reset("WIFI_EN");
     vTaskDelay(100 / portTICK_PERIOD_MS);
     pin_set("WIFI_EN");
@@ -502,11 +576,12 @@ bool esp8266_init(void)
     g_serial = serial_request(COM2);
     if (NULL == g_serial)
     {
-        TRACE("initialize failed, can't open serial \'COM2\'\n");
+        TRACE("initialize failed, can't open serial \'COM2\'\r\n");
         return FALSE;
     }
     serial_open(g_serial);
 
+    init_esp8266_driver();
     xStatusQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_NODE_NUM);
     xAtQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
     xInTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
@@ -519,7 +594,7 @@ bool esp8266_init(void)
         (NULL == xInTcpQueue) ||
         (NULL == xOutTcpQueue))
     {
-        TRACE("initialize failed, can't create queue\'COM2\'\n");
+        TRACE("initialize failed, can't create queue\'COM2\'\r\n");
         serial_release(g_serial);
         g_serial = NULL;
         return FALSE;
@@ -556,7 +631,7 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
 
     if (0 != ret)
     {
-        TRACE("status: %d\n", -ret);
+        TRACE("status: %d\r\n", -ret);
     }
     return ret;
 }
@@ -583,7 +658,7 @@ int esp8266_write(const char *data, uint32_t length, TickType_t time)
 
     if (0 != ret)
     {
-        TRACE("status: %d\n", -ret);
+        TRACE("status: %d\r\n", -ret);
     }
     return ret;
 }
@@ -627,7 +702,7 @@ esp8266_mode esp8266_getmode(TickType_t time)
         }
     }
 
-    TRACE("mode: %d\n", mode);
+    TRACE("mode: %d\r\n", mode);
     return mode;
 }
 
@@ -672,7 +747,7 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
 
     if (0 != ret)
     {
-        TRACE("status: %d\n", -ret);
+        TRACE("status: %d\r\n", -ret);
     }
     return ret;
 }
@@ -892,4 +967,53 @@ int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time)
     
     return esp8266_send_ok(str_mode, time);
 }
+
+/**
+ * @brief refresh driver
+ */
+static void refresh_driver(void)
+{
+    if (NULL == g_driver.ap_connect)
+    {
+        g_driver.ap_connect = esp8266_ap_connect;
+    }
+
+    if (NULL == g_driver.ap_disconnect)
+    {
+        g_driver.ap_disconnect = esp8266_ap_disconnect;
+    }
+    
+    if (NULL == g_driver.server_connect)
+    {
+        g_driver.server_connect = esp8266_server_connect;
+    }
+
+    if (NULL == g_driver.server_disconnect)
+    {
+        g_driver.server_disconnect = esp8266_server_disconnect;
+    }
+}
+
+/**
+ * @brief attach mqtt driver
+ * @param driver - mqtt driver handle
+ */
+void esp8266_attach(const esp8266_driver *driver)
+{
+    assert_param(NULL != driver);
+    g_driver.ap_connect = driver->ap_connect;
+    g_driver.ap_disconnect = driver->ap_disconnect;
+    g_driver.server_connect = driver->server_connect;
+    g_driver.server_disconnect = driver->server_disconnect;
+    refresh_driver();
+}
+
+/**
+ * @brief detach mqtt driver
+ */
+void esp8266_detach(void)
+{
+    init_esp8266_driver();
+}
+
 

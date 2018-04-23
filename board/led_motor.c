@@ -73,7 +73,7 @@ static void hc595_senddata(uint16_t data)
  */
 void led_motor_init(void)
 {
-    TRACE("initialieze motor led...");
+    TRACE("initialieze motor led...\r\n");
     led_status = 0;
     hc595_senddata(led_status);
 }
@@ -85,7 +85,7 @@ void led_motor_init(void)
 void led_motor_turn_on(uint8_t num)
 {
     assert_param(num < LED_NUM);
-    TRACE("turn on led: %d\n", num);
+    TRACE("turn on led: %d\r\n", num);
     led_status |= (1 << num);
     hc595_senddata(led_status);
 }
@@ -97,7 +97,7 @@ void led_motor_turn_on(uint8_t num)
 void led_motor_turn_off(uint8_t num)
 {
     assert_param(num < LED_NUM);
-    TRACE("turn off led: %d\n", num);
+    TRACE("turn off led: %d\r\n", num);
     led_status &= ~(1 << num);
     hc595_senddata(led_status);
 }

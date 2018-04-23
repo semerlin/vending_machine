@@ -61,7 +61,7 @@ PIN_CONFIG pins[] =
     {"WIFI_TX", GPIOA, 2, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
     {"WIFI_RX", GPIOA, 3, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
     {"WIFI_RST", GPIOC, 14, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
-    {"WIFI_EN", GPIOB, 0, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
+    {"WIFI_EN", GPIOC, 15, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
     {"GPRS_TX", GPIOB, 10, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
     {"GPRS_RX", GPIOB, 11, GPIO_Speed_2MHz, GPIO_Mode_IN_FLOATING},
     {"GPRS_PWR", GPIOC, 13, GPIO_Speed_2MHz, GPIO_Mode_Out_PP},
