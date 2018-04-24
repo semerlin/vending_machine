@@ -39,17 +39,32 @@ static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\r\n");
     esp8266_init();
-    esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT);
-    esp8266_setmode(BOTH, DEFAULT_TIMEOUT);
+    if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
+    {
+        goto ERROR;
+    }
+    if (ESP_ERR_OK != esp8266_setmode(BOTH, DEFAULT_TIMEOUT))
+    {
+        goto ERROR;
+    }
     /* need restart after set esp8266 mode */
     //esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT);
-    esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, AP_ENC, DEFAULT_TIMEOUT);
+    if (ESP_ERR_OK != esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, 
+                                         AP_ENC, DEFAULT_TIMEOUT))
+    {
+        goto ERROR;
+    }
 
     http_init();
     wifi_init();
     mqtt_init();
+    goto END;
+
+ERROR:
+    TRACE("initialize network failed\r\n");
+    led_net_turn_on(0);
     
-    
+END:
     vTaskDelete(NULL);
 }
 

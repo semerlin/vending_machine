@@ -16,6 +16,7 @@
 #include "mqtt.h"
 #include "stm32f10x_cfg.h"
 #include "motorctl.h"
+#include "led_net.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[wifi]"
@@ -46,11 +47,17 @@ uint8_t mqtt_status = 0x00;
 
 bool ap_connected = FALSE;
 
+#define LED_AP            (1)
+#define LED_MQTT          (2)
+#define FLASH_INTERVAL    (500 / portTICK_PERIOD_MS)
+
 /**
  * @brief connedted default process function
  */
 static void esp8266_ap_connect(void)
 {
+    led_net_stop_flashing(LED_AP);
+    led_net_flashing(LED_MQTT, FLASH_INTERVAL);
     ap_connected = TRUE;
 }
 
@@ -59,6 +66,8 @@ static void esp8266_ap_connect(void)
  */
 static void esp8266_ap_disconnect(void)
 {
+    led_net_flashing(LED_AP, FLASH_INTERVAL);
+    led_net_stop_flashing(LED_MQTT);
     ap_connected = FALSE;
     mqtt_status = 0x00;
 }
@@ -105,6 +114,7 @@ static void vConnectAp(void *pvParameters)
 {
     ap_info info;
     uint8_t count = 0;
+    led_net_flashing(LED_AP, FLASH_INTERVAL);
     for (;;)
     {
         count = 0;
