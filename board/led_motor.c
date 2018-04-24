@@ -23,7 +23,7 @@ static uint16_t led_status = 0;
 /**
  * @brief shift register transition
  */
-__INLINE void sh_transition(void)
+static __INLINE void sh_transition(void)
 {
     pin_reset("LED_SH");
     __NOP();
@@ -36,7 +36,7 @@ __INLINE void sh_transition(void)
 /**
  * @brief storage register transition
  */
-__INLINE void st_transition(void)
+static __INLINE void st_transition(void)
 {
     pin_reset("LED_ST");
     __NOP();
@@ -56,11 +56,11 @@ static void hc595_senddata(uint16_t data)
     {
         if (0 != (data & 0x8000))
         {
-            pin_set("LED_DATA");
+            pin_reset("LED_DATA");
         }
         else
         {
-            pin_reset("LED_DATA");
+            pin_set("LED_DATA");
         }
         data <<= 1;
         sh_transition();

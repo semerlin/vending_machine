@@ -202,4 +202,20 @@ void GPIO_EXTIConfig(GPIO_Group group, uint8_t pin)
     AFIO->EXTICR[pos] |= (((uint32_t)group) << offset);
 }
 
+/**
+ * @brief config gpio remap
+ * @param pin - pin name
+ * @param flag - remap status
+ */
+void GPIO_PinRemap(uint32_t pin, bool flag)
+{
+    if (flag)
+    {
+        AFIO->MAPR |= pin;
+    }
+    else
+    {
+        AFIO->MAPR &= ~pin;
+    }
+}
 

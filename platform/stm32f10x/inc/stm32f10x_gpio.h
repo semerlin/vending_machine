@@ -52,6 +52,8 @@ typedef struct
 }GPIO_Config;
 
 
+#define SWJ_JTAG_DISABLE     (2 << 24)
+
 /* interface */
 void GPIO_Setup(GPIO_Group group, const GPIO_Config *config);
 uint16_t GPIO_ReadDataGroup(GPIO_Group group);
@@ -61,6 +63,7 @@ void GPIO_SetPin(GPIO_Group group, uint8_t pin);
 void GPIO_ResetPin(GPIO_Group group, uint8_t pin);
 void GPIO_LockPin(GPIO_Group group, uint8_t pin);
 void GPIO_EXTIConfig(GPIO_Group group, uint8_t pin);
+void GPIO_PinRemap(uint32_t pin, bool flag);
 
 
 #endif /* _STM32F10X_GPIO_H_ */

@@ -44,7 +44,7 @@ void led_net_init(void)
     TRACE("initialize net led...\r\n");
     for (int i = 0; i < LED_NUM; ++i)
     {
-        pin_set(led_names[i]);
+        pin_reset(led_names[i]);
     }
 }
 

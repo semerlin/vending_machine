@@ -136,6 +136,7 @@ void pin_init(void)
         }
     }
     
+    GPIO_PinRemap(SWJ_JTAG_DISABLE, TRUE);
     /* config pins */
     len = sizeof(pins) / sizeof(PIN_CONFIG);
     for(uint32_t i = 0; i < len; ++i)

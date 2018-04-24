@@ -15,6 +15,8 @@
 #include "motorctl.h"
 #include "wifi.h"
 #include "mqtt.h"
+#include "led_motor.h"
+#include "led_net.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -46,6 +48,7 @@ static void vInitNetwork(void *pvParameters)
     wifi_init();
     mqtt_init();
     
+    
     vTaskDelete(NULL);
 }
 
@@ -65,8 +68,10 @@ static __INLINE void network_init(void)
 static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\r\n");
+    led_motor_init();
+    led_net_init();
+    motor_init();
     network_init();
-    //motor_init();
     
     vTaskDelete(NULL);
 }
