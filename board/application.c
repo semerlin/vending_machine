@@ -17,6 +17,7 @@
 #include "mqtt.h"
 #include "led_motor.h"
 #include "led_net.h"
+#include "ir.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -70,7 +71,9 @@ static void vInitSystem(void *pvParameters)
     TRACE("startup application...\r\n");
     led_motor_init();
     led_net_init();
+    ir_init();
     motor_init();
+    
     network_init();
     
     vTaskDelete(NULL);

@@ -15,6 +15,8 @@ BEGIN_DECLS
 void led_motor_init(void);
 void led_motor_turn_on(uint8_t num);
 void led_motor_turn_off(uint8_t num);
+void led_motor_all_on(void);
+void led_motor_all_off(void);
 
 END_DECLS
 

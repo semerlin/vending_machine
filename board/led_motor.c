@@ -102,4 +102,22 @@ void led_motor_turn_off(uint8_t num)
     hc595_senddata(led_status);
 }
 
+/**
+ * @brief turn on all led
+ */
+void led_motor_all_on(void)
+{
+    TRACE("turn on all led\r\n");
+    led_status = 0xffff;
+    hc595_senddata(led_status);
+}
 
+/**
+ * @brief turn off all led
+ */
+void led_motor_all_off(void)
+{
+    TRACE("turn off all led\r\n");
+    led_status = 0;
+    hc595_senddata(led_status);
+}

@@ -1968,6 +1968,12 @@
       <name>$PROJ_DIR$\board\global.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\ir.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\ir.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\led_motor.c</name>
     </file>
     <file>
