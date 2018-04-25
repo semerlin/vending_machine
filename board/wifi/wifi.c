@@ -11,6 +11,7 @@
 #include "queue.h"
 #include "wifi.h"
 #include "esp8266.h"
+#include "m26.h"
 #include "global.h"
 #include "trace.h"
 #include "mqtt.h"
@@ -106,6 +107,48 @@ static void init_esp8266_driver(void)
     driver.server_disconnect = esp8266_server_disconnect;
     esp8266_attach(&driver);
 }
+
+/**
+ * @brief m26 network register process function
+ */
+static void m26_net_register(uint8_t code)
+{
+}
+
+/**
+ * @brief m26 gprs process function
+ */
+static void m26_gprs_attach(uint8_t code)
+{
+}
+
+/**
+ * @brief m26 server connect process function
+ */
+static void m26_server_connect(void)
+{
+}
+
+/**
+ * @brief m26 server disconnect process function
+ */
+static void m26_server_disconnect(void)
+{
+}
+
+/**
+ * @brief initialize esp8266 default driver
+ */
+static void init_m26_driver(void)
+{
+    m26_driver driver;
+    driver.net_register = m26_net_register;
+    driver.gprs_attach = m26_gprs_attach;
+    driver.server_connect = m26_server_connect();
+    driver.server_disconnect = m26_server_disconnect();
+    m26_attach(&driver);
+}
+
 
 /**
  * @brief ap process task
@@ -349,6 +392,7 @@ int wifi_init(void)
     TRACE("initialize wifi...\r\n");
     init_mqtt_driver();
     init_esp8266_driver();
+    init_m26_driver();
     xApInfoQueue = xQueueCreate(1, sizeof(ap_info) / sizeof(char));
     xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, NULL);

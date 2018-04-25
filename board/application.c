@@ -32,25 +32,84 @@
 #define AP_ENC               OPEN
 
 /**
+ * @brief initialize esp8266 module
+ * @return initialize status
+ */
+static bool init_esp8266(void)
+{
+    if (!esp8266_init())
+    {
+        return FALSE;
+    }
+
+    if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+    if (ESP_ERR_OK != esp8266_setmode(BOTH, DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+    /* need restart after set esp8266 mode */
+    //esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT);
+    if (ESP_ERR_OK != esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, 
+                                         AP_ENC, DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
+/**
+ * @brief initialize m26 module
+ * @return initialize status
+ */
+static bool init_m26()
+{
+    if (!m26_init())
+    {
+        return FALSE;
+    }
+
+    if (M26_ERR_OK != m26_send_ok("AT+QIHEAD=1\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+
+    if (M26_ERR_OK != m26_send_ok("AT+IPR=115200&W\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+
+    if (M26_ERR_OK != m26_send_ok("AT+CREG=1\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+
+    if (M26_ERR_OK != m26_send_ok("AT+CGREG=1\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+
+
+    return TRUE;
+}
+
+/**
  * @brief network initialize task
  * @param pvParameter - task parameter
  */
 static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\r\n");
-    esp8266_init();
-    if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
+
+    if (!init_esp8266())
     {
         goto ERROR;
     }
-    if (ESP_ERR_OK != esp8266_setmode(BOTH, DEFAULT_TIMEOUT))
-    {
-        goto ERROR;
-    }
-    /* need restart after set esp8266 mode */
-    //esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT);
-    if (ESP_ERR_OK != esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, 
-                                         AP_ENC, DEFAULT_TIMEOUT))
+
+    if (!init_m26())
     {
         goto ERROR;
     }
