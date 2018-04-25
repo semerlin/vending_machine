@@ -1931,6 +1931,12 @@
         <name>$PROJ_DIR$\board\wifi\esp8266.h</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\board\wifi\m26.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\board\wifi\m26.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\board\wifi\simple_http.c</name>
       </file>
       <file>
@@ -1987,6 +1993,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\board\main.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\mode.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\mode.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\board\motorctl.c</name>

@@ -6,14 +6,17 @@
 * See the COPYING file for the terms of usage and distribution.
 */
 #include <string.h>
+#include <stdio.h>
 #include "mqtt.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "esp8266.h"
+#include "m26.h"
 #include "trace.h"
 #include "global.h"
 #include "assert.h"
+#include "mode.h"
 
 
 #undef __TRACE_MODULE
@@ -370,13 +373,24 @@ void vMqttSend(void *pvParameters)
     for (;;)
     {
         xQueueReceive(xSendQueue, &msg, portMAX_DELAY);
-        if (ESP_ERR_OK == esp8266_prepare_send(2, msg.size, 
-                                                   3000 / portTICK_PERIOD_MS))
+        if (MODE_NET_WIFI == mode_net())
         {
-            esp8266_write((const char *)msg.data, msg.size, 
-                      1000 / portTICK_PERIOD_MS);
+            if (ESP_ERR_OK == esp8266_prepare_send(2, msg.size, 
+                                                   3000 / portTICK_PERIOD_MS))
+            {
+                esp8266_write((const char *)msg.data, msg.size, 
+                          1000 / portTICK_PERIOD_MS);
+            }
         }
-        
+        else
+        {
+            if (M26_ERR_OK == m26_prepare_send(msg.size, 
+                                               3000 / portTICK_PERIOD_MS))
+            {
+                m26_write((const char *)msg.data, msg.size, 
+                          1000 / portTICK_PERIOD_MS);
+            }
+        }
     }
 }
 
@@ -391,14 +405,31 @@ void vMqttRecv(void *pvParameters)
     int count = sizeof(funcs) / sizeof(funcs[0]);
     for (;;)
     {
-        if (ESP_ERR_OK == esp8266_recv(out, data, &len, portMAX_DELAY))
+        if (MODE_NET_WIFI == mode_net())
         {
-            for (int i = 0; i < count; ++i)
+            if (ESP_ERR_OK == esp8266_recv(out, data, &len, portMAX_DELAY))
             {
-                if (funcs[i].type == data[0])
+                for (int i = 0; i < count; ++i)
                 {
-                    funcs[i].process(data, len);
-                    break;
+                    if (funcs[i].type == data[0])
+                    {
+                        funcs[i].process(data, len);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (M26_ERR_OK == m26_recv(data, &len, portMAX_DELAY))
+            {
+                for (int i = 0; i < count; ++i)
+                {
+                    if (funcs[i].type == data[0])
+                    {
+                        funcs[i].process(data, len);
+                        break;
+                    }
                 }
             }
         }
@@ -585,7 +616,17 @@ static uint32_t calculate_connect_payload_len(const connect_param *param)
  */
 int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port)
 {
-    return esp8266_connect(id, "TCP", ip, port, 3000 / portTICK_PERIOD_MS);
+    if (MODE_NET_WIFI == mode_net())
+    {
+        return esp8266_connect(id, "TCP", ip, port, 
+                               3000 / portTICK_PERIOD_MS);
+    }
+    else
+    {
+        char port_str[6];
+        sprintf(port_str, "%d", port);
+        return m26_connect("TCP", ip, port_str, 3000 / portTICK_PERIOD_MS);
+    }
 }
 
 /**

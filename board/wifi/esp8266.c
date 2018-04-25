@@ -51,7 +51,7 @@ typedef enum
 static work_mode g_curmode = mode_at;
 
 /* serial handle */
-serial *g_serial = NULL;
+static serial *g_serial = NULL;
 
 /* recive queue */
 static xQueueHandle xStatusQueue = NULL;
@@ -332,7 +332,7 @@ static bool try_process_default(const char *data, uint8_t len)
 }
 
 /* process functions list */
-process_func process_funcs[] = 
+static process_func process_funcs[] = 
 {
     try_process_status,
     try_process_server_connect,
@@ -364,7 +364,7 @@ static void process_line(const char *data, uint8_t len)
  * @param data - node data
  * @param len - node length
  */
-int process_at_data(const char *data, uint8_t len)
+static int process_at_data(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
@@ -393,7 +393,7 @@ int process_at_data(const char *data, uint8_t len)
  * @param id - tcp link id
  * @param length - tcp data length
  */
-int process_tcp_head(const char *data, uint8_t len, uint16_t *id, 
+static int process_tcp_head(const char *data, uint8_t len, uint16_t *id, 
                      uint16_t *length)
 {
     assert_param(NULL != id);

@@ -20,7 +20,7 @@
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[m26]"
 
-//#define _PRINT_DETAIL 
+#define _PRINT_DETAIL 
 
 
 /* mqtt driver */
@@ -68,12 +68,13 @@ typedef enum
 static work_mode g_curmode = mode_at;
 
 /* serial handle */
-serial *g_serial = NULL;
+static serial *g_serial = NULL;
 
 /* recive queue */
 static xQueueHandle xStatusQueue = NULL;
 static xQueueHandle xTcpQueue = NULL;
 static xQueueHandle xAtQueue = NULL;
+static xQueueHandle xSyncQueue = NULL;
 
 #define M26_MAX_NODE_NUM              (6)
 #define M26_MAX_MSG_SIZE_PER_LINE     (64)
@@ -82,7 +83,7 @@ static xQueueHandle xAtQueue = NULL;
 typedef struct
 {
     uint16_t size;
-    char data[ESP_MAX_MSG_SIZE_PER_LINE];
+    char data[M26_MAX_MSG_SIZE_PER_LINE];
 }tcp_node;
 
 /* timeout time(ms) */
@@ -223,19 +224,19 @@ static bool try_process_status(const char *data, uint8_t len)
  */
 static bool try_process_server_connect(const char *data, uint8_t len)
 {
-    if (0 == strcmp(data, "CONNECT OK", len - 2))
+    if (0 == strncmp(data, "CONNECT OK", len - 2))
     {
-        g_driver.server_connect(id);
+        g_driver.server_connect();
         return TRUE;
     }
-    else if (0 == strcmp(data, "CLOSED", len - 2))
+    else if (0 == strncmp(data, "CLOSED", len - 2))
     {
-        g_driver.server_disconnect(id);
+        g_driver.server_disconnect();
         return TRUE;
     }
-    else if (0 == strcmp(data, "+PDP DEACT", len - 2))
+    else if (0 == strncmp(data, "+PDP DEACT", len - 2))
     {
-        g_driver.server_disconnect(id);
+        g_driver.server_disconnect();
         return TRUE;
     }
 
@@ -296,7 +297,7 @@ static bool try_process_default(const char *data, uint8_t len)
 }
 
 /* process functions list */
-process_func process_funcs[] = 
+static process_func process_funcs[] = 
 {
     try_process_status,
     try_process_server_connect,
@@ -329,9 +330,19 @@ static void process_line(const char *data, uint8_t len)
  * @param data - node data
  * @param len - node length
  */
-int process_at_data(const char *data, uint8_t len)
+static int process_at_data(const char *data, uint8_t len)
 {
-    if (len >= 3)
+    if (len == 2)
+    {
+        uint8_t flag = 0;
+        if (0 == strncmp(data, "at", 2))
+        {
+            xQueueSend(xSyncQueue, &flag, 0);
+            return 1;
+        }
+    }
+    
+    if (len == 3)
     {
         if (0 == strncmp(data, "IPD", 3))
         {
@@ -357,9 +368,8 @@ int process_at_data(const char *data, uint8_t len)
  * @param len - data length
  * @param length - tcp data length
  */
-int process_tcp_head(const char *data, uint8_t len, uint16_t *length)
+static int process_tcp_head(const char *data, uint8_t len, uint16_t *length)
 {
-    assert_param(NULL != id);
     assert_param(NULL != length);
     uint16_t val = 0;
     if (':' == data[len - 1])
@@ -412,7 +422,7 @@ static int process_tcp_data(char *data, uint16_t len)
 static void vM26Response(void *pvParameters)
 {
     serial *pserial = pvParameters;
-    char node_data[ESP_MAX_MSG_SIZE_PER_LINE];
+    char node_data[M26_MAX_MSG_SIZE_PER_LINE];
     uint8_t node_size = 0;
     char *pData = node_data;
     uint16_t tcp_size = 0;
@@ -469,7 +479,7 @@ static void vM26Response(void *pvParameters)
                     }
                     else
                     {
-                        if (node_size >= ESP_MAX_MSG_SIZE_PER_LINE)
+                        if (node_size >= M26_MAX_MSG_SIZE_PER_LINE)
                         {
                             process_tcp_data(node_data, node_size);
                             pData = node_data;
@@ -492,8 +502,10 @@ static void vM26Response(void *pvParameters)
 bool m26_init(void)
 {
     TRACE("initialize m26...\r\n");
+    pin_reset("GPRS_PWR");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     pin_set("GPRS_PWR");
-    vTaskDelay(1500 / portTICK_PERIOD_MS);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
     pin_reset("GPRS_PWR");
     
     g_serial = serial_request(COM3);
@@ -508,10 +520,12 @@ bool m26_init(void)
     xAtQueue = xQueueCreate(M26_MAX_NODE_NUM, M26_MAX_MSG_SIZE_PER_LINE);
     xTcpQueue = xQueueCreate(M26_MAX_NODE_NUM * 2, 
                              sizeof(tcp_node) / sizeof(char));
+    xSyncQueue = xQueueCreate(1, 1);
 
     if ((NULL == xStatusQueue) || 
         (NULL == xAtQueue) || 
-        (NULL == xTcpQueue))
+        (NULL == xTcpQueue) || 
+        (NULL == xStatusQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\r\n");
         serial_release(g_serial);
@@ -537,7 +551,7 @@ int m26_send_ok(const char *cmd, TickType_t time)
 
     uint8_t status;
     send_at_cmd(cmd, strlen(cmd));
-    int ret = ESP_ERR_OK;
+    int ret = M26_ERR_OK;
 
     if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
@@ -545,7 +559,7 @@ int m26_send_ok(const char *cmd, TickType_t time)
     }
     else
     {
-        ret = -ESP_ERR_TIMEOUT;
+        ret = -M26_ERR_TIMEOUT;
     }
 
     if (0 != ret)
@@ -556,13 +570,26 @@ int m26_send_ok(const char *cmd, TickType_t time)
 }
 
 /**
- * @brief set module baudrate
- * @param baudrate - module baudrate
- * @param time - timeout time
+ * @brief sync baudrate
  */
-int m26_set_baudrate(uint32_t baudrate, TickType_t time)
+int m26_sync(void)
 {
-    return esp8266_send_ok("AT+IPR=115200&W", time);
+    TRACE("sync baudrate\r\n");
+    int ret = -M26_ERR_FAIL;
+    uint8_t flag = 0;
+    for (int i = 0; i < 10; ++i)
+    {
+        serial_putstring(g_serial, "at", 2);
+        if (pdPASS == xQueueReceive(xSyncQueue, &flag, 
+                                    500 / portTICK_PERIOD_MS))
+        {
+            TRACE("sync success\r\n");
+            ret = M26_ERR_OK;
+            break;
+        }
+    }
+    
+    return ret;
 }
 
 /**
@@ -591,7 +618,7 @@ uint8_t parse_pin_code(const char *pin)
         }
     }
     
-    return M26_PIN_UNKNOWN;
+    return M26_SIM_UNKNOWN;
 }
 
 /**
@@ -604,21 +631,20 @@ uint8_t m26_pin_status(TickType_t time)
     assert_param(NULL != g_serial);
 
     uint8_t status;
-    uint8_t buf[ESP_MAX_MSG_SIZE_PER_LINE];
-    buf[0] = UNKNOWN + '0';
+    uint8_t buf[M26_MAX_MSG_SIZE_PER_LINE];
     send_at_cmd("AT+CPIN?\r\n", 10);
     uint8_t code = M26_SIM_UNKNOWN;
 
     if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
-        if (ESP_ERR_OK == status)
+        if (M26_ERR_OK == status)
         {
             xQueueReceive(xAtQueue, buf, 0);
-            code = parse_pin_code(buf);
+            code = parse_pin_code((const char *)buf);
         }
     }
 
-    TRACE("code: %d\r\n", mode);
+    TRACE("code: %d\r\n", code);
     return code;
 }
 
@@ -648,7 +674,7 @@ int m26_connect(const char *mode, const char *ip, const char *port,
 int m26_prepare_send(uint16_t length, TickType_t time)
 {
     char str_mode[20];
-    sprintf(str_mode, "AT+QISEND=%d\r\n", chl, length);
+    sprintf(str_mode, "AT+QISEND=%d\r\n", length);
     
     return m26_send_ok(str_mode, time);
 }
@@ -662,7 +688,7 @@ int m26_write(const char *data, uint32_t length, TickType_t time)
 {
     uint8_t status;
     serial_putstring(g_serial, data, length);
-    int ret = ESP_ERR_OK;
+    int ret = M26_ERR_OK;
 
     if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
     {
@@ -670,7 +696,7 @@ int m26_write(const char *data, uint32_t length, TickType_t time)
     }
     else
     {
-        ret = -ESP_ERR_TIMEOUT;
+        ret = -M26_ERR_TIMEOUT;
     }
 
     if (0 != ret)
@@ -686,7 +712,7 @@ int m26_write(const char *data, uint32_t length, TickType_t time)
  * @param len - data length
  * @param xBlockTime - timeout time
  */
-int m26_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime)
+int m26_recv(char *data, uint16_t *len, TickType_t xBlockTime)
 {
     assert_param(NULL != xTcpQueue);
     
@@ -696,11 +722,11 @@ int m26_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTim
     {
         strncpy(data, node.data, node.size);
         *len = node.size;
-        return ESP_ERR_OK;
+        return M26_ERR_OK;
     }
     else
     {
-        return -ESP_ERR_TIMEOUT;
+        return -M26_ERR_TIMEOUT;
     }
 }
 

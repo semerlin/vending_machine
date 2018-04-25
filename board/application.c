@@ -18,6 +18,8 @@
 #include "led_motor.h"
 #include "led_net.h"
 #include "ir.h"
+#include "m26.h"
+#include "mode.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -72,12 +74,25 @@ static bool init_m26()
         return FALSE;
     }
 
-    if (M26_ERR_OK != m26_send_ok("AT+QIHEAD=1\r\n", DEFAULT_TIMEOUT))
+    if (M26_ERR_OK != m26_sync())
+    {
+       return FALSE; 
+    }
+  
+    //vTaskDelay(5000 / portTICK_PERIOD_MS);
+#if 1
+    if (M26_ERR_OK != m26_send_ok("AT+IPR=115200&W\r\n", DEFAULT_TIMEOUT))
     {
         return FALSE;
     }
+#endif
 
-    if (M26_ERR_OK != m26_send_ok("AT+IPR=115200&W\r\n", DEFAULT_TIMEOUT))
+    if (M26_ERR_OK != m26_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+    
+    if (M26_ERR_OK != m26_send_ok("AT+QIHEAD=1\r\n", DEFAULT_TIMEOUT))
     {
         return FALSE;
     }
@@ -104,17 +119,22 @@ static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\r\n");
 
-    if (!init_esp8266())
+    if (MODE_NET_WIFI == mode_net())
     {
-        goto ERROR;
+        if (!init_esp8266())
+        {
+            goto ERROR;
+        }
+        http_init();
     }
-
-    if (!init_m26())
+    else
     {
-        goto ERROR;
+        if (!init_m26())
+        {
+            goto ERROR;
+        }
     }
-
-    http_init();
+    
     wifi_init();
     mqtt_init();
     goto END;
@@ -154,12 +174,32 @@ static void vInitSystem(void *pvParameters)
 }
 
 /**
+ * @brief initialize system
+ * @param pvParameters - task parameter
+ */
+static void vTestSystem(void *pvParameters)
+{
+    TRACE("startup test...\r\n");
+
+    vTaskDelete(NULL);
+}
+
+/**
  * @brief start system
  */
 void ApplicationStartup()
 {
-    xTaskCreate(vInitSystem, "Init", INIT_SYSTEM_STACK_SIZE, NULL, 
-                INIT_SYSTEM_PRIORITY, NULL);
+    mode_init();
+    if (MODE_WORK_NORMAL == mode_work())
+    {
+        xTaskCreate(vInitSystem, "Init", INIT_SYSTEM_STACK_SIZE, NULL, 
+                    INIT_SYSTEM_PRIORITY, NULL);
+    }
+    else
+    {
+        xTaskCreate(vTestSystem, "Test", INIT_SYSTEM_STACK_SIZE, NULL, 
+                    INIT_SYSTEM_PRIORITY, NULL);
+    }
     
     /* Start the scheduler. */
     vTaskStartScheduler();

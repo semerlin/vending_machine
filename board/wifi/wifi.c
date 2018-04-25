@@ -18,6 +18,7 @@
 #include "stm32f10x_cfg.h"
 #include "motorctl.h"
 #include "led_net.h"
+#include "mode.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[wifi]"
@@ -144,8 +145,8 @@ static void init_m26_driver(void)
     m26_driver driver;
     driver.net_register = m26_net_register;
     driver.gprs_attach = m26_gprs_attach;
-    driver.server_connect = m26_server_connect();
-    driver.server_disconnect = m26_server_disconnect();
+    driver.server_connect = m26_server_connect;
+    driver.server_disconnect = m26_server_disconnect;
     m26_attach(&driver);
 }
 
@@ -394,10 +395,13 @@ int wifi_init(void)
     init_esp8266_driver();
     init_m26_driver();
     xApInfoQueue = xQueueCreate(1, sizeof(ap_info) / sizeof(char));
-    xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
-                       AP_PRIORITY, NULL);
-    xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
-                       AP_PRIORITY, NULL);
+    if (MODE_NET_WIFI == mode_net())
+    {
+        xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
+                        AP_PRIORITY, NULL);
+        xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
+                        AP_PRIORITY, NULL);
+    }
     xTaskCreate(vConnectMqtt, "connectmqtt", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, NULL);
     xTaskCreate(vMotorState, "motorstate", AP_STACK_SIZE, NULL, 

@@ -259,13 +259,13 @@ bool serial_putchar(serial *handle, char data,
     switch(pserial->port)
     {
     case COM1:
-        USART_WriteData_Wait(USART2, data);
+        USART_WriteData_Wait(USART1, data);
         break;
     case COM2:
         USART_WriteData_Wait(USART2, data);
         break;
     case COM3:
-        USART_WriteData_Wait(USART2, data);
+        USART_WriteData_Wait(USART3, data);
         break;
     default:
         return FALSE;
@@ -296,7 +296,7 @@ void USART1_IRQHandler(void)
     portCHAR cChar;
 	
     /* The interrupt was caused by the RX not empty. */
-	if(USART_IsFlagOn( USART1, USART_FLAG_RXNE))
+	if(USART_IsFlagOn(USART1, USART_FLAG_RXNE))
 	{
 		cChar = USART_ReadData(USART1);
 		xQueueSendFromISR(xRxedChars[0], &cChar, &xHigherPriorityTaskWoken);
@@ -334,7 +334,7 @@ void USART3_IRQHandler(void)
     portCHAR cChar;
 	
     /* The interrupt was caused by the RX not empty. */
-	if(USART_IsFlagOn(USART1, USART_FLAG_RXNE))
+	if(USART_IsFlagOn(USART3, USART_FLAG_RXNE))
 	{
 		cChar = USART_ReadData(USART3);
 		xQueueSendFromISR(xRxedChars[2], &cChar, &xHigherPriorityTaskWoken);

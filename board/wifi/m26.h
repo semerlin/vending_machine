@@ -43,12 +43,13 @@ int m26_send_ok(const char *cmd, TickType_t time);
 uint8_t m26_pin_status(TickType_t time);
 void m26_attach(const m26_driver *driver);
 void m26_detach(void);
-int m26_connect(const char *mode, const char *ip, uint16_t port,
-                    TickType_t time);
-int esp8266_disconnect(TickType_t time);
+int m26_connect(const char *mode, const char *ip, const char *port,
+        TickType_t time);
+int m26_disconnect(TickType_t time);
 int m26_prepare_send(uint16_t length, TickType_t time);
 int m26_write(const char *data, uint32_t length, TickType_t time);
-int m26_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime);
+int m26_recv(char *data, uint16_t *len, TickType_t xBlockTime);
+int m26_sync(void);
 
 END_DECLS
 
