@@ -111,7 +111,9 @@ void led_net_flashing(uint8_t num, TickType_t interval)
 void led_net_stop_flashing(uint8_t num)
 {
     assert_param(num < LED_NUM);
-    assert_param(NULL != led_timers[num]);
-    TRACE("stop flashing led: %d\r\n", num);
-    xTimerStop(led_timers[num], 0);
+    if (NULL != led_timers[num])
+    {
+        TRACE("stop flashing led: %d\r\n", num);
+        xTimerStop(led_timers[num], 0);
+    }
 }
