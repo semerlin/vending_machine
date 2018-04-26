@@ -50,6 +50,7 @@ int m26_prepare_send(uint16_t length, TickType_t time);
 int m26_write(const char *data, uint32_t length, TickType_t time);
 int m26_recv(char *data, uint16_t *len, TickType_t xBlockTime);
 int m26_sync(void);
+void m26_shutdown(void);
 
 END_DECLS
 

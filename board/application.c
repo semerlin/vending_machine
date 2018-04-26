@@ -20,6 +20,7 @@
 #include "ir.h"
 #include "m26.h"
 #include "mode.h"
+#include "license.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -190,6 +191,7 @@ static void vTestSystem(void *pvParameters)
 void ApplicationStartup()
 {
     mode_init();
+    license_init();
     if (MODE_WORK_NORMAL == mode_work())
     {
         xTaskCreate(vInitSystem, "Init", INIT_SYSTEM_STACK_SIZE, NULL, 

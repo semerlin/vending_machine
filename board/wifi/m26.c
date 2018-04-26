@@ -26,6 +26,7 @@
 /* mqtt driver */
 static m26_driver g_driver;
 
+TaskHandle_t task_m26 = NULL;
 
 /* esp8266 work in block mode */
 static struct
@@ -534,7 +535,7 @@ bool m26_init(void)
     }
     
     xTaskCreate(vM26Response, "M26Response", M26_STACK_SIZE, 
-            g_serial, M26_PRIORITY, NULL);
+            g_serial, M26_PRIORITY, &task_m26);
      
     return TRUE;
 }
@@ -741,5 +742,18 @@ int m26_disconnect(TickType_t time)
     
     return m26_send_ok(str_mode, time);
 }
+
+/**
+ * @brief shutdown m26
+ */
+void m26_shutdown(void)
+{
+    if (NULL != task_m26)
+    {
+        vTaskDelete(task_m26);
+        task_m26 = NULL;
+    }
+}
+
 
 

@@ -26,6 +26,8 @@
 /* mqtt driver */
 static esp8266_driver g_driver;
 
+static TaskHandle_t task_esp8266 = NULL;
+
 
 /* esp8266 work in block mode */
 static struct
@@ -610,7 +612,7 @@ bool esp8266_init(void)
     }
     
     xTaskCreate(vESP8266Response, "ESP8266Response", ESP8266_STACK_SIZE, 
-            g_serial, ESP8266_PRIORITY, NULL);
+            g_serial, ESP8266_PRIORITY, &task_esp8266);
      
     return TRUE;
 }
@@ -1009,7 +1011,6 @@ static void refresh_driver(void)
  */
 void esp8266_attach(const esp8266_driver *driver)
 {
-    assert_param(NULL != driver);
     g_driver.ap_connect = driver->ap_connect;
     g_driver.ap_disconnect = driver->ap_disconnect;
     g_driver.server_connect = driver->server_connect;
@@ -1025,4 +1026,15 @@ void esp8266_detach(void)
     init_esp8266_driver();
 }
 
+/**
+ * @brief shutdown esp8266
+ */
+void esp8266_shutdown(void)
+{
+    if (NULL != task_esp8266)
+    {
+        vTaskDelete(task_esp8266);
+        task_esp8266 = NULL;
+    }
+}
 

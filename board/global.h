@@ -13,6 +13,7 @@
 #define VERSION  ("v1.0.1.0_rc")
 
 /* task priority definition */
+#define LICENSE_PRIORITY             (tskIDLE_PRIORITY + 1)
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
 #define INIT_NETWORK_PRIORITY        (tskIDLE_PRIORITY + 1)
 #define HTTP_PRIORITY                (tskIDLE_PRIORITY + 1)
@@ -24,6 +25,7 @@
 #define IR_PRIORITY                  (tskIDLE_PRIORITY + 1)
 
 /* task stack definition */
+#define LICENSE_STACK_SIZE           (configMINIMAL_STACK_SIZE)
 #define INIT_SYSTEM_STACK_SIZE       (configMINIMAL_STACK_SIZE)
 #define INIT_NETWORK_STACK_SIZE      (configMINIMAL_STACK_SIZE)
 #define HTTP_STACK_SIZE              (configMINIMAL_STACK_SIZE)
