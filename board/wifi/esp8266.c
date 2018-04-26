@@ -125,6 +125,15 @@ static void init_esp8266_driver(void)
     g_driver.ap_disconnect = esp8266_ap_disconnect;
     g_driver.server_connect = esp8266_server_connect;
     g_driver.server_disconnect = esp8266_server_disconnect;
+
+    uint8_t count = sizeof(connects) / sizeof(connects[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        connects[i].is_valid = FALSE;
+        connects[i].direction = out;
+        connects[i].id = 0;
+        connects[i].is_working = FALSE;
+    }
 }
 
 
