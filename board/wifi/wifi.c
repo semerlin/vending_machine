@@ -29,6 +29,7 @@
 /* mqtt topic */
 #define TOPIC_CONTROL     "controller"
 #define TOPIC_STATE       "state"
+#define TOPIC_REGISTER    "register"
 
 static xQueueHandle xApInfoQueue = NULL;
 typedef struct
@@ -48,6 +49,8 @@ uint8_t g_id[25];
 uint8_t mqtt_status = 0x00;
 
 bool ap_connected = FALSE;
+
+static uint16_t g_motor_num = 0;
 
 #define LED_AP            (1)
 #define LED_MQTT          (2)
@@ -149,7 +152,6 @@ static void init_m26_driver(void)
     driver.server_disconnect = m26_server_disconnect;
     m26_attach(&driver);
 }
-
 
 /**
  * @brief ap process task
@@ -261,9 +263,21 @@ static void mqtt_connack(uint8_t status)
     if (MQTT_ERR_OK == status)
     {
         mqtt_status |= 0x02;
+        /* register sn */
+        mqtt_publish(TOPIC_REGISTER, g_id, 0, 1, 0);
+
         /* subscribe topic */
         mqtt_subscribe(TOPIC_CONTROL, 2);
     }
+}
+
+/**
+ * @brief publish callback
+ */
+static void mqtt_publish_cb(const char *topic, uint8_t *data, uint32_t len)
+{
+    assert_param(len >= 1);
+    g_motor_num = *pdata;
 }
 
 /**
@@ -271,15 +285,8 @@ static void mqtt_connack(uint8_t status)
  */
 static void mqtt_puback(uint16_t id)
 {
-    UNUSED(id);
-}
-
-/**
- * @brief connack default process function
- */
-static void mqtt_pubrec(uint16_t id)
-{
-    UNUSED(id);
+    /* register ack */
+    TRACE("register sn \'%s\' success\r\n", g_id);
 }
 
 /**
@@ -287,15 +294,8 @@ static void mqtt_pubrec(uint16_t id)
  */
 static void mqtt_pubrel(uint16_t id)
 {
-    UNUSED(id);
-}
-
-/**
- * @brief connack default process function
- */
-static void mqtt_pubcomp(uint16_t id)
-{
-    UNUSED(id);
+    assert_param(g_motor_num < 10);
+    motor_start(g_motor_num);
 }
 
 /**
@@ -305,22 +305,12 @@ static void mqtt_suback(uint8_t status, uint16_t id)
 {
     if (MQTT_SUB_ERR == status)
     {
+        if (0x03 == mqtt_status)
+        {
+            /* try to subscribe again */
+            mqtt_subscribe(TOPIC_CONTROL, 2);
+        }
     }
-}
-
-/**
- * @brief connack default process function
- */
-static void mqtt_unsuback(uint16_t id)
-{
-    UNUSED(id);
-}
-
-/**
- * @brief connack default process function
- */
-static void mqtt_pingresp(void)
-{
 }
 
 /**
@@ -330,16 +320,12 @@ static void init_mqtt_driver(void)
 {
     mqtt_driver driver;
     driver.connack = mqtt_connack;
+    driver.publish = mqtt_publish_cb;
     driver.puback = mqtt_puback;
-    driver.pubrec = mqtt_pubrec;
     driver.pubrel = mqtt_pubrel;
-    driver.pubcomp = mqtt_pubcomp;
     driver.suback = mqtt_suback;
-    driver.unsuback = mqtt_unsuback;
-    driver.pingresp= mqtt_pingresp;
     mqtt_attach(&driver);
 }
-
 
 /**
  * @brief convert chip id to string format

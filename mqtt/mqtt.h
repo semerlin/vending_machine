@@ -54,6 +54,7 @@ typedef struct
 typedef struct
 {
     void (*connack)(uint8_t status);
+    void (*publish)(const char *topic, uint8_t *content, uint32_t len);
     void (*puback)(uint16_t id);
     void (*pubrec)(uint16_t id);
     void (*pubrel)(uint16_t id);

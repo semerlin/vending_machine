@@ -81,6 +81,17 @@ static void mqtt_connack(uint8_t status)
 /**
  * @brief connack default process function
  */
+
+static void mqtt_publish_cb(const char *topic, uint8_t *content, uint32_t len);
+{
+    UNUSED(topic);
+    UNUSED(content);
+    UNUSED(len);
+}
+
+/**
+ * @brief connack default process function
+ */
 static void mqtt_puback(uint16_t id)
 {
     UNUSED(id);
@@ -140,6 +151,7 @@ static void mqtt_pingresp(void)
 static void init_mqtt_driver(void)
 {
     g_driver.connack = mqtt_connack;
+    g_driver.publish = mqtt_publish_cb
     g_driver.puback = mqtt_puback;
     g_driver.pubrec = mqtt_pubrec;
     g_driver.pubrel = mqtt_pubrel;
@@ -180,15 +192,25 @@ static uint8_t encode_length(uint32_t data, uint8_t *encode)
 /**
  * @brief decode data length
  * @param decode - data to decode
+ * @param step - decode step
  * @return data length 
  */
-static uint32_t decode_length(uint8_t *decode)
+static uint32_t decode_length(uint8_t *decode, uint8_t *step)
 {
     uint32_t multipiler = 0;
     uint32_t value = 0;
+    if (NULL != step)
+    {
+        *step = 0;
+    }
+
     do
     {
         decode ++;
+        if (NULL != step)
+        {
+            *step += 1; 
+        }
         value += (*decode & 0x7f) * multipiler;
         multipiler *= 128;
         if (multipiler > 128 * 128 *128)
@@ -210,7 +232,7 @@ void process_connack(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 2);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
         if (MQTT_ERR_OK == data[3])
         {
             g_is_connected = TRUE;
@@ -229,11 +251,70 @@ void process_connack(const char *data, uint8_t len)
  * @param data - data to process
  * @param len - data length
  */
+void process_publish(const char *data, uint8_t len)
+{
+    if (len >= 4)
+    {
+        uint8_t step = 0;
+        uint32_t data_len = decode_length((uint8_t *)(data + 1), &step);
+        uint8_t dup = ((data[0] >> 3) & 0x01);
+        uint8_t qos = ((data[0] >> 1) & 0x03);
+
+        char topic[32];
+        uint16_t id = 0;
+        uint16_t topic_len = 0;
+        const char *pdata = data + step + 1;
+        uint16_t content_len = 0;
+        topic_len = *pdata;
+        pdata ++;
+        topic_len <<= 8;
+        topic_len += *pdata;
+        pdata ++;
+
+        if (topic_len >= 32)
+        {
+            strncpy(topic, pdata, 31);
+            topic[31] = '\0';
+        }
+        else
+        {
+            strncpy(topic, pdata, topic_len);
+            topic[topic_len] = '\0';
+        }
+        pdata += topic_len;
+
+        id = *pdata;
+        id <<= 8;
+        pdata ++;
+        id += *pdata;
+        pdata ++;
+
+        g_driver.publish(topic, pdata, len - step - topic_len - 5);
+        switch(qos)
+        {
+        case 1:
+            mqtt_puback(id);
+            break;
+        case 2:
+            mqtt_pubrec(id);
+            break;
+        default:
+            break;
+        }
+        TRACE("PUBLISH: %d, %d, %d\r\n", dup, qos, data_len);
+    }
+}
+
+/**
+ * @brief process puback information
+ * @param data - data to process
+ * @param len - data length
+ */
 void process_puback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 2);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -251,7 +332,7 @@ void process_pubrec(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 2);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -269,10 +350,11 @@ void process_pubrel(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 2);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
+        mqtt_pubcomp(uuid);
         g_driver.pubrel(uuid);
         TRACE("PUBREL: %d\r\n", uuid);
     }
@@ -287,7 +369,7 @@ void process_pubcomp(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 2);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -305,7 +387,7 @@ void process_suback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 3);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 3);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -324,7 +406,7 @@ void process_unsuback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1)) == 3);
+        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 3);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -354,6 +436,7 @@ typedef struct
 func_node funcs[] = 
 {
     {TYPE_CONNACK, process_connack},
+    {TYPE_PUBLISH, process_publish},
     {TYPE_PUBACK, process_puback},
     {TYPE_PUBREC, process_pubrec},
     {TYPE_PUBREL, process_pubrel},
@@ -411,7 +494,7 @@ void vMqttRecv(void *pvParameters)
             {
                 for (int i = 0; i < count; ++i)
                 {
-                    if (funcs[i].type == data[0])
+                    if (funcs[i].type == (data[0] & 0xf0))
                     {
                         funcs[i].process(data, len);
                         break;
