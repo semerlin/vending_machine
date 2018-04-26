@@ -6,7 +6,7 @@
 * See the COPYING file for the terms of usage and distribution.
 */
 #include "FreeRTOS.h"
-#include "tasks.h"
+#include "task.h"
 #include "global.h"
 #include "trace.h"
 #include "serial.h"
@@ -37,7 +37,7 @@ static void vLicense(void *pvParameters)
             TRACE("license expired!\r\n");
             break;
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS):
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL);
@@ -48,8 +48,8 @@ static void vLicense(void *pvParameters)
  */
 void license_init(void)
 {
-    TRACE("initialise license system...");
-    xTaskCreate(vLicense, "license", LICENSE_SIZE, NULL, 
+    TRACE("initialise license system...\r\n");
+    xTaskCreate(vLicense, "license", LICENSE_STACK_SIZE, NULL, 
                 LICENSE_PRIORITY, NULL);
 }
 

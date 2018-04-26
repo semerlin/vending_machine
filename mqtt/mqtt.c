@@ -73,7 +73,7 @@ static bool g_is_connected = FALSE;
 /**
  * @brief connack default process function
  */
-static void mqtt_connack(uint8_t status)
+static void mqtt_connack_cb(uint8_t status)
 {
     UNUSED(status);
 }
@@ -82,7 +82,7 @@ static void mqtt_connack(uint8_t status)
  * @brief connack default process function
  */
 
-static void mqtt_publish_cb(const char *topic, uint8_t *content, uint32_t len);
+static void mqtt_publish_cb(const char *topic, uint8_t *content, uint32_t len)
 {
     UNUSED(topic);
     UNUSED(content);
@@ -92,7 +92,7 @@ static void mqtt_publish_cb(const char *topic, uint8_t *content, uint32_t len);
 /**
  * @brief connack default process function
  */
-static void mqtt_puback(uint16_t id)
+static void mqtt_puback_cb(uint16_t id)
 {
     UNUSED(id);
 }
@@ -100,7 +100,7 @@ static void mqtt_puback(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pubrec(uint16_t id)
+static void mqtt_pubrec_cb(uint16_t id)
 {
     UNUSED(id);
 }
@@ -108,7 +108,7 @@ static void mqtt_pubrec(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pubrel(uint16_t id)
+static void mqtt_pubrel_cb(uint16_t id)
 {
     UNUSED(id);
 }
@@ -116,7 +116,7 @@ static void mqtt_pubrel(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pubcomp(uint16_t id)
+static void mqtt_pubcomp_cb(uint16_t id)
 {
     UNUSED(id);
 }
@@ -124,7 +124,7 @@ static void mqtt_pubcomp(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_suback(uint8_t status, uint16_t id)
+static void mqtt_suback_cb(uint8_t status, uint16_t id)
 {
     UNUSED(status);
     UNUSED(id);
@@ -133,7 +133,7 @@ static void mqtt_suback(uint8_t status, uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_unsuback(uint16_t id)
+static void mqtt_unsuback_cb(uint16_t id)
 {
     UNUSED(id);
 }
@@ -141,7 +141,7 @@ static void mqtt_unsuback(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pingresp(void)
+static void mqtt_pingresp_cb(void)
 {
 }
 
@@ -150,15 +150,15 @@ static void mqtt_pingresp(void)
  */
 static void init_mqtt_driver(void)
 {
-    g_driver.connack = mqtt_connack;
-    g_driver.publish = mqtt_publish_cb
-    g_driver.puback = mqtt_puback;
-    g_driver.pubrec = mqtt_pubrec;
-    g_driver.pubrel = mqtt_pubrel;
-    g_driver.pubcomp = mqtt_pubcomp;
-    g_driver.suback = mqtt_suback;
-    g_driver.unsuback = mqtt_unsuback;
-    g_driver.pingresp = mqtt_pingresp;
+    g_driver.connack = mqtt_connack_cb;
+    g_driver.publish = mqtt_publish_cb;
+    g_driver.puback = mqtt_puback_cb;
+    g_driver.pubrec = mqtt_pubrec_cb;
+    g_driver.pubrel = mqtt_pubrel_cb;
+    g_driver.pubcomp = mqtt_pubcomp_cb;
+    g_driver.suback = mqtt_suback_cb;
+    g_driver.unsuback = mqtt_unsuback_cb;
+    g_driver.pingresp = mqtt_pingresp_cb;
 }
 
 /**
@@ -197,7 +197,7 @@ static uint8_t encode_length(uint32_t data, uint8_t *encode)
  */
 static uint32_t decode_length(uint8_t *decode, uint8_t *step)
 {
-    uint32_t multipiler = 0;
+    uint32_t multipiler = 1;
     uint32_t value = 0;
     if (NULL != step)
     {
@@ -232,7 +232,7 @@ void process_connack(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
+        assert_param(decode_length((uint8_t *)data, NULL) == 2);
         if (MQTT_ERR_OK == data[3])
         {
             g_is_connected = TRUE;
@@ -256,7 +256,7 @@ void process_publish(const char *data, uint8_t len)
     if (len >= 4)
     {
         uint8_t step = 0;
-        uint32_t data_len = decode_length((uint8_t *)(data + 1), &step);
+        uint32_t data_len = decode_length((uint8_t *)data, &step);
         uint8_t dup = ((data[0] >> 3) & 0x01);
         uint8_t qos = ((data[0] >> 1) & 0x03);
 
@@ -264,7 +264,6 @@ void process_publish(const char *data, uint8_t len)
         uint16_t id = 0;
         uint16_t topic_len = 0;
         const char *pdata = data + step + 1;
-        uint16_t content_len = 0;
         topic_len = *pdata;
         pdata ++;
         topic_len <<= 8;
@@ -283,13 +282,17 @@ void process_publish(const char *data, uint8_t len)
         }
         pdata += topic_len;
 
-        id = *pdata;
-        id <<= 8;
-        pdata ++;
-        id += *pdata;
-        pdata ++;
+        if ((1 == qos) || (2 == qos))
+        {
+            id = *pdata;
+            id <<= 8;
+            pdata ++;
+            id += *pdata;
+            pdata ++;
+            len -= 2;
+        }
 
-        g_driver.publish(topic, pdata, len - step - topic_len - 5);
+        g_driver.publish(topic, (uint8_t *)pdata, len - step - topic_len - 3);
         switch(qos)
         {
         case 1:
@@ -314,7 +317,7 @@ void process_puback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
+        assert_param(decode_length((uint8_t *)data, NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -332,7 +335,7 @@ void process_pubrec(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
+        assert_param(decode_length((uint8_t *)data, NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -350,7 +353,7 @@ void process_pubrel(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
+        assert_param(decode_length((uint8_t *)data, NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -369,7 +372,7 @@ void process_pubcomp(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 2);
+        assert_param(decode_length((uint8_t *)data, NULL) == 2);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -387,7 +390,7 @@ void process_suback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 3);
+        assert_param(decode_length((uint8_t *)data, NULL) == 3);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -406,7 +409,7 @@ void process_unsuback(const char *data, uint8_t len)
 {
     if (len >= 4)
     {
-        assert_param(decode_length((uint8_t *)(data + 1), NULL) == 3);
+        assert_param(decode_length((uint8_t *)data, NULL) == 3);
         uint16_t uuid = data[2];
         uuid <<= 8;
         uuid += data[3];
@@ -557,42 +560,42 @@ static void refresh_driver(void)
 {
     if (NULL == g_driver.connack)
     {
-        g_driver.connack = mqtt_connack;
+        g_driver.connack = mqtt_connack_cb;
     }
 
     if (NULL == g_driver.puback)
     {
-        g_driver.puback = mqtt_puback;
+        g_driver.puback = mqtt_puback_cb;
     }
 
     if (NULL == g_driver.pubrec)
     {
-        g_driver.pubrec = mqtt_pubrec;
+        g_driver.pubrec = mqtt_pubrec_cb;
     }
 
     if (NULL == g_driver.pubrel)
     {
-        g_driver.pubrel = mqtt_pubrel;
+        g_driver.pubrel = mqtt_pubrel_cb;
     }
 
     if (NULL == g_driver.pubcomp)
     {
-        g_driver.pubcomp = mqtt_pubcomp;
+        g_driver.pubcomp = mqtt_pubcomp_cb;
     }
 
     if (NULL == g_driver.suback)
     {
-        g_driver.suback = mqtt_suback;
+        g_driver.suback = mqtt_suback_cb;
     }
     
     if (NULL == g_driver.unsuback)
     {
-        g_driver.unsuback = mqtt_unsuback;
+        g_driver.unsuback = mqtt_unsuback_cb;
     }
     
     if (NULL == g_driver.pingresp)
     {
-        g_driver.pingresp = mqtt_pingresp;
+        g_driver.pingresp = mqtt_pingresp_cb;
     }
 }
 
@@ -817,6 +820,7 @@ void mqtt_connect(const connect_param *param)
  * @param topic - topic to publish
  * @param content - content to publish
  */
+
 void mqtt_publish(const char *topic, const char *content, uint8_t dup,
                   uint8_t qos, uint8_t retain)
 {
@@ -839,6 +843,7 @@ void mqtt_publish(const char *topic, const char *content, uint8_t dup,
     *pdata |= ((dup & 0x01) << 3);
     *pdata |= ((qos & 0x03) << 1);
     *pdata |= (retain & 0x01);
+    pdata++;
     
     uint8_t encode_len = encode_length(payload_len, pdata);
     assert_param((payload_len + encode_len + 1) <= MQTT_MAX_MSG_SIZE);
@@ -881,7 +886,7 @@ uint8_t mqtt_subscribe(const char *topic, uint8_t qos)
     payload_len = strlen(topic) + 5;
 
     /* packet data */
-    *pdata = TYPE_SUBSCRIBE;
+    *pdata++ = TYPE_SUBSCRIBE;
     
     uint8_t encode_len = encode_length(payload_len, pdata);
     assert_param((payload_len + encode_len + 1) <= MQTT_MAX_MSG_SIZE);
@@ -926,7 +931,7 @@ void mqtt_unsubscribe(const char *topic)
     payload_len = strlen(topic) + 4;
 
     /* packet data */
-    *pdata = TYPE_SUBSCRIBE;
+    *pdata++ = TYPE_SUBSCRIBE;
     
     uint8_t encode_len = encode_length(payload_len, pdata);
     assert_param((payload_len + encode_len + 1) <= MQTT_MAX_MSG_SIZE);
@@ -945,6 +950,66 @@ void mqtt_unsubscribe(const char *topic)
     pdata += str_len;
     
     msg.size = payload_len + encode_len + 1;
+
+    /* send message to queue */
+    xQueueSend(xSendQueue, &msg, 0);
+}
+
+/**
+ * @brief puback signal
+ */
+void mqtt_puback(uint16_t id)
+{
+    mqtt_msg msg;
+    uint8_t *pdata = msg.data;
+
+    /* packet data */
+    *pdata ++ = TYPE_PUBACK;
+    *pdata ++ = 0x02;
+    *pdata ++ = (uint8_t)(id >> 8);
+    *pdata ++ = (uint8_t)(id & 0x0f);
+    
+    msg.size = 4;
+
+    /* send message to queue */
+    xQueueSend(xSendQueue, &msg, 0);
+}
+
+/**
+ * @brief pubrec signal
+ */
+void mqtt_pubrec(uint16_t id)
+{
+    mqtt_msg msg;
+    uint8_t *pdata = msg.data;
+
+    /* packet data */
+    *pdata ++ = TYPE_PUBREC;
+    *pdata ++ = 0x02;
+    *pdata ++ = (uint8_t)(id >> 8);
+    *pdata ++ = (uint8_t)(id & 0x0f);
+    
+    msg.size = 4;
+
+    /* send message to queue */
+    xQueueSend(xSendQueue, &msg, 0);
+}
+
+/**
+ * @brief pubcomp signal
+ */
+void mqtt_pubcomp(uint16_t id)
+{
+    mqtt_msg msg;
+    uint8_t *pdata = msg.data;
+
+    /* packet data */
+    *pdata ++ = TYPE_PUBCOMP;
+    *pdata ++ = 0x02;
+    *pdata ++ = (uint8_t)(id >> 8);
+    *pdata ++ = (uint8_t)(id & 0x0f);
+    
+    msg.size = 4;
 
     /* send message to queue */
     xQueueSend(xSendQueue, &msg, 0);

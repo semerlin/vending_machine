@@ -40,7 +40,7 @@ serial *serial_request(Port port)
         return NULL;
     }
     pserial->port = port;
-    pserial->rxBufLen = 64;
+    pserial->rxBufLen = 128;
     USART_StructInit(&pserial->config);
 
     return pserial;

@@ -82,7 +82,7 @@ int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBloc
 int esp8266_write(const char *data, uint32_t length, TickType_t time);
 void esp8266_attach(const esp8266_driver *driver);
 void esp8266_detach(void);
-void esp8266_shutdown(void):
+void esp8266_shutdown(void);
 
 END_DECLS
 

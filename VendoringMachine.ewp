@@ -1992,6 +1992,12 @@
       <name>$PROJ_DIR$\board\led_net.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\license.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\license.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\main.c</name>
     </file>
     <file>

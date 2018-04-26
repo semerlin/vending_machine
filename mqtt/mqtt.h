@@ -72,6 +72,9 @@ bool mqtt_is_connected(void);
 void mqtt_connect(const connect_param *param);
 void mqtt_publish(const char *topic, const char *content, uint8_t dup,
                   uint8_t qos, uint8_t retain);
+void mqtt_puback(uint16_t id);
+void mqtt_pubrec(uint16_t id);
+void mqtt_pubcomp(uint16_t id);
 uint8_t mqtt_subscribe(const char *topic, uint8_t qos);
 void mqtt_unsubscribe(const char *topic);
 void mqtt_pingreq(void);

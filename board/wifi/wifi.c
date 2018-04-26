@@ -177,12 +177,6 @@ static void vConnectAp(void *pvParameters)
                 break;
             }
         }
-        
-        if (count < TRY_COUNT)
-        {
-            ap_connected = TRUE;
-            TRACE("connect to ap \"%s\" success\r\n", info.name);
-        }
     }
 }
 
@@ -210,6 +204,7 @@ static void vConnectMqtt(void *pvParameters)
     {
         if (ap_connected)
         {
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
             switch (mqtt_status)
             {
             case 0x00:
@@ -229,8 +224,10 @@ static void vConnectMqtt(void *pvParameters)
                 break;
             }
         }
-        
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        else
+        {
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
+        }
     }
 }
 
@@ -249,22 +246,22 @@ static void vMotorState(void *pvParameters)
             status_str[0] = (status >> 8);
             status_str[1] = (status & 0xff);
             mqtt_publish(TOPIC_STATE, (const char *)status_str, 0, 0, 0);
-        }
-        
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        }   
+        vTaskDelay(9000 / portTICK_PERIOD_MS);
     }
 }
 
 /**
  * @brief connack default process function
  */
-static void mqtt_connack(uint8_t status)
+static void mqtt_connack_cb(uint8_t status)
 {
     if (MQTT_ERR_OK == status)
     {
+        led_net_stop_flashing(LED_MQTT);
         mqtt_status |= 0x02;
         /* register sn */
-        mqtt_publish(TOPIC_REGISTER, g_id, 0, 1, 0);
+        mqtt_publish(TOPIC_REGISTER, (const char *)g_id, 0, 1, 0);
 
         /* subscribe topic */
         mqtt_subscribe(TOPIC_CONTROL, 2);
@@ -277,13 +274,13 @@ static void mqtt_connack(uint8_t status)
 static void mqtt_publish_cb(const char *topic, uint8_t *data, uint32_t len)
 {
     assert_param(len >= 1);
-    g_motor_num = *pdata;
+    g_motor_num = *data;
 }
 
 /**
  * @brief connack default process function
  */
-static void mqtt_puback(uint16_t id)
+static void mqtt_puback_cb(uint16_t id)
 {
     /* register ack */
     TRACE("register sn \'%s\' success\r\n", g_id);
@@ -292,7 +289,7 @@ static void mqtt_puback(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_pubrel(uint16_t id)
+static void mqtt_pubrel_cb(uint16_t id)
 {
     assert_param(g_motor_num < 10);
     motor_start(g_motor_num);
@@ -301,7 +298,7 @@ static void mqtt_pubrel(uint16_t id)
 /**
  * @brief connack default process function
  */
-static void mqtt_suback(uint8_t status, uint16_t id)
+static void mqtt_suback_cb(uint8_t status, uint16_t id)
 {
     if (MQTT_SUB_ERR == status)
     {
@@ -319,11 +316,11 @@ static void mqtt_suback(uint8_t status, uint16_t id)
 static void init_mqtt_driver(void)
 {
     mqtt_driver driver;
-    driver.connack = mqtt_connack;
+    driver.connack = mqtt_connack_cb;
     driver.publish = mqtt_publish_cb;
-    driver.puback = mqtt_puback;
-    driver.pubrel = mqtt_pubrel;
-    driver.suback = mqtt_suback;
+    driver.puback = mqtt_puback_cb;
+    driver.pubrel = mqtt_pubrel_cb;
+    driver.suback = mqtt_suback_cb;
     mqtt_attach(&driver);
 }
 
@@ -378,8 +375,14 @@ int wifi_init(void)
 {
     TRACE("initialize wifi...\r\n");
     init_mqtt_driver();
-    init_esp8266_driver();
-    init_m26_driver();
+    if (MODE_NET_WIFI == mode_net())
+    {
+        init_esp8266_driver();
+    }
+    else
+    {
+        init_m26_driver();
+    }
     xApInfoQueue = xQueueCreate(1, sizeof(ap_info) / sizeof(char));
     if (MODE_NET_WIFI == mode_net())
     {

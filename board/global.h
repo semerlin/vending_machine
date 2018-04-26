@@ -16,11 +16,11 @@
 #define LICENSE_PRIORITY             (tskIDLE_PRIORITY + 1)
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
 #define INIT_NETWORK_PRIORITY        (tskIDLE_PRIORITY + 1)
-#define HTTP_PRIORITY                (tskIDLE_PRIORITY + 1)
+#define HTTP_PRIORITY                (tskIDLE_PRIORITY + 2)
 #define AP_PRIORITY                  (tskIDLE_PRIORITY + 1)
 #define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 3)
 #define M26_PRIORITY                 (tskIDLE_PRIORITY + 3)
-#define MOTOR_PRIORITY               (tskIDLE_PRIORITY + 2)
+#define MOTOR_PRIORITY               (tskIDLE_PRIORITY + 1)
 #define MQTT_PRIORITY                (tskIDLE_PRIORITY + 2)
 #define IR_PRIORITY                  (tskIDLE_PRIORITY + 1)
 

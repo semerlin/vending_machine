@@ -20,7 +20,7 @@
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[esp8266]"
 
-//#define _PRINT_DETAIL 
+#define _PRINT_DETAIL 
 
 
 /* mqtt driver */
@@ -28,6 +28,7 @@ static esp8266_driver g_driver;
 
 static TaskHandle_t task_esp8266 = NULL;
 
+static uint16_t g_out_id = 0xffff;
 
 /* esp8266 work in block mode */
 static struct
@@ -151,6 +152,7 @@ static void add_connect(esp8266_condir direction, uint16_t id)
     {
         if (!connects[i].is_valid)
         {
+            TRACE("add connect: %d\r\n", id);
             connects[i].is_valid = TRUE;
             connects[i].direction = direction;
             connects[i].id = id;
@@ -171,6 +173,7 @@ static void remove_connect(uint16_t id)
     {
         if (connects[i].is_valid && (connects[i].id == id))
         {
+            TRACE("remove connect: %d\r\n", id);
             connects[i].is_valid = FALSE;
             break;
         }
@@ -186,7 +189,7 @@ static void set_id_working(uint16_t id)
     uint8_t count = sizeof(connects) / sizeof(connects[0]);
     for (int i = 0; i < count; ++i)
     {
-        if (connects[i].id == id)
+        if ((connects[i].id == id) && connects[i].is_valid)
         {
             connects[i].is_working = TRUE;
             break;
@@ -204,7 +207,7 @@ static esp8266_condir get_id_direction(uint16_t id)
     uint8_t count = sizeof(connects) / sizeof(connects[0]);
     for (int i = 0; i < count; ++i)
     {
-        if (connects[i].id == id)
+        if ((connects[i].id == id) && connects[i].is_valid)
         {
             return connects[i].direction;
         }
@@ -259,8 +262,12 @@ static uint16_t parse_id(const char *data)
 {
     const char *pdata = data;
     uint16_t val = 0;
-    while (',' != *pdata)
+    while ((',' != *pdata) && ('\0' != *pdata))
     {
+        if (' ' == *pdata)
+        {
+            continue;
+        }
         val *= 10;
         val += (*pdata - '0'); 
         pdata++;
@@ -290,13 +297,20 @@ static bool try_process_server_connect(const char *data, uint8_t len)
         if (0 == strncmp(pdata, "CONNECT", 7))
         {
             id = parse_id(data);
-            add_connect(in, id);
+            if (id != g_out_id)
+            {
+                add_connect(in, id);
+            }
             g_driver.server_connect(id);
             return TRUE;
         }
         else if (0 == strncmp(pdata, "CLOSED", 6))
         {
             id = parse_id(data);
+            if (id == g_out_id)
+            {
+                g_out_id = 0xffff;
+            }
             remove_connect(id);
             g_driver.server_disconnect(id);
             return TRUE;
@@ -315,13 +329,11 @@ static bool try_process_ap_connect(const char *data, uint8_t len)
 {
     if (0 == strncmp(data, "WIFI CONNECTED", len - 2))
     {
-        TRACE("ap connected\r\n");
         g_driver.ap_connect();
         return TRUE;
     }
     else if (0 == strncmp(data, "WIFI DISCONNECT", len - 2))
     {
-        TRACE("ap disconnect\r\n");
         g_driver.ap_disconnect();
         return TRUE;
     }
@@ -575,6 +587,7 @@ static void vESP8266Response(void *pvParameters)
  * @brief initialize esp8266
  * @return 0 means success, otherwise error code
  */
+uint16_t iddd = 0;
 bool esp8266_init(void)
 {
     TRACE("initialize esp8266...\r\n");
@@ -582,7 +595,7 @@ bool esp8266_init(void)
     pin_reset("WIFI_EN");
     vTaskDelay(100 / portTICK_PERIOD_MS);
     pin_set("WIFI_EN");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     
     g_serial = serial_request(COM2);
     if (NULL == g_serial)
@@ -826,14 +839,18 @@ int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port
 {
     assert_param(NULL != g_serial);
 
-    char str_mode[64];
-    sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", id, mode, ip, port);
-    
+    g_out_id = id;
+    char str_mode[45];
+    sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", g_out_id, mode, ip, port);
     int ret = esp8266_send_ok(str_mode, time);
     if (ESP_ERR_OK == ret)
     {
-        add_connect(out, id);
-        set_id_working(id);
+        add_connect(out, g_out_id);
+        set_id_working(g_out_id);
+    }
+    else
+    {
+        g_out_id = 0xffff;
     }
     
     return ret;

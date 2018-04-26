@@ -44,7 +44,15 @@ static bool init_esp8266(void)
     {
         return FALSE;
     }
-
+    
+#if 0
+    if (ESP_ERR_OK != esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT))
+    {
+        return FALSE;
+    }
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+#endif
+    
     if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
     {
         return FALSE;
@@ -136,8 +144,9 @@ static void vInitNetwork(void *pvParameters)
         }
     }
     
-    wifi_init();
     mqtt_init();
+    wifi_init();
+    
     goto END;
 
 ERROR:

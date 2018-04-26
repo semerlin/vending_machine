@@ -52,6 +52,7 @@ const char set_page[] = "\
 static void parse_name_and_pwd(const char *data, char *name, char *pwd)
 {
     const char *pdata = data;
+    uint8_t spec = 0;
     while('=' != *pdata++);
     while('&' != *pdata)
     {
@@ -61,6 +62,17 @@ static void parse_name_and_pwd(const char *data, char *name, char *pwd)
     while('=' != *pdata++);
     while(' ' != *pdata)
     {
+        if ('%' == *pdata)
+        {
+            pdata++;
+            spec = *pdata - '0';
+            spec <<= 4;
+            pdata++;
+            spec += (*pdata - '0');
+            pdata ++;
+            *pwd++ = spec;
+            continue;
+        }
         *pwd++ = *pdata++;
     }
     *pwd = '\0';
@@ -104,8 +116,8 @@ static void vHttpd(void *pvParameters)
                 apname[0] = 0;
                 password[0] = 0;
                 parse_name_and_pwd(data, apname, password);
-                TRACE("get setting:%s(%s)\r\n", apname, password);
                 while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
+                TRACE("get setting:%s(%s)\r\n", apname, password);
                 id = esp8266_tcp_id(in);
                 if (0xffff != id)
                 {
