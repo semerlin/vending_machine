@@ -5,6 +5,7 @@
 *
 * See the COPYING file for the terms of usage and distribution.
 */
+#include <string.h>
 #include "stm32f10x_flash.h"
 #include "stm32f10x_map.h"
 #include "stm32f10x_cfg.h"
@@ -33,6 +34,12 @@ FLASH_T *FLASH = (FLASH_T *)FLASH_BASE;
 #define ACR_PRFTBS (PERIPH_BB_BASE + ACR_OFFSET * 32 + 0x05 * 4)
 #define ACR_PRFTBE (PERIPH_BB_BASE + ACR_OFFSET * 32 + 0x04 * 4)
 #define ACR_HLFCYA (PERIPH_BB_BASE + ACR_OFFSET * 32 + 0x03 * 4)
+/* CR bit band */
+#define CR_OFFSET (FLASH_OFFSET + 0x10)
+#define CR_PG     (PERIPH_BB_BASE + CR_OFFSET * 32 + 0x00 * 4)
+#define CR_PER    (PERIPH_BB_BASE + CR_OFFSET * 32 + 0x01 * 4)
+#define CR_STRT   (PERIPH_BB_BASE + CR_OFFSET * 32 + 0x06 * 4)
+#define CR_LOCK   (PERIPH_BB_BASE + CR_OFFSET * 32 + 0x07 * 4)
 
 
 /* key values */
@@ -46,12 +53,28 @@ FLASH_T *FLASH = (FLASH_T *)FLASH_BASE;
 
 
 
+/**
+ * @brief unlock flash
+ */
+static void FLASH_Unlock(void)
+{
+    FLASH->KEYR = KEY1;
+    FLASH->KEYR = KEY2;
+}
+
+/**
+ * @brief lock flash
+ */
+static void FLASH_Lock(void)
+{
+    *((volatile uint32_t*)CR_LOCK) = 0x01;
+}
 
 /**
  * @brief enable flash prefetch
  * @param flag: TRUE: enable, FALSE: disable
  */
-void Flash_EnablePrefetch(bool flag)
+void FLASH_EnablePrefetch(bool flag)
 {
     if(flag)
         *((volatile uint32_t *)ACR_PRFTBE) = 0x01;
@@ -116,3 +139,79 @@ void FLASH_SetLatency(uint8_t latency)
     FLASH->ACR |= latency;
 }
 
+/**
+ * @brief get flag status
+ * @pram - flag
+ * @return flag status
+ */
+bool FLASH_Is_FlagSet(uint8_t flag)
+{
+    assert_param(IS_FLASH_FLAG_PARAM(flag)); 
+    return (0 != (FLASH->SR & flag));
+}
+
+/**
+ * @brief clear flash flag
+ * @param flag - flash flag
+ */
+void FLASH_ClrFlag(uint8_t flag)
+{
+    FLASH->SR &= ~(flag);
+}
+
+/**
+ * @brief erase flash page
+ * @param addr - erase address
+ */
+void FLASH_ErasePage(uint32_t addr)
+{
+    FLASH_Unlock();
+    FLASH_ClrFlag(FLAH_FLAG_EOP | FLAH_FLAG_WRPRTERR | FLAH_FLAG_PGERR);
+    
+    *((volatile uint32_t*)CR_PER) = 0x01;
+    FLASH->AR = addr;
+    *((volatile uint32_t*)CR_STRT) = 0x01;
+    while (FLASH->SR & FLAH_FLAG_BSY); 
+    *((volatile uint32_t*)CR_PER) = 0x00;
+    
+    FLASH_Lock();
+}
+/**
+ * @brief write data to flash
+ * @param addr - start address
+ * @param data - data to write
+ * @param len - data length
+ */
+uint32_t FLASH_Write(uint32_t addr, uint8_t *data, uint32_t len)
+{
+    FLASH_Unlock();
+    FLASH_ClrFlag(FLAH_FLAG_EOP | FLAH_FLAG_WRPRTERR | FLAH_FLAG_PGERR);
+    
+    *((volatile uint32_t*)CR_PG) = 0x01;
+    
+    for (uint32_t i = 0; i < len; i += 2)
+    {
+        *(uint16_t*)addr = *(uint16_t *)data;
+        addr += 2;
+        data += 2;
+        while (FLASH->SR & FLAH_FLAG_BSY);
+    }
+
+    *((volatile uint32_t*)CR_PG) = 0x00;
+    
+    FLASH_Lock();
+    
+    return len;
+}
+
+/**
+ * @brief write data to flash
+ * @param addr - start address
+ * @param data - data to read out
+ * @param len - data length
+ */
+uint32_t FLASH_Read(uint32_t addr, uint8_t *data, uint32_t len)
+{
+    memcpy(data, (void *)addr, len);
+    return len;
+}
