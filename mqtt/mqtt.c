@@ -11,6 +11,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
 #include "esp8266.h"
 #include "m26.h"
 #include "trace.h"
@@ -26,8 +27,8 @@
 static mqtt_driver g_driver;
 
 /* send and recive queue */
-static xQueueHandle xSendQueue = NULL;
 static xQueueHandle xRecvQueue = NULL;
+static SemaphoreHandle_t xSendMutex = NULL;
 
 #define MQTT_MAX_MSG_NUM     (6)
 #define MQTT_MAX_MSG_SIZE    (128)
@@ -57,6 +58,7 @@ typedef struct
 
 /* uuid */
 static uint16_t g_uuid = 0;
+static uint8_t g_linkid = 0xff;
 
 /* connect */
 const uint8_t protocol_name[6] = {0x00, 0x04, 'M', 'Q', 'T', 'T'};
@@ -65,9 +67,6 @@ connect_flag default_connect_flag = {0x00};
 
 /* process function */
 typedef void (*process_func)(const char *data, uint8_t len);
-
-/* mqtt connect status */
-static bool g_is_connected = FALSE;
 
 
 /**
@@ -233,14 +232,6 @@ void process_connack(const char *data, uint8_t len)
     if (len >= 4)
     {
         assert_param(decode_length((uint8_t *)data, NULL) == 2);
-        if (MQTT_ERR_OK == data[3])
-        {
-            g_is_connected = TRUE;
-        }
-        else
-        {
-            g_is_connected = FALSE;
-        }
         g_driver.connack(data[3]);
         TRACE("CONNACK: %d\r\n", data[3]);
     }
@@ -450,32 +441,30 @@ func_node funcs[] =
 };
 
 /**
- * @brief mqtt send task
- * @param pvParameters - task parameters
+ * @brief mqtt send data
+ * @param data - data to send
+ * @param length - data length
  */
-void vMqttSend(void *pvParameters)
+static void mqtt_send_data(const mqtt_msg *msg)
 {
-    mqtt_msg msg;
-    for (;;)
+    if (MODE_NET_WIFI == mode_net())
     {
-        xQueueReceive(xSendQueue, &msg, portMAX_DELAY);
-        if (MODE_NET_WIFI == mode_net())
+        if(pdTRUE == xSemaphoreTake(xSendMutex, 1000 / portTICK_PERIOD_MS))
         {
-            if (ESP_ERR_OK == esp8266_prepare_send(2, msg.size, 
-                                                   3000 / portTICK_PERIOD_MS))
+            if (ESP_ERR_OK == esp8266_prepare_send(g_linkid, msg->size))
             {
-                esp8266_write((const char *)msg.data, msg.size, 
-                          1000 / portTICK_PERIOD_MS);
+                esp8266_write((const char *)msg->data, msg->size);
             }
+            xSemaphoreGive(xSendMutex);
         }
-        else
+    }
+    else
+    {
+        if (M26_ERR_OK == m26_prepare_send(msg->size, 
+                                           3000 / portTICK_PERIOD_MS))
         {
-            if (M26_ERR_OK == m26_prepare_send(msg.size, 
-                                               3000 / portTICK_PERIOD_MS))
-            {
-                m26_write((const char *)msg.data, msg.size, 
-                          1000 / portTICK_PERIOD_MS);
-            }
+            m26_write((const char *)msg->data, msg->size, 
+                      1000 / portTICK_PERIOD_MS);
         }
     }
 }
@@ -489,11 +478,12 @@ void vMqttRecv(void *pvParameters)
     char data[65];
     uint16_t len;
     int count = sizeof(funcs) / sizeof(funcs[0]);
+    uint8_t id = 0;
     for (;;)
     {
         if (MODE_NET_WIFI == mode_net())
         {
-            if (ESP_ERR_OK == esp8266_recv(out, data, &len, portMAX_DELAY))
+            if (ESP_ERR_OK == esp8266_recv(&id, data, &len, portMAX_DELAY))
             {
                 for (int i = 0; i < count; ++i)
                 {
@@ -529,22 +519,13 @@ void vMqttRecv(void *pvParameters)
  */
 bool mqtt_init(void)
 {
-    g_is_connected = FALSE;
-    xSendQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
-    if (NULL == xSendQueue)
-    {
-        return FALSE;
-    }
-
+    xSendMutex = xSemaphoreCreateMutex();
     xRecvQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
-        vPortFree(xSendQueue);
         return FALSE;
     }
     
-    xTaskCreate(vMqttSend, "MqttSend", MQTT_STACK_SIZE, 
-            NULL, MQTT_PRIORITY, NULL);
     xTaskCreate(vMqttRecv, "MqttRecv", MQTT_STACK_SIZE, 
             NULL, MQTT_PRIORITY, NULL);
 
@@ -704,8 +685,7 @@ int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port)
 {
     if (MODE_NET_WIFI == mode_net())
     {
-        return esp8266_connect(id, "TCP", ip, port, 
-                               3000 / portTICK_PERIOD_MS);
+        return esp8266_connect_server(id, "TCP", ip, port);
     }
     else
     {
@@ -713,15 +693,6 @@ int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port)
         sprintf(port_str, "%d", port);
         return m26_connect("TCP", ip, port_str, 3000 / portTICK_PERIOD_MS);
     }
-}
-
-/**
- * @brief get mqtt connect status
- * @return connect status
- */
-bool mqtt_is_connected(void)
-{
-    return g_is_connected;
 }
 
 /**
@@ -812,7 +783,7 @@ void mqtt_connect(const connect_param *param)
     }
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -866,7 +837,7 @@ void mqtt_publish(const char *topic, const char *content, uint8_t dup,
     msg.size = payload_len + encode_len + 1;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -909,7 +880,7 @@ uint8_t mqtt_subscribe(const char *topic, uint8_t qos)
     msg.size = payload_len + encode_len + 1;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
     
     return g_uuid;
 }
@@ -952,7 +923,7 @@ void mqtt_unsubscribe(const char *topic)
     msg.size = payload_len + encode_len + 1;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -972,7 +943,7 @@ void mqtt_puback(uint16_t id)
     msg.size = 4;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -992,7 +963,7 @@ void mqtt_pubrec(uint16_t id)
     msg.size = 4;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -1012,7 +983,7 @@ void mqtt_pubcomp(uint16_t id)
     msg.size = 4;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -1030,7 +1001,7 @@ void mqtt_pingreq(void)
     msg.size = 2;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
 }
 
 /**
@@ -1048,6 +1019,23 @@ void mqtt_disconnect(void)
     msg.size = 2;
 
     /* send message to queue */
-    xQueueSend(xSendQueue, &msg, 0);
+    mqtt_send_data(&msg);
+}
+
+/**
+ * @brief notify socket connect
+ * @param id - connect id
+ */
+void mqtt_notify_connect(uint8_t id)
+{
+    g_linkid = id;
+}
+
+/**
+ * @brief notify socket disconnect
+ */
+void mqtt_notify_disconnect(void)
+{
+    g_linkid = 0xff;
 }
 

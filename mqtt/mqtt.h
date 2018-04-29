@@ -79,6 +79,8 @@ uint8_t mqtt_subscribe(const char *topic, uint8_t qos);
 void mqtt_unsubscribe(const char *topic);
 void mqtt_pingreq(void);
 void mqtt_disconnect(void);
+void mqtt_notify_connect(uint8_t id);
+void mqtt_notify_disconnect(void);
 
 
 END_DECLS

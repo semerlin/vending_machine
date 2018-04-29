@@ -5,16 +5,19 @@
 *
 * See the COPYING file for the terms of usage and distribution.
 */
-#ifndef _WIFI_H_
-  #define _WIFI_H_
+#ifndef _MODESWITCH_H_
+  #define _MODESWITCH_H_
 
 #include "types.h"
 
 BEGIN_DECLS
 
-int wifi_init(void);
-void wifi_connect_ap(const char *ssid, const char *pwd);
+#define MODE_AP        1
+#define MODE_SAT       2
+
+void modeswitch_init(void);
+void modeswitch_set(uint8_t mode);
 
 END_DECLS
 
-#endif /* _WIFI_H_ */
+#endif

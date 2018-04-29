@@ -22,13 +22,10 @@
 
 #define _PRINT_DETAIL 
 
-
 /* mqtt driver */
 static esp8266_driver g_driver;
 
 static TaskHandle_t task_esp8266 = NULL;
-
-static uint16_t g_out_id = 0xffff;
 
 /* esp8266 work in block mode */
 static struct
@@ -58,8 +55,7 @@ static serial *g_serial = NULL;
 
 /* recive queue */
 static xQueueHandle xStatusQueue = NULL;
-static xQueueHandle xInTcpQueue = NULL;
-static xQueueHandle xOutTcpQueue = NULL;
+static xQueueHandle xTcpQueue = NULL;
 static xQueueHandle xAtQueue = NULL;
 
 #define ESP_MAX_NODE_NUM              (6)
@@ -68,23 +64,10 @@ static xQueueHandle xAtQueue = NULL;
 
 typedef struct
 {
-    uint16_t link_id;
+    uint8_t id;
     uint16_t size;
     char data[ESP_MAX_MSG_SIZE_PER_LINE];
 }tcp_node;
-
-
-/* connect information */
-typedef struct
-{
-    bool is_valid;
-    esp8266_condir direction;
-    uint16_t id;
-    bool is_working;
-}connect_info;
-
-/* support at most 10 connects */
-connect_info connects[10];
 
 /* timeout time(ms) */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
@@ -106,7 +89,7 @@ static void esp8266_ap_disconnect(void)
 /**
  * @brief connedted default process function
  */
-static void esp8266_server_connect(uint16_t id)
+static void esp8266_server_connect(uint8_t id)
 {
     UNUSED(id);
 }
@@ -114,7 +97,7 @@ static void esp8266_server_connect(uint16_t id)
 /**
  * @brief connedted default process function
  */
-static void esp8266_server_disconnect(uint16_t id)
+static void esp8266_server_disconnect(uint8_t id)
 {
     UNUSED(id);
 }
@@ -128,92 +111,6 @@ static void init_esp8266_driver(void)
     g_driver.ap_disconnect = esp8266_ap_disconnect;
     g_driver.server_connect = esp8266_server_connect;
     g_driver.server_disconnect = esp8266_server_disconnect;
-
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        connects[i].is_valid = FALSE;
-        connects[i].direction = out;
-        connects[i].id = 0;
-        connects[i].is_working = FALSE;
-    }
-}
-
-
-/**
- * @brief add connect information to list
- * @param direction - connect direction
- * @param id - connect id
- */
-static void add_connect(esp8266_condir direction, uint16_t id)
-{
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        if (!connects[i].is_valid)
-        {
-            TRACE("add connect: %d\r\n", id);
-            connects[i].is_valid = TRUE;
-            connects[i].direction = direction;
-            connects[i].id = id;
-            connects[i].is_working = FALSE;
-            break;
-        }
-    }
-}
-
-/**
- * @brief remove connect from list
- * @param id - connect id
- */
-static void remove_connect(uint16_t id)
-{
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        if (connects[i].is_valid && (connects[i].id == id))
-        {
-            TRACE("remove connect: %d\r\n", id);
-            connects[i].is_valid = FALSE;
-            break;
-        }
-    }
-}
-
-/**
- * @brief set id working
- * @param id - connect id
- */
-static void set_id_working(uint16_t id)
-{
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        if ((connects[i].id == id) && connects[i].is_valid)
-        {
-            connects[i].is_working = TRUE;
-            break;
-        }
-    }
-}
-
-/**
- * @brief get connect direction
- * @param id - connect id
- * @return connect direction
- */
-static esp8266_condir get_id_direction(uint16_t id)
-{
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        if ((connects[i].id == id) && connects[i].is_valid)
-        {
-            return connects[i].direction;
-        }
-    }
-    
-    return unknown;
 }
 
 /**
@@ -223,6 +120,7 @@ static esp8266_condir get_id_direction(uint16_t id)
  */
 static void send_at_cmd(const char *cmd, uint32_t length)
 {
+    assert_param(NULL != g_serial);
     xQueueReset(xStatusQueue);
     xQueueReset(xAtQueue);
     TRACE("send: %s", cmd);
@@ -297,21 +195,12 @@ static bool try_process_server_connect(const char *data, uint8_t len)
         if (0 == strncmp(pdata, "CONNECT", 7))
         {
             id = parse_id(data);
-            if (id != g_out_id)
-            {
-                add_connect(in, id);
-            }
             g_driver.server_connect(id);
             return TRUE;
         }
         else if (0 == strncmp(pdata, "CLOSED", 6))
         {
             id = parse_id(data);
-            if (id == g_out_id)
-            {
-                g_out_id = 0xffff;
-            }
-            remove_connect(id);
             g_driver.server_disconnect(id);
             return TRUE;
         }
@@ -474,28 +363,16 @@ static int process_tcp_head(const char *data, uint8_t len, uint16_t *id,
 
 /**
  * @brief process reveived tcp data
- * @param id - link id
  * @param data - data buffer
  * @param len - data length
  */
-static int process_tcp_data(uint16_t id, char *data, uint16_t len)
+static int process_tcp_data(uint8_t id, char *data, uint16_t len)
 {
     tcp_node node;
-    node.link_id = id;
+    node.id = id;
     node.size = len;
     strncpy(node.data, data, len);
-    esp8266_condir dir = get_id_direction(id);
-    switch (dir)
-    {
-    case in:
-        xQueueSend(xInTcpQueue, &node, 100 / portTICK_PERIOD_MS);
-        break;
-    case out:
-        xQueueSend(xOutTcpQueue, &node, 100 / portTICK_PERIOD_MS);
-        break;
-    default:
-        break;
-    }
+    xQueueSend(xTcpQueue, &node, 100 / portTICK_PERIOD_MS);
     
     return 0;
 }
@@ -550,7 +427,6 @@ static void vESP8266Response(void *pvParameters)
                     if (process_tcp_head(node_data, node_size, &link_id, 
                                          &tcp_size) > 0)
                     {
-                        set_id_working(link_id);
                         pData = node_data;
                         node_size = 0;
                     }
@@ -587,7 +463,6 @@ static void vESP8266Response(void *pvParameters)
  * @brief initialize esp8266
  * @return 0 means success, otherwise error code
  */
-uint16_t iddd = 0;
 bool esp8266_init(void)
 {
     TRACE("initialize esp8266...\r\n");
@@ -608,15 +483,12 @@ bool esp8266_init(void)
     init_esp8266_driver();
     xStatusQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_NODE_NUM);
     xAtQueue = xQueueCreate(ESP_MAX_NODE_NUM, ESP_MAX_MSG_SIZE_PER_LINE);
-    xInTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
-                             sizeof(tcp_node) / sizeof(char));
-    xOutTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
+    xTcpQueue = xQueueCreate(ESP_MAX_NODE_NUM * 2, 
                              sizeof(tcp_node) / sizeof(char));
 
     if ((NULL == xStatusQueue) || 
         (NULL == xAtQueue) || 
-        (NULL == xInTcpQueue) ||
-        (NULL == xOutTcpQueue))
+        (NULL == xTcpQueue))
     {
         TRACE("initialize failed, can't create queue\'COM2\'\r\n");
         serial_release(g_serial);
@@ -633,18 +505,15 @@ bool esp8266_init(void)
 /**
  * @brief test esp8266 module
  * @param cmd - cmd to send
- * @param time - timeout time
  * @return 0 means connect success, otherwise failed
  */
-int esp8266_send_ok(const char *cmd, TickType_t time)
+int esp8266_send_ok(const char *cmd)
 {
-    assert_param(NULL != g_serial);
-
     uint8_t status;
     send_at_cmd(cmd, strlen(cmd));
     int ret = ESP_ERR_OK;
 
-    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, DEFAULT_TIMEOUT))
     {
         ret = -status;
     }
@@ -665,13 +534,14 @@ int esp8266_send_ok(const char *cmd, TickType_t time)
  * @param data - data
  * @param length - data length
  */
-int esp8266_write(const char *data, uint32_t length, TickType_t time)
+int esp8266_write(const char *data, uint32_t length)
 {
+    assert_param(NULL != g_serial);
     uint8_t status;
     serial_putstring(g_serial, data, length);
     int ret = ESP_ERR_OK;
 
-    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, DEFAULT_TIMEOUT))
     {
         ret = -status;
     }
@@ -690,16 +560,13 @@ int esp8266_write(const char *data, uint32_t length, TickType_t time)
 /**
  * @brief set esp8266 work mode
  * @param mode - work mode
- * @param time - timeout time
  * @return 0 means connect success, otherwise failed
  */
-int esp8266_setmode(esp8266_mode mode, TickType_t time)
+int esp8266_setmode(esp8266_mode mode)
 {
-    assert_param(NULL != g_serial);
-
     char str_mode[16];
     sprintf(str_mode, "AT+CWMODE_CUR=%d\r\n", mode);
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -707,17 +574,15 @@ int esp8266_setmode(esp8266_mode mode, TickType_t time)
  * @param time - timeout time
  * @return esp8266 current work mode
  */
-esp8266_mode esp8266_getmode(TickType_t time)
+esp8266_mode esp8266_getmode(void)
 {
-    assert_param(NULL != g_serial);
-
     uint8_t status;
     uint8_t buf[ESP_MAX_MSG_SIZE_PER_LINE];
     buf[0] = UNKNOWN + '0';
     send_at_cmd("AT+CWMODE_CUR?\r\n", 16);
     esp8266_mode mode = UNKNOWN;
 
-    if (pdPASS == xQueueReceive(xStatusQueue, &status, time))
+    if (pdPASS == xQueueReceive(xStatusQueue, &status, DEFAULT_TIMEOUT))
     {
         if (ESP_ERR_OK == status)
         {
@@ -734,13 +599,10 @@ esp8266_mode esp8266_getmode(TickType_t time)
  * @brief connect ap
  * @param ssid - ap ssid
  * @param pwd - ap password
- * @param time - connect timeout time
  * @return 0 means connect success, otherwise failed
  */
 int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
 {
-    assert_param(NULL != g_serial);
-
     char str_mode[64];
     sprintf(str_mode, "AT+CWJAP_CUR=\"%s\",\"%s\"\r\n", ssid, pwd);
     send_at_cmd(str_mode, strlen(str_mode));
@@ -777,17 +639,6 @@ int esp8266_connect_ap(const char *ssid, const char *pwd, TickType_t time)
 }
 
 /**
- * @brief disconnect ap
- * @param time - disconnect timeout time
- */
-void esp8266_disconnect_ap(TickType_t time)
-{
-    assert_param(NULL != g_serial);
-
-    esp8266_send_ok("AT+CWQAP\r\n", time);
-}
-
-/**
  * @brief set software ap parameter
  * @param ssid - ap ssid
  * @param pwd - ap password
@@ -796,15 +647,13 @@ void esp8266_disconnect_ap(TickType_t time)
  * @return 0 means connect success, otherwise failed
  */
 int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl, 
-                       esp8266_ecn ecn, TickType_t time)
+                       esp8266_ecn ecn)
 {
-    assert_param(NULL != g_serial);
-
     char str_mode[64];
     sprintf(str_mode, "AT+CWSAP_CUR=\"%s\",\"%s\",%d,%d\r\n", 
             ssid, pwd, chl, ecn);
     
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -815,16 +664,13 @@ int esp8266_set_softap(const char *ssid, const char *pwd, uint8_t chl,
  * @param ecn - password encode type
  * @return 0 means connect success, otherwise failed
  */
-int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask,
-                       TickType_t time)
+int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask)
 {
-    assert_param(NULL != g_serial);
-
     char str_mode[64];
     sprintf(str_mode, "AT+CIPAP_CUR=\"%s\",\"%s\",\"%s\"\r\n", 
             ip, gateway, netmask);
     
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -832,44 +678,27 @@ int esp8266_set_apaddr(const char *ip, const char *gateway, const char *netmask,
  * @param mode - connect mode
  * @param ip - remote ip address
  * @param port - remote port
- * @param time - timeout time
  */
-int esp8266_connect(uint16_t id, const char *mode, const char *ip, uint16_t port,
-                    TickType_t time)
+int esp8266_connect_server(uint8_t id, const char *mode, const char *ip, 
+                    uint16_t port)
 {
-    assert_param(NULL != g_serial);
-
-    g_out_id = id;
-    char str_mode[45];
-    sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", g_out_id, mode, ip, port);
-    int ret = esp8266_send_ok(str_mode, time);
-    if (ESP_ERR_OK == ret)
-    {
-        add_connect(out, g_out_id);
-        set_id_working(g_out_id);
-    }
-    else
-    {
-        g_out_id = 0xffff;
-    }
-    
-    return ret;
+    char str_mode[64];
+    sprintf(str_mode, "AT+CIPSTART=%d,\"%s\",\"%s\",%d\r\n", id, mode, 
+            ip, port);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
- * @brief set esp8266 transport mode
- * @param mode - transport mode
+ * @brief disconnect tcp,udp,ssl connection
+ * @param id - link id
  * @param time - timeout time
- * @return error code
  */
-int esp8266_set_transmode(esp8266_transmode mode, TickType_t time)
+int esp8266_disconnect_server(uint8_t id)
 {
-    assert_param(NULL != g_serial);
+    char str_mode[22];
+    sprintf(str_mode, "AT+CIPCLOSE=%d\r\n", id);
     
-    char str_mode[16];
-    sprintf(str_mode, "AT+CIPMODE=%d\r\n", mode);
-
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -878,14 +707,12 @@ int esp8266_set_transmode(esp8266_transmode mode, TickType_t time)
  * @param time - timeout time
  * @return error code
  */
-int esp8266_listen(uint16_t port, TickType_t time)
+int esp8266_listen(uint16_t port)
 {
-    assert_param(NULL != g_serial);
-    
     char str_mode[24];
     sprintf(str_mode, "AT+CIPSERVER=1,%d\r\n", port);
 
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -893,14 +720,12 @@ int esp8266_listen(uint16_t port, TickType_t time)
  * @param time - timeout time
  * @return error code
  */
-int esp8266_close(uint16_t port, TickType_t time)
+int esp8266_close(uint16_t port)
 {
-    assert_param(NULL != g_serial);
-    
     char str_mode[24];
     sprintf(str_mode, "AT+CIPSERVER=0,%d\r\n", port);
 
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -909,24 +734,12 @@ int esp8266_close(uint16_t port, TickType_t time)
  * @param len - data length
  * @param xBlockTime - timeout time
  */
-int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBlockTime)
+int esp8266_recv(uint8_t *id, char *data, uint16_t *len, TickType_t xBlockTime)
 {
-    assert_param(NULL != xInTcpQueue);
-    assert_param(NULL != xOutTcpQueue);
-    
     tcp_node node;
-    xQueueHandle tcp_queue = NULL;
-    if (in == dir)
+    if (xQueueReceive(xTcpQueue, &node, xBlockTime))
     {
-        tcp_queue = xInTcpQueue;
-    }
-    else
-    {
-        tcp_queue = xOutTcpQueue;
-    }
-
-    if (xQueueReceive(tcp_queue, &node, xBlockTime))
-    {
+        *id = node.id;
         strncpy(data, node.data, node.size);
         *len = node.size;
         return ESP_ERR_OK;
@@ -941,46 +754,13 @@ int esp8266_recv(esp8266_condir dir, char *data, uint16_t *len, TickType_t xBloc
  * @brief prepare send tcp data
  * @param chl - connected channel
  * @param length - send length
- * @param time - timeout time
  */
-int esp8266_prepare_send(uint16_t chl, uint16_t length, TickType_t time)
+int esp8266_prepare_send(uint8_t id, uint16_t length)
 {
     char str_mode[20];
-    sprintf(str_mode, "AT+CIPSEND=%d,%d\r\n", chl, length);
+    sprintf(str_mode, "AT+CIPSEND=%d,%d\r\n", id, length);
     
-    return esp8266_send_ok(str_mode, time);
-}
-
-/**
- * @brief get tcp id
- * @param dir - connect direction
- * @return tcp id
- */
-uint16_t esp8266_tcp_id(esp8266_condir dir)
-{
-    uint8_t count = sizeof(connects) / sizeof(connects[0]);
-    for (int i = 0; i < count; ++i)
-    {
-        if ((connects[i].direction == dir) &&
-            connects[i].is_working)
-        {
-            return connects[i].id;
-        }
-    }
-    return 0xffff;
-}
-
-/**
- * @brief disconnect tcp,udp,ssl connection
- * @param id - link id
- * @param time - timeout time
- */
-int esp8266_disconnect(uint16_t id, TickType_t time)
-{
-    char str_mode[22];
-    sprintf(str_mode, "AT+CIPCLOSE=%d\r\n", id);
-    
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**
@@ -988,12 +768,12 @@ int esp8266_disconnect(uint16_t id, TickType_t time)
  * @param time - timeout time
  * @param time - timeout time
  */
-int esp8266_set_tcp_timeout(uint16_t timeout, TickType_t time)
+int esp8266_set_tcp_timeout(uint16_t timeout)
 {
     char str_mode[22];
     sprintf(str_mode, "AT+CIPSTO=%d\r\n", timeout);
     
-    return esp8266_send_ok(str_mode, time);
+    return esp8266_send_ok(str_mode);
 }
 
 /**

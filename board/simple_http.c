@@ -13,13 +13,20 @@
 #include "trace.h"
 #include "global.h"
 #include "dbgserial.h"
-#include "wifi.h"
+#include "flash.h"
+#include "modeswitch.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[http]"
 
 /* default timeout time */
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
+
+/* ap configueation */
+#define AP_NAME              "vendor"
+#define AP_PWD               "12345678"
+#define AP_CHL               5
+#define AP_ENC               OPEN
 
 /* ap address */
 #define AP_IP           "192.168.10.1"
@@ -83,87 +90,85 @@ static void parse_name_and_pwd(const char *data, char *name, char *pwd)
  */
 static void vHttpd(void *pvParameters)
 {
-    //esp8266_send_ok("AT+CIPSERVERMAXCONN=1\r\n", DEFAULT_TIMEOUT);
-    esp8266_listen(80, DEFAULT_TIMEOUT);
-    esp8266_set_tcp_timeout(20, DEFAULT_TIMEOUT);
     const TickType_t xDelay = 300 / portTICK_PERIOD_MS;
     char data[65];
     uint16_t len;
-    char apname[32];
-    char password[32];
-    uint16_t id = 0xffff;
+    char ssid[32];
+    char pwd[32];
+    uint8_t id = 0;
     for (;;)
     {
-        if (ESP_ERR_OK == esp8266_recv(in, data, &len, portMAX_DELAY))
+        if (ESP_ERR_OK == esp8266_recv(&id, data, &len, portMAX_DELAY))
         {
-            if (0 == strncmp(data, "GET / HTTP/1.1", 14))
+            if (0 == strncmp(data, "GET /setting?", 13))
             {
-                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
-                id = esp8266_tcp_id(in);
-                if (0xffff != id)
-                {
-                    if (ESP_ERR_OK == esp8266_prepare_send(id, 
-                                                   strlen(set_page), 
-                                                   DEFAULT_TIMEOUT))
-                    {
-                        esp8266_write(set_page, strlen(set_page), DEFAULT_TIMEOUT);
-                        esp8266_disconnect(id, DEFAULT_TIMEOUT);
-                    }
-                }
+                parse_name_and_pwd(data, ssid, pwd);
+                while (ESP_ERR_OK == esp8266_recv(&id, data, &len, xDelay));
+                TRACE("get setting:%s(%s)\r\n", ssid, pwd);
+                esp8266_disconnect_server(id);
+                esp8266_close(80);
+                break;
             }
-            else if (0 == strncmp(data, "GET /setting?", 13))
+            else if (0 == strncmp(data, "GET /", 5))
             {
-                apname[0] = 0;
-                password[0] = 0;
-                parse_name_and_pwd(data, apname, password);
-                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
-                TRACE("get setting:%s(%s)\r\n", apname, password);
-                id = esp8266_tcp_id(in);
-                if (0xffff != id)
+                while (ESP_ERR_OK == esp8266_recv(&id, data, &len, xDelay));
+                if (ESP_ERR_OK == esp8266_prepare_send(id, strlen(set_page)))
                 {
-                    esp8266_disconnect(id, DEFAULT_TIMEOUT);
+                    esp8266_write(set_page, strlen(set_page));
+                    esp8266_disconnect_server(id);
                 }
-                
-                wifi_connect_ap(apname, password);
             }
             else
             {
-                while (ESP_ERR_OK == esp8266_recv(in, data, &len, xDelay));
-                id = esp8266_tcp_id(in);
-                if (0xffff != id)
-                {
-                    esp8266_disconnect(id, DEFAULT_TIMEOUT);
-                }
+                while (ESP_ERR_OK == esp8266_recv(&id, data, &len, xDelay));
             }
         }
         
          
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    //esp8266_close(80, DEFAULT_TIMEOUT);
+    
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    flash_set_ssid_pwd(ssid, pwd);
+    modeswitch_set(MODE_SAT);
+    
+    vTaskDelete(NULL);
 }
  
 /**
  * @brief pms5003 data process task
  * @param serial handle
  */
-int http_init(void)
+bool http_init(void)
 {
     int err;
     TRACE("initialize http...\r\n");
-    err = esp8266_send_ok("AT+CIPMUX=1\r\n", DEFAULT_TIMEOUT);
-    if (ESP_ERR_OK == err)
+    err = esp8266_setmode(AP);
+    if (ESP_ERR_OK != err)
     {
-        err = esp8266_set_apaddr(AP_IP, AP_GATEWAY, AP_NETMASK, 
-                                 DEFAULT_TIMEOUT);
-        if (ESP_ERR_OK == err)
-        {
-           xTaskCreate(vHttpd, "httpd", HTTP_STACK_SIZE, NULL, 
-                       HTTP_PRIORITY, NULL);
-        }
+        return FALSE;
     }
-
-    TRACE("http status: %d\r\n", -err);
-    return err;
+    
+    err = esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, AP_ENC);
+    if (ESP_ERR_OK != err)
+    {
+        return FALSE;
+    }
+    
+    err = esp8266_set_apaddr(AP_IP, AP_GATEWAY, AP_NETMASK);
+    if (ESP_ERR_OK != err)
+    {
+        return FALSE;
+    }
+    
+    err = esp8266_listen(80);
+    if (ESP_ERR_OK != err)
+    {
+        return FALSE;
+    }
+    
+    xTaskCreate(vHttpd, "httpd", HTTP_STACK_SIZE, NULL, 
+                       HTTP_PRIORITY, NULL);
+    return TRUE;
 }
 

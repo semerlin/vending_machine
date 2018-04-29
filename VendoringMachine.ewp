@@ -317,7 +317,6 @@
           <state>F:\outsource\VendingMachine\platform\cm3</state>
           <state>F:\outsource\VendingMachine\platform\stm32f10x\inc</state>
           <state>F:\outsource\VendingMachine\board</state>
-          <state>F:\outsource\VendingMachine\board\wifi</state>
           <state>F:\outsource\VendingMachine\mqtt</state>
         </option>
         <option>
@@ -1922,33 +1921,6 @@
   </configuration>
   <group>
     <name>board</name>
-    <group>
-      <name>wifi</name>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\esp8266.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\esp8266.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\m26.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\m26.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\simple_http.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\simple_http.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\wifi.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\board\wifi\wifi.h</name>
-      </file>
-    </group>
     <file>
       <name>$PROJ_DIR$\board\application.c</name>
     </file>
@@ -1966,6 +1938,18 @@
     </file>
     <file>
       <name>$PROJ_DIR$\board\dbgserial.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\esp8266.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\esp8266.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\flash.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\flash.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\board\FreeRTOSConfig.h</name>
@@ -1998,6 +1982,12 @@
       <name>$PROJ_DIR$\board\license.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\m26.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\m26.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\main.c</name>
     </file>
     <file>
@@ -2005,6 +1995,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\board\mode.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\modeswitch.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\modeswitch.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\board\motorctl.c</name>
@@ -2025,6 +2021,12 @@
       <name>$PROJ_DIR$\board\serial.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\board\simple_http.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\simple_http.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\board\stm32f10x_cfg.h</name>
     </file>
     <file>
@@ -2035,6 +2037,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\board\stm32f10x_vector.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\wifi.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\board\wifi.h</name>
     </file>
   </group>
   <group>

@@ -16,13 +16,14 @@
 #define LICENSE_PRIORITY             (tskIDLE_PRIORITY + 1)
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
 #define INIT_NETWORK_PRIORITY        (tskIDLE_PRIORITY + 1)
-#define HTTP_PRIORITY                (tskIDLE_PRIORITY + 2)
+#define HTTP_PRIORITY                (tskIDLE_PRIORITY + 3)
 #define AP_PRIORITY                  (tskIDLE_PRIORITY + 1)
-#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 3)
-#define M26_PRIORITY                 (tskIDLE_PRIORITY + 3)
+#define ESP8266_PRIORITY             (tskIDLE_PRIORITY + 4)
+#define M26_PRIORITY                 (tskIDLE_PRIORITY + 4)
 #define MOTOR_PRIORITY               (tskIDLE_PRIORITY + 1)
 #define MQTT_PRIORITY                (tskIDLE_PRIORITY + 2)
 #define IR_PRIORITY                  (tskIDLE_PRIORITY + 1)
+#define MODESWITCH_PRIORITY          (tskIDLE_PRIORITY + 1)
 
 /* task stack definition */
 #define LICENSE_STACK_SIZE           (configMINIMAL_STACK_SIZE)
@@ -35,6 +36,7 @@
 #define MOTOR_STACK_SIZE             (configMINIMAL_STACK_SIZE)
 #define MQTT_STACK_SIZE              (configMINIMAL_STACK_SIZE)
 #define IR_STACK_SIZE                (configMINIMAL_STACK_SIZE)
+#define MODESWITCH_STACK_SIZE        (configMINIMAL_STACK_SIZE)
 
 /* interrupt priority */
 #define USART1_PRIORITY        (13)

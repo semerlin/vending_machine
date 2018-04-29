@@ -19,24 +19,20 @@
 #include "motorctl.h"
 #include "led_net.h"
 #include "mode.h"
+#include "flash.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[wifi]"
 
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
-#define TRY_COUNT             3
+
+static char g_ssid[32];
+static char g_pwd[32];
 
 /* mqtt topic */
-#define TOPIC_CONTROL     "controller"
-#define TOPIC_STATE       "state"
+#define TOPIC_CONTROL     "controller/"
+#define TOPIC_STATE       "state/"
 #define TOPIC_REGISTER    "register"
-
-static xQueueHandle xApInfoQueue = NULL;
-typedef struct
-{
-    char name[32];
-    char password[32];
-}ap_info;
 
 uint8_t g_id[25];
 
@@ -74,16 +70,18 @@ static void esp8266_ap_disconnect(void)
     led_net_flashing(LED_AP, FLASH_INTERVAL);
     led_net_stop_flashing(LED_MQTT);
     ap_connected = FALSE;
+    mqtt_notify_disconnect();
     mqtt_status = 0x00;
 }
 
 /**
  * @brief connedted default process function
  */
-static void esp8266_server_connect(uint16_t id)
+static void esp8266_server_connect(uint8_t id)
 {
     if (MQTT_ID == id)
     {
+        mqtt_notify_connect(id);
         mqtt_status = 0x01;
     }
 }
@@ -91,10 +89,11 @@ static void esp8266_server_connect(uint16_t id)
 /**
  * @brief connedted default process function
  */
-static void esp8266_server_disconnect(uint16_t id)
+static void esp8266_server_disconnect(uint8_t id)
 {
     if (MQTT_ID == id)
     {
+        mqtt_notify_disconnect();
         mqtt_status = 0x00;
     }
 }
@@ -158,24 +157,21 @@ static void init_m26_driver(void)
  */
 static void vConnectAp(void *pvParameters)
 {
-    ap_info info;
-    uint8_t count = 0;
     led_net_flashing(LED_AP, FLASH_INTERVAL);
     for (;;)
     {
-        count = 0;
-        xQueueReceive(xApInfoQueue, &info, portMAX_DELAY);
-        TRACE("connect ap:%s, %s\r\n", info.name, info.password);
-        while(ESP_ERR_OK != esp8266_connect_ap(info.name, info.password, 
-                                               20000 / portTICK_PERIOD_MS))
+        if (FALSE == ap_connected)
         {
-            count++;
-            if (count >= TRY_COUNT)
+            TRACE("connect ap:%s, %s\r\n", g_ssid, g_pwd);
+            if(ESP_ERR_OK == esp8266_connect_ap(g_ssid, g_pwd, 
+                                                20000 / portTICK_PERIOD_MS))
             {
-                ap_connected = FALSE;
-                TRACE("connect to ap \"%s\" failed\r\n", info.name);
-                break;
+                ap_connected = TRUE;
             }
+        }
+        else
+        {
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
     }
 }
@@ -321,6 +317,10 @@ static void init_mqtt_driver(void)
     driver.puback = mqtt_puback_cb;
     driver.pubrel = mqtt_pubrel_cb;
     driver.suback = mqtt_suback_cb;
+    driver.pubrec = NULL;
+    driver.pubcomp = NULL;
+    driver.unsuback = NULL;
+    driver.pingresp = NULL;
     mqtt_attach(&driver);
 }
 
@@ -371,9 +371,15 @@ static void convert_chipid(void)
  * @brief init wifi
  * @return init status
  */
-int wifi_init(void)
+bool wifi_init(void)
 {
     TRACE("initialize wifi...\r\n");
+    flash_get_ssid_pwd(g_ssid, g_pwd);
+    if (ESP_ERR_OK != esp8266_setmode(SAT))
+    {
+        return FALSE;
+    }
+    
     init_mqtt_driver();
     if (MODE_NET_WIFI == mode_net())
     {
@@ -383,35 +389,22 @@ int wifi_init(void)
     {
         init_m26_driver();
     }
-    xApInfoQueue = xQueueCreate(1, sizeof(ap_info) / sizeof(char));
-    if (MODE_NET_WIFI == mode_net())
-    {
-        xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
-                        AP_PRIORITY, NULL);
-        xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
-                        AP_PRIORITY, NULL);
-    }
+    
     xTaskCreate(vConnectMqtt, "connectmqtt", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, NULL);
+    xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
+                        AP_PRIORITY, NULL);
     xTaskCreate(vMotorState, "motorstate", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, NULL);
     convert_chipid();
-    return 0;
-}
 
-/**
- * @brief connect ap
- * @param ssid - ap name
- * @param pwd - ap password
- */
-void wifi_connect_ap(const char *ssid, const char *pwd)
-{
-    assert_param(NULL != xApInfoQueue);
-    ap_info info;
-    strcpy(info.name, ssid);
-    strcpy(info.password, pwd);
-    xQueueOverwrite(xApInfoQueue, &info);
+    if (MODE_NET_WIFI == mode_net())
+    {
+        xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
+                        AP_PRIORITY, NULL); 
+    }
+    
+    return TRUE;
 }
-
 
 

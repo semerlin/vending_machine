@@ -21,6 +21,8 @@
 #include "m26.h"
 #include "mode.h"
 #include "license.h"
+#include "modeswitch.h"
+#include "flash.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[init]"
@@ -28,11 +30,6 @@
 
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
 
-/* ap configueation */
-#define AP_NAME              "vendor"
-#define AP_PWD               "12345678"
-#define AP_CHL               5
-#define AP_ENC               OPEN
 
 /**
  * @brief initialize esp8266 module
@@ -45,31 +42,32 @@ static bool init_esp8266(void)
         return FALSE;
     }
     
-#if 0
-    if (ESP_ERR_OK != esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT))
-    {
-        return FALSE;
-    }
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-#endif
-    
-    if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n", DEFAULT_TIMEOUT))
-    {
-        return FALSE;
-    }
-    if (ESP_ERR_OK != esp8266_setmode(BOTH, DEFAULT_TIMEOUT))
-    {
-        return FALSE;
-    }
-    /* need restart after set esp8266 mode */
-    //esp8266_send_ok("AT+RST\r\n", DEFAULT_TIMEOUT);
-    if (ESP_ERR_OK != esp8266_set_softap(AP_NAME, AP_PWD, AP_CHL, 
-                                         AP_ENC, DEFAULT_TIMEOUT))
+    if (ESP_ERR_OK != esp8266_send_ok("ATE0\r\n"))
     {
         return FALSE;
     }
     
-    return TRUE;
+    if (ESP_ERR_OK != esp8266_send_ok("AT+CIPMUX=1\r\n"))
+    {
+        return FALSE;
+    }
+    
+    if (flash_first_start())
+    {
+        TRACE("first start\r\n");
+        return http_init();
+    }
+    else
+    {
+        if (mqtt_init())
+        {
+            return wifi_init();
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
 }
 
 /**
@@ -115,7 +113,9 @@ static bool init_m26()
     {
         return FALSE;
     }
-
+    
+    mqtt_init();
+    wifi_init();
 
     return TRUE;
 }
@@ -127,33 +127,24 @@ static bool init_m26()
 static void vInitNetwork(void *pvParameters)
 {
     TRACE("initialize network...\r\n");
-
+    
     if (MODE_NET_WIFI == mode_net())
     {
         if (!init_esp8266())
         {
-            goto ERROR;
+            TRACE("initialize network failed\r\n");
+            led_net_turn_on(0);
         }
-        http_init();
     }
     else
     {
         if (!init_m26())
         {
-            goto ERROR;
+            TRACE("initialize network failed\r\n");
+            led_net_turn_on(0);
         }
     }
     
-    mqtt_init();
-    wifi_init();
-    
-    goto END;
-
-ERROR:
-    TRACE("initialize network failed\r\n");
-    led_net_turn_on(0);
-    
-END:
     vTaskDelete(NULL);
 }
 
@@ -173,12 +164,14 @@ static __INLINE void network_init(void)
 static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\r\n");
+    //FLASH_ErasePage(0x800F400);
+    //while(1);
     led_motor_init();
     led_net_init();
     ir_init();
     motor_init();
-    
     network_init();
+    modeswitch_init();
     
     vTaskDelete(NULL);
 }

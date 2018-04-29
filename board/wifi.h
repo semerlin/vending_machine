@@ -5,16 +5,15 @@
 *
 * See the COPYING file for the terms of usage and distribution.
 */
-#ifndef _SIMPLE_HTTP_H_
-  #define _SIMPLE_HHTP_H_
+#ifndef _WIFI_H_
+  #define _WIFI_H_
 
 #include "types.h"
 
 BEGIN_DECLS
 
-int http_init(void);
+bool wifi_init(void);
 
 END_DECLS
 
-
-#endif /* _SIMPLE_HTTP_H_ */
+#endif /* _WIFI_H_ */

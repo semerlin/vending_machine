@@ -10,6 +10,7 @@
 #include "stm32f10x_cfg.h"
 #include "global.h"
 
+/* stm32f103r8t6:64k 20k */
 int main(int argc, char **argv)
 {
     board_init();

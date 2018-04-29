@@ -56,7 +56,7 @@ static void clock_init(void)
     
     //config flash latency
     FLASH_SetLatency(FLASH_LATENCY_TWO);
-    Flash_EnablePrefetch(TRUE);
+    FLASH_EnablePrefetch(TRUE);
     
     //config HCLK(72MHz), PCLK1(36MHz), PCLK2(72MHz)
     RCC_HCLKPrescalerFromSYSCLK(RCC_HPRE_SYSCLK);
