@@ -16,9 +16,10 @@
 #include "mqtt.h"
 #include "wifi.h"
 #include "flash.h"
+#include "simple_http.h"
 
 #undef __TRACE_MODULE
-#define __TRACE_MODULE  "[motor]"
+#define __TRACE_MODULE  "[mode]"
 
 
 static xQueueHandle xModeQueue = NULL;
@@ -26,21 +27,6 @@ uint8_t g_cur_mode = MODE_SAT;
 
 #define SWITCH_COUNT    (5)
 
-/**
- * @brief enter ap mode
- */
-bool switch2ap(void)
-{
-    /* close mqtt if connected */
-    
-    /* disconnect ap if connected */
-    
-    /* suspend mqtt receive task */
-    
-    /* resume http task */
-    
-    return TRUE;
-}
 
 /**
  * @brief monitor button
@@ -63,11 +49,7 @@ static void vModeMonitor(void *pvParameters)
         {
             if (MODE_AP != g_cur_mode)
             {
-                if (switch2ap())
-                {
-                    TRACE("switch to ap mode\r\n");
-                    g_cur_mode = MODE_AP;
-                }
+                modeswitch_set(MODE_AP);
             }
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -90,8 +72,14 @@ static void vModeSwitch(void *pvParameters)
             switch(mode)
             {
             case MODE_AP:
+                wifi_deinit();
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                mqtt_deinit();
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                http_init();
                 break;
             case MODE_SAT:
+                SCB_SystemReset();
                 mqtt_init();
                 wifi_init();
                 break;
@@ -117,8 +105,8 @@ void modeswitch_init(void)
     xModeQueue = xQueueCreate(1, 1);
     xTaskCreate(vModeMonitor, "ModeMonitor", MODESWITCH_STACK_SIZE, 
                 NULL, MODESWITCH_PRIORITY, NULL);
-    xTaskCreate(vModeSwitch, "ModeSwitch", MODESWITCH_STACK_SIZE, 
-                NULL, MODESWITCH_PRIORITY, NULL);
+    xTaskCreate(vModeSwitch, "ModeSwitch", MODECHANGE_STACK_SIZE, 
+                NULL, MODECHANGE_PRIORITY, NULL);
 }
 
 /**

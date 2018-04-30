@@ -65,6 +65,8 @@ const uint8_t protocol_name[6] = {0x00, 0x04, 'M', 'Q', 'T', 'T'};
 #define PROTOCOL_LEVEL    (0x04)
 connect_flag default_connect_flag = {0x00};
 
+static TaskHandle_t xMqttHandle = NULL;
+
 /* process function */
 typedef void (*process_func)(const char *data, uint8_t len);
 
@@ -519,7 +521,12 @@ void vMqttRecv(void *pvParameters)
  */
 bool mqtt_init(void)
 {
+    TRACE("init mqtt...\r\n");
     xSendMutex = xSemaphoreCreateMutex();
+    if (NULL == xSendMutex)
+    {
+        return FALSE;
+    }
     xRecvQueue = xQueueCreate(MQTT_MAX_MSG_NUM, sizeof(mqtt_msg) / sizeof(uint8_t));
     if (NULL == xRecvQueue)
     {
@@ -527,11 +534,42 @@ bool mqtt_init(void)
     }
     
     xTaskCreate(vMqttRecv, "MqttRecv", MQTT_STACK_SIZE, 
-            NULL, MQTT_PRIORITY, NULL);
+            NULL, MQTT_PRIORITY, &xMqttHandle);
+    if (NULL == xMqttHandle)
+    {
+        return FALSE;
+    }
 
     init_mqtt_driver();
 
     return TRUE;
+}
+
+/**
+ * @brief suspend mqtt task
+ */
+void mqtt_deinit(void)
+{
+    TRACE("deinit mqtt module...\r\n");
+    mqtt_disconnect();
+    if (NULL != xMqttHandle)
+    {
+        vTaskDelete(xMqttHandle);
+        xMqttHandle = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (NULL != xRecvQueue)
+    {
+        vQueueDelete(xRecvQueue);
+        xRecvQueue = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (NULL != xSendMutex)
+    {
+        vSemaphoreDelete(xSendMutex);
+        xSendMutex = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
 }
 
 /**

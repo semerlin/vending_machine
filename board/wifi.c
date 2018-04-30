@@ -52,12 +52,19 @@ static uint16_t g_motor_num = 0;
 #define LED_MQTT          (2)
 #define FLASH_INTERVAL    (500 / portTICK_PERIOD_MS)
 
+static TaskHandle_t xConnectMqttTask = NULL;
+static TaskHandle_t xHeartTask = NULL; 
+static TaskHandle_t xMotorStateTask = NULL; 
+static TaskHandle_t xConnectApTask = NULL; 
+
+
 /**
  * @brief connedted default process function
  */
 static void esp8266_ap_connect(void)
 {
     led_net_stop_flashing(LED_AP);
+    led_net_turn_on(LED_AP);
     led_net_flashing(LED_MQTT, FLASH_INTERVAL);
     ap_connected = TRUE;
 }
@@ -69,6 +76,7 @@ static void esp8266_ap_disconnect(void)
 {
     led_net_flashing(LED_AP, FLASH_INTERVAL);
     led_net_stop_flashing(LED_MQTT);
+    led_net_turn_off(LED_MQTT);
     ap_connected = FALSE;
     mqtt_notify_disconnect();
     mqtt_status = 0x00;
@@ -368,12 +376,23 @@ static void convert_chipid(void)
 }
 
 /**
+ * @brief init parameter
+ */
+static void init_param(void)
+{
+    mqtt_status = 0x00;
+    ap_connected = FALSE;
+    g_motor_num = 0;
+}
+
+/**
  * @brief init wifi
  * @return init status
  */
 bool wifi_init(void)
 {
     TRACE("initialize wifi...\r\n");
+    init_param();
     flash_get_ssid_pwd(g_ssid, g_pwd);
     if (ESP_ERR_OK != esp8266_setmode(SAT))
     {
@@ -391,20 +410,63 @@ bool wifi_init(void)
     }
     
     xTaskCreate(vConnectMqtt, "connectmqtt", AP_STACK_SIZE, NULL, 
-                       AP_PRIORITY, NULL);
+                       AP_PRIORITY, &xConnectMqttTask);
     xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
-                        AP_PRIORITY, NULL);
+                        AP_PRIORITY, &xHeartTask);
     xTaskCreate(vMotorState, "motorstate", AP_STACK_SIZE, NULL, 
-                       AP_PRIORITY, NULL);
+                       AP_PRIORITY, &xMotorStateTask);
+    if ((NULL == xConnectMqttTask) ||
+        (NULL == xHeartTask) ||
+        (NULL == xMotorStateTask))
+    {
+        return FALSE;
+    }
     convert_chipid();
 
     if (MODE_NET_WIFI == mode_net())
     {
         xTaskCreate(vConnectAp, "connectap", AP_STACK_SIZE, NULL, 
-                        AP_PRIORITY, NULL); 
+                        AP_PRIORITY, &xConnectApTask); 
+        if (NULL == xConnectApTask)
+        {
+            return FALSE;
+        }
     }
     
     return TRUE;
 }
 
+/**
+ * @brief deinit wifi module
+ */
+void wifi_deinit(void)
+{
+    TRACE("deinit wifi module...\r\n");
+    
+    if (NULL != xConnectMqttTask)
+    {
+        vTaskDelete(xConnectMqttTask);
+        xConnectMqttTask = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (NULL != xConnectApTask)
+    {
+        vTaskDelete(xConnectApTask);
+        xConnectApTask = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (NULL != xMotorStateTask)
+    {
+        vTaskDelete(xMotorStateTask);
+        xMotorStateTask = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (NULL != xHeartTask)
+    {
+        vTaskDelete(xHeartTask);
+        xHeartTask = NULL;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    esp8266_send_ok("AT+CWQAP\r\n");
+}
 

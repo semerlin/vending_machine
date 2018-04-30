@@ -503,6 +503,16 @@ bool esp8266_init(void)
 }
 
 /**
+ * @brief refresh esp8266 data
+ */
+void esp8266_refresh(void)
+{
+    xQueueReset(xStatusQueue);
+    xQueueReset(xAtQueue);
+    xQueueReset(xTcpQueue);
+}
+
+/**
  * @brief test esp8266 module
  * @param cmd - cmd to send
  * @return 0 means connect success, otherwise failed

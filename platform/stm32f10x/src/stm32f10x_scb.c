@@ -730,6 +730,16 @@ uint32_t SCB_GetBusFaultAddress(void)
     return SCB->BFAR;
 }
 
+/**
+ * @brief reset system
+ */
+void SCB_SystemReset(void) 
+{ 
+  __ASM("MOV R0, #1"); 
+  __ASM("MSR FAULTMASK, R0"); 
+  SCB->AIRCR = 0x05FA0004; 
+  for(;;); 
+} 
 
 
 

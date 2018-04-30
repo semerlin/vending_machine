@@ -33,6 +33,8 @@
 #define AP_GATEWAY      "192.168.10.1"
 #define AP_NETMASK      "255.255.255.0"
 
+TaskHandle_t xHttpHandle = NULL;
+
 /* set page */
 const char set_page[] = "\
 <html>\r\n \
@@ -124,7 +126,6 @@ static void vHttpd(void *pvParameters)
             }
         }
         
-         
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     
@@ -167,8 +168,15 @@ bool http_init(void)
         return FALSE;
     }
     
+    esp8266_refresh();
     xTaskCreate(vHttpd, "httpd", HTTP_STACK_SIZE, NULL, 
-                       HTTP_PRIORITY, NULL);
+                       HTTP_PRIORITY, &xHttpHandle);
+    if (NULL == xHttpHandle)
+    {
+        return FALSE;
+    }
+    
     return TRUE;
 }
+
 

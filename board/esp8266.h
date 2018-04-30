@@ -53,6 +53,7 @@ typedef struct
 
 /* esp8266 interface */
 bool esp8266_init(void);
+void esp8266_refresh(void);
 int esp8266_send_ok(const char *cmd);
 int esp8266_setmode(esp8266_mode mode);
 int esp8266_create_server(void);

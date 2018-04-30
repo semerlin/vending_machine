@@ -173,6 +173,7 @@ uint32_t SCB_GetHardFaultDetail(void);
 void SCB_ClrHardFaultStatus(uint32_t reg);
 uint32_t SCB_GetMemFaultAddress(void);
 uint32_t SCB_GetBusFaultAddress(void);
+void SCB_SystemReset(void);
 
 
 #endif /* _STM32F10X_SCB_H_ */

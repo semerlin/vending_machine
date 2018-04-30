@@ -65,6 +65,7 @@ typedef struct
 }mqtt_driver;
 
 bool mqtt_init(void);
+void mqtt_deinit(void);
 void mqtt_attach(const mqtt_driver *driver);
 void mqtt_detach(void);
 int mqtt_connect_server(uint16_t id, const char *ip, uint16_t port);
