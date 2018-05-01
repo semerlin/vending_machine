@@ -12,11 +12,7 @@
 
 BEGIN_DECLS
 
-#define MODE_AP        1
-#define MODE_SAT       2
-
 void modeswitch_init(void);
-void modeswitch_set(uint8_t mode);
 
 END_DECLS
 

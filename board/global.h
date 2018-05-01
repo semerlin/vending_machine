@@ -10,8 +10,6 @@
 
 #include "FreeRTOS.h"
 
-#define VERSION  ("v1.0.1.0_rc")
-
 /* task priority definition */
 #define LICENSE_PRIORITY             (tskIDLE_PRIORITY + 1)
 #define INIT_SYSTEM_PRIORITY         (tskIDLE_PRIORITY + 1)
@@ -24,7 +22,7 @@
 #define MQTT_PRIORITY                (tskIDLE_PRIORITY + 2)
 #define IR_PRIORITY                  (tskIDLE_PRIORITY + 1)
 #define MODESWITCH_PRIORITY          (tskIDLE_PRIORITY + 1)
-#define MODECHANGE_PRIORITY          (tskIDLE_PRIORITY + 4)
+#define MOTOR_STATE_PRIORITY         (tskIDLE_PRIORITY + 1)
 
 /* task stack definition */
 #define LICENSE_STACK_SIZE           (configMINIMAL_STACK_SIZE)
@@ -38,7 +36,7 @@
 #define MQTT_STACK_SIZE              (configMINIMAL_STACK_SIZE)
 #define IR_STACK_SIZE                (configMINIMAL_STACK_SIZE)
 #define MODESWITCH_STACK_SIZE        (configMINIMAL_STACK_SIZE)
-#define MODECHANGE_STACK_SIZE        (configMINIMAL_STACK_SIZE)
+#define MOTOR_STATE_STACK_SIZE       (configMINIMAL_STACK_SIZE * 2)
 
 /* interrupt priority */
 #define USART1_PRIORITY        (13)

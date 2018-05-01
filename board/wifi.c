@@ -6,6 +6,7 @@
 * See the COPYING file for the terms of usage and distribution.
 */
 #include <string.h>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -30,8 +31,8 @@ static char g_ssid[32];
 static char g_pwd[32];
 
 /* mqtt topic */
-#define TOPIC_CONTROL     "controller/"
-#define TOPIC_STATE       "state/"
+#define TOPIC_CONTROL     "controller"
+#define TOPIC_STATE       "state"
 #define TOPIC_REGISTER    "register"
 
 uint8_t g_id[25];
@@ -241,15 +242,28 @@ static void vConnectMqtt(void *pvParameters)
 static void vMotorState(void *pvParameters)
 {
     uint16_t status = 0;
-    uint8_t status_str[3] = {0x00, 0x00, 0x00};
+    uint8_t status_str[11];
+    status_str[10] = 0x00;
+    char topic[40];
     for (;;)
     {
         if (0x03 == mqtt_status)
         {
             status = motor_getstatus();
-            status_str[0] = (status >> 8);
-            status_str[1] = (status & 0xff);
-            mqtt_publish(TOPIC_STATE, (const char *)status_str, 0, 0, 0);
+            for (int i = 0; i < 10; ++i)
+            {
+                if (status & 0x01)
+                {
+                    status_str[i] = '1';
+                }
+                else
+                {
+                    status_str[i] = '0';
+                }
+                status >>= 1;
+            }
+            sprintf(topic, "%s/%s", TOPIC_STATE, g_id);
+            mqtt_publish(topic, (const char *)status_str, 0, 0, 0);
         }   
         vTaskDelay(9000 / portTICK_PERIOD_MS);
     }
@@ -268,7 +282,9 @@ static void mqtt_connack_cb(uint8_t status)
         mqtt_publish(TOPIC_REGISTER, (const char *)g_id, 0, 1, 0);
 
         /* subscribe topic */
-        mqtt_subscribe(TOPIC_CONTROL, 2);
+        char topic[40];
+        sprintf(topic, "%s/%s", TOPIC_CONTROL, g_id);
+        mqtt_subscribe(topic, 2);
     }
 }
 
@@ -278,7 +294,7 @@ static void mqtt_connack_cb(uint8_t status)
 static void mqtt_publish_cb(const char *topic, uint8_t *data, uint32_t len)
 {
     assert_param(len >= 1);
-    g_motor_num = *data;
+    g_motor_num = *data - '0';
 }
 
 /**
@@ -309,6 +325,8 @@ static void mqtt_suback_cb(uint8_t status, uint16_t id)
         if (0x03 == mqtt_status)
         {
             /* try to subscribe again */
+            char topic[36];
+            sprintf(topic, "%s/%s", TOPIC_CONTROL, g_id);
             mqtt_subscribe(TOPIC_CONTROL, 2);
         }
     }
@@ -411,12 +429,12 @@ bool wifi_init(void)
     
     xTaskCreate(vConnectMqtt, "connectmqtt", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, &xConnectMqttTask);
-    xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
-                        AP_PRIORITY, &xHeartTask);
-    xTaskCreate(vMotorState, "motorstate", AP_STACK_SIZE, NULL, 
-                       AP_PRIORITY, &xMotorStateTask);
+    //xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
+    //                    AP_PRIORITY, &xHeartTask);
+    xTaskCreate(vMotorState, "motorstate", MOTOR_STATE_STACK_SIZE, NULL, 
+                       MOTOR_STATE_PRIORITY, &xMotorStateTask);
     if ((NULL == xConnectMqttTask) ||
-        (NULL == xHeartTask) ||
+        //(NULL == xHeartTask) ||
         (NULL == xMotorStateTask))
     {
         return FALSE;
@@ -434,39 +452,5 @@ bool wifi_init(void)
     }
     
     return TRUE;
-}
-
-/**
- * @brief deinit wifi module
- */
-void wifi_deinit(void)
-{
-    TRACE("deinit wifi module...\r\n");
-    
-    if (NULL != xConnectMqttTask)
-    {
-        vTaskDelete(xConnectMqttTask);
-        xConnectMqttTask = NULL;
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    if (NULL != xConnectApTask)
-    {
-        vTaskDelete(xConnectApTask);
-        xConnectApTask = NULL;
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    if (NULL != xMotorStateTask)
-    {
-        vTaskDelete(xMotorStateTask);
-        xMotorStateTask = NULL;
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    if (NULL != xHeartTask)
-    {
-        vTaskDelete(xHeartTask);
-        xHeartTask = NULL;
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    esp8266_send_ok("AT+CWQAP\r\n");
 }
 

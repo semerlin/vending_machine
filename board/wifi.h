@@ -13,7 +13,6 @@
 BEGIN_DECLS
 
 bool wifi_init(void);
-void wifi_deinit(void);
 
 END_DECLS
 

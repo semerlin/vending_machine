@@ -54,3 +54,11 @@ void flash_set_ssid_pwd(const char *ssid, const char *pwd)
     FLASH_Write(FLASH_ADDR + PWD_OFFSET, (uint8_t *)pwd, strlen(pwd) + 1);
     TRACE("update ssid(%s), pwd(%s)\r\n", ssid, pwd);
 }
+
+/**
+ * @brief restore to configure
+ */
+void flash_restore(void)
+{
+    FLASH_ErasePage(FLASH_ADDR);
+}

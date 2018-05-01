@@ -93,7 +93,7 @@ static void parse_name_and_pwd(const char *data, char *name, char *pwd)
 static void vHttpd(void *pvParameters)
 {
     const TickType_t xDelay = 300 / portTICK_PERIOD_MS;
-    char data[65];
+    uint8_t data[65];
     uint16_t len;
     char ssid[32];
     char pwd[32];
@@ -102,16 +102,16 @@ static void vHttpd(void *pvParameters)
     {
         if (ESP_ERR_OK == esp8266_recv(&id, data, &len, portMAX_DELAY))
         {
-            if (0 == strncmp(data, "GET /setting?", 13))
+            if (0 == strncmp((const char *)data, "GET /setting?", 13))
             {
-                parse_name_and_pwd(data, ssid, pwd);
+                parse_name_and_pwd((const char *)data, ssid, pwd);
                 while (ESP_ERR_OK == esp8266_recv(&id, data, &len, xDelay));
                 TRACE("get setting:%s(%s)\r\n", ssid, pwd);
                 esp8266_disconnect_server(id);
                 esp8266_close(80);
                 break;
             }
-            else if (0 == strncmp(data, "GET /", 5))
+            else if (0 == strncmp((const char *)data, "GET /", 5))
             {
                 while (ESP_ERR_OK == esp8266_recv(&id, data, &len, xDelay));
                 if (ESP_ERR_OK == esp8266_prepare_send(id, strlen(set_page)))
@@ -129,9 +129,10 @@ static void vHttpd(void *pvParameters)
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     flash_set_ssid_pwd(ssid, pwd);
-    modeswitch_set(MODE_SAT);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    SCB_SystemReset();
     
     vTaskDelete(NULL);
 }
@@ -168,7 +169,6 @@ bool http_init(void)
         return FALSE;
     }
     
-    esp8266_refresh();
     xTaskCreate(vHttpd, "httpd", HTTP_STACK_SIZE, NULL, 
                        HTTP_PRIORITY, &xHttpHandle);
     if (NULL == xHttpHandle)

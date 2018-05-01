@@ -11,6 +11,7 @@
 #include "types.h"
 
 bool flash_first_start(void);
+void flash_restore(void);
 void flash_get_ssid_pwd(char *ssid, char *pwd);
 void flash_set_ssid_pwd(const char *ssid, const char *pwd);
 

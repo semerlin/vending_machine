@@ -53,7 +53,6 @@ typedef struct
 
 /* esp8266 interface */
 bool esp8266_init(void);
-void esp8266_refresh(void);
 int esp8266_send_ok(const char *cmd);
 int esp8266_setmode(esp8266_mode mode);
 int esp8266_create_server(void);
@@ -70,7 +69,7 @@ int esp8266_listen(uint16_t port);
 int esp8266_close(uint16_t port);
 int esp8266_prepare_send(uint8_t id, uint16_t length);
 int esp8266_set_tcp_timeout(uint16_t timeout);
-int esp8266_recv(uint8_t *id, char *data, uint16_t *len, TickType_t xBlockTime);
+int esp8266_recv(uint8_t *id, uint8_t *data, uint16_t *len, TickType_t xBlockTime);
 int esp8266_write(const char *data, uint32_t length);
 void esp8266_attach(const esp8266_driver *driver);
 void esp8266_detach(void);

@@ -20,7 +20,7 @@
 #undef __TRACE_MODULE
 #define __TRACE_MODULE "[esp8266]"
 
-#define _PRINT_DETAIL 
+//#define _PRINT_DETAIL 
 
 /* mqtt driver */
 static esp8266_driver g_driver;
@@ -66,7 +66,7 @@ typedef struct
 {
     uint8_t id;
     uint16_t size;
-    char data[ESP_MAX_MSG_SIZE_PER_LINE];
+    uint8_t data[ESP_MAX_MSG_SIZE_PER_LINE];
 }tcp_node;
 
 /* timeout time(ms) */
@@ -368,10 +368,13 @@ static int process_tcp_head(const char *data, uint8_t len, uint16_t *id,
  */
 static int process_tcp_data(uint8_t id, char *data, uint16_t len)
 {
-    tcp_node node;
+    tcp_node node; 
     node.id = id;
     node.size = len;
-    strncpy(node.data, data, len);
+    for (int i = 0; i < len; ++i)
+    {
+        node.data[i] = data[i];
+    }
     xQueueSend(xTcpQueue, &node, 100 / portTICK_PERIOD_MS);
     
     return 0;
@@ -500,16 +503,6 @@ bool esp8266_init(void)
             g_serial, ESP8266_PRIORITY, &task_esp8266);
      
     return TRUE;
-}
-
-/**
- * @brief refresh esp8266 data
- */
-void esp8266_refresh(void)
-{
-    xQueueReset(xStatusQueue);
-    xQueueReset(xAtQueue);
-    xQueueReset(xTcpQueue);
 }
 
 /**
@@ -744,13 +737,16 @@ int esp8266_close(uint16_t port)
  * @param len - data length
  * @param xBlockTime - timeout time
  */
-int esp8266_recv(uint8_t *id, char *data, uint16_t *len, TickType_t xBlockTime)
+int esp8266_recv(uint8_t *id, uint8_t *data, uint16_t *len, TickType_t xBlockTime)
 {
     tcp_node node;
     if (xQueueReceive(xTcpQueue, &node, xBlockTime))
     {
         *id = node.id;
-        strncpy(data, node.data, node.size);
+        for (int i = 0; i < node.size; ++i)
+        {
+            data[i] = node.data[i];
+        }
         *len = node.size;
         return ESP_ERR_OK;
     }

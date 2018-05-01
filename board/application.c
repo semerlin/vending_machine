@@ -29,7 +29,7 @@
 
 
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
-
+#define VERSION  ("v1.0.1.3_beta")
 
 /**
  * @brief initialize esp8266 module
@@ -164,8 +164,7 @@ static __INLINE void network_init(void)
 static void vInitSystem(void *pvParameters)
 {
     TRACE("startup application...\r\n");
-    //FLASH_ErasePage(0x800F400);
-    //while(1);
+    TRACE("version = %s\r\n", VERSION);
     led_motor_init();
     led_net_init();
     ir_init();

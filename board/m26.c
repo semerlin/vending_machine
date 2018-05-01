@@ -713,7 +713,7 @@ int m26_write(const char *data, uint32_t length, TickType_t time)
  * @param len - data length
  * @param xBlockTime - timeout time
  */
-int m26_recv(char *data, uint16_t *len, TickType_t xBlockTime)
+int m26_recv(uint8_t *data, uint16_t *len, TickType_t xBlockTime)
 {
     assert_param(NULL != xTcpQueue);
     
@@ -721,7 +721,10 @@ int m26_recv(char *data, uint16_t *len, TickType_t xBlockTime)
 
     if (xQueueReceive(xTcpQueue, &node, xBlockTime))
     {
-        strncpy(data, node.data, node.size);
+        for (int i = 0; i < node.size; ++i)
+        {
+            data[i] = node.data[i];
+        }
         *len = node.size;
         return M26_ERR_OK;
     }

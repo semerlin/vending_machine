@@ -22,7 +22,9 @@
 #define __TRACE_MODULE  "[mode]"
 
 
-static xQueueHandle xModeQueue = NULL;
+#define MODE_AP        1
+#define MODE_SAT       2
+
 uint8_t g_cur_mode = MODE_SAT;
 
 #define SWITCH_COUNT    (5)
@@ -49,46 +51,15 @@ static void vModeMonitor(void *pvParameters)
         {
             if (MODE_AP != g_cur_mode)
             {
-                modeswitch_set(MODE_AP);
+                flash_restore();
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                SCB_SystemReset();
             }
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
-/**
- * @brief switch mode
- */
-static void vModeSwitch(void *pvParameters)
-{
-    uint8_t mode = 0;
-    for (;;)
-    {
-        xQueueReceive(xModeQueue, &mode, portMAX_DELAY);
-        if (g_cur_mode != mode)
-        {
-            g_cur_mode = mode;
-            TRACE("enter mode: %d\r\n", mode);
-            switch(mode)
-            {
-            case MODE_AP:
-                wifi_deinit();
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-                mqtt_deinit();
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-                http_init();
-                break;
-            case MODE_SAT:
-                SCB_SystemReset();
-                mqtt_init();
-                wifi_init();
-                break;
-            default:
-                break;
-            }
-        }
-    }
-}
 /**
  * @brief initilise mode switch module
  */
@@ -102,21 +73,10 @@ void modeswitch_init(void)
     {
         g_cur_mode = MODE_SAT;
     }
-    xModeQueue = xQueueCreate(1, 1);
     xTaskCreate(vModeMonitor, "ModeMonitor", MODESWITCH_STACK_SIZE, 
                 NULL, MODESWITCH_PRIORITY, NULL);
-    xTaskCreate(vModeSwitch, "ModeSwitch", MODECHANGE_STACK_SIZE, 
-                NULL, MODECHANGE_PRIORITY, NULL);
 }
 
-/**
- * @brief set mode
- * @param mode - mode to set
- */
-void modeswitch_set(uint8_t mode)
-{
-    xQueueOverwrite(xModeQueue, &mode);
-}
 
 
 
