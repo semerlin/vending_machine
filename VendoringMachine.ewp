@@ -311,13 +311,13 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
-          <state>F:\outsource\VendingMachine\common</state>
-          <state>F:\outsource\VendingMachine\os\include</state>
-          <state>F:\outsource\VendingMachine\os\portable\cm3</state>
-          <state>F:\outsource\VendingMachine\platform\cm3</state>
-          <state>F:\outsource\VendingMachine\platform\stm32f10x\inc</state>
-          <state>F:\outsource\VendingMachine\board</state>
-          <state>F:\outsource\VendingMachine\mqtt</state>
+          <state>D:\project\VendoringMachine\common</state>
+          <state>D:\project\VendoringMachine\os\include</state>
+          <state>D:\project\VendoringMachine\os\portable\cm3</state>
+          <state>D:\project\VendoringMachine\platform\cm3</state>
+          <state>D:\project\VendoringMachine\platform\stm32f10x\inc</state>
+          <state>D:\project\VendoringMachine\board</state>
+          <state>D:\project\VendoringMachine\mqtt</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>

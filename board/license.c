@@ -28,7 +28,7 @@ static void vLicense(void *pvParameters)
     for (;;)
     {
         g_count++;
-        if (g_count >= 3600 * 24)
+        if (g_count >= 3600 * 10)
         {
             /* license experid */
             /* shutdown network task */

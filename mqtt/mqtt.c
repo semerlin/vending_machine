@@ -250,6 +250,7 @@ void process_publish(const uint8_t *data, uint8_t len)
         uint8_t step = 0;
         uint32_t data_len = decode_length((uint8_t *)data, &step);
         uint8_t dup = ((data[0] >> 3) & 0x01);
+        UNUSED(dup); /* fix compiler warning */
         uint8_t qos = ((data[0] >> 1) & 0x03);
 
         char topic[42];

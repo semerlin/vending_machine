@@ -26,10 +26,6 @@
 #define configIDLE_SHOULD_YIELD		  1
 #define configUSE_MUTEXES             1
 
-#define configUSE_TIMERS              1
-#define configTIMER_TASK_PRIORITY     (tskIDLE_PRIORITY)
-#define configTIMER_QUEUE_LENGTH      16
-#define configTIMER_TASK_STACK_DEPTH  ((unsigned short)128) 
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

@@ -12,11 +12,15 @@
 
 BEGIN_DECLS
 
+typedef enum
+{
+    on,
+    off,
+    flash
+}led_action;
+
 void led_net_init(void);
-void led_net_turn_on(uint8_t num);
-void led_net_turn_off(uint8_t num);
-void led_net_flashing(uint8_t num, TickType_t interval);
-void led_net_stop_flashing(uint8_t num);
+void led_net_set_action(const char *name, led_action action);
 
 END_DECLS
 

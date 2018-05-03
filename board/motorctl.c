@@ -14,10 +14,14 @@
 #include "pinconfig.h"
 #include "global.h"
 #include "stm32f10x_cfg.h"
+#include "wifi.h"
+
 
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[motor]"
+
+//#define USE_DETECT
 
 #define MOTOR_NUM   10
 
@@ -29,12 +33,16 @@ const char *motor_dect[] = {"CH1_DET", "CH2_DET", "CH3_DET", "CH4_DET",
 
 /* motor control message queue */
 static xQueueHandle xMotorQueue = NULL;
-#define MOTOR_MSG_NUM      (4)
+#define MOTOR_MSG_NUM      (10)
 
+#ifdef USE_DETECT
 static xSemaphoreHandle xMotorWorking = NULL;
-#define MOTOR_UP_TIME      (3000 / portTICK_PERIOD_MS)
+#endif
 
+#define MOTOR_UP_TIME      (500 / portTICK_PERIOD_MS)
+#define MOTOR_WAIT_TIME    (600 / portTICK_PERIOD_MS)
 
+#ifdef USE_DETECT
 /**
  * motor working detect interrupt handler
  */
@@ -45,9 +53,10 @@ void EXTI3_IRQHandler(void)
     get_pininfo(MOTOR_DET_PIN_NAME, NULL, &pin_num);
     xSemaphoreGiveFromISR(xMotorWorking, &xHigherPriorityTaskWoken);
     /* check if there is any higher priority task need to wakeup */
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
     EXTI_ClrPending(pin_num);
 }
+#endif
 
 /**
  * @brief motor control task
@@ -66,7 +75,8 @@ static void vMotorCtl(void *pvParameters)
             TRACE("start motor: %d\r\n", num);
             pin_set(motor_left[left]);
             pin_set(motor_right[right]);
-
+            
+#ifdef USE_DETECT
             /* wait motor working */
             if (pdTRUE == xSemaphoreTake(xMotorWorking, MOTOR_UP_TIME))
             {
@@ -77,10 +87,15 @@ static void vMotorCtl(void *pvParameters)
             {
                 TRACE("motor working timeout!\r\n");
             }
-
+#else
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+#endif
+            
             TRACE("stop motor: %d\r\n", num);
             pin_reset(motor_left[left]);
             pin_reset(motor_right[right]);
+            wifi_update_motor_status();
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
     }
 }
@@ -99,10 +114,13 @@ void motor_init(void)
     }
     
     xMotorQueue = xQueueCreate(MOTOR_MSG_NUM, 1);
+#ifdef USE_DETECT
     xMotorWorking = xSemaphoreCreateBinary();
+#endif
     xTaskCreate(vMotorCtl, "MotorCtl", MOTOR_STACK_SIZE, 
                 NULL, MOTOR_PRIORITY, NULL);
     
+#ifdef USE_DETECT
     /* set pin interrupt */
     uint8_t pin_group = 0, pin_num = 0;
     get_pininfo(MOTOR_DET_PIN_NAME, &pin_group, &pin_num);
@@ -112,6 +130,7 @@ void motor_init(void)
     NVIC_Config nvicConfig = {EXTI3_IRQChannel, USART1_PRIORITY, 0, TRUE};
     NVIC_Init(&nvicConfig);
     EXTI_EnableLine_INT(pin_num, TRUE);
+#endif
 }
 
 /**
@@ -121,7 +140,7 @@ void motor_init(void)
 void motor_start(uint8_t num)
 {
     assert_param(num < MOTOR_NUM);
-    xQueueSend(xMotorQueue, &num, 0);
+    xQueueSend(xMotorQueue, &num, MOTOR_WAIT_TIME);
 }
 
 /**

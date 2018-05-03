@@ -23,6 +23,7 @@
 #define IR_PRIORITY                  (tskIDLE_PRIORITY + 1)
 #define MODESWITCH_PRIORITY          (tskIDLE_PRIORITY + 1)
 #define MOTOR_STATE_PRIORITY         (tskIDLE_PRIORITY + 1)
+#define LED_PRIORITY                 (tskIDLE_PRIORITY)
 
 /* task stack definition */
 #define LICENSE_STACK_SIZE           (configMINIMAL_STACK_SIZE)
@@ -37,6 +38,7 @@
 #define IR_STACK_SIZE                (configMINIMAL_STACK_SIZE)
 #define MODESWITCH_STACK_SIZE        (configMINIMAL_STACK_SIZE)
 #define MOTOR_STATE_STACK_SIZE       (configMINIMAL_STACK_SIZE * 2)
+#define LED_STACK_SIZE               (configMINIMAL_STACK_SIZE)
 
 /* interrupt priority */
 #define USART1_PRIORITY        (13)

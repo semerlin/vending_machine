@@ -29,7 +29,7 @@
 
 
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
-#define VERSION  ("v1.0.1.3_beta")
+#define VERSION  ("v1.0.2.3_alpha")
 
 /**
  * @brief initialize esp8266 module
@@ -133,7 +133,7 @@ static void vInitNetwork(void *pvParameters)
         if (!init_esp8266())
         {
             TRACE("initialize network failed\r\n");
-            led_net_turn_on(0);
+            led_net_set_action("LED_ERROR", on);
         }
     }
     else
@@ -141,7 +141,7 @@ static void vInitNetwork(void *pvParameters)
         if (!init_m26())
         {
             TRACE("initialize network failed\r\n");
-            led_net_turn_on(0);
+            led_net_set_action("LED_ERROR", on);
         }
     }
     

@@ -51,7 +51,6 @@ static uint16_t g_motor_num = 0;
 
 #define LED_AP            (1)
 #define LED_MQTT          (2)
-#define FLASH_INTERVAL    (500 / portTICK_PERIOD_MS)
 
 static TaskHandle_t xConnectMqttTask = NULL;
 static TaskHandle_t xHeartTask = NULL; 
@@ -64,9 +63,8 @@ static TaskHandle_t xConnectApTask = NULL;
  */
 static void esp8266_ap_connect(void)
 {
-    led_net_stop_flashing(LED_AP);
-    led_net_turn_on(LED_AP);
-    led_net_flashing(LED_MQTT, FLASH_INTERVAL);
+    led_net_set_action("LED_NET", on);
+    led_net_set_action("LED_MQTT", flash);
     ap_connected = TRUE;
 }
 
@@ -75,9 +73,8 @@ static void esp8266_ap_connect(void)
  */
 static void esp8266_ap_disconnect(void)
 {
-    led_net_flashing(LED_AP, FLASH_INTERVAL);
-    led_net_stop_flashing(LED_MQTT);
-    led_net_turn_off(LED_MQTT);
+    led_net_set_action("LED_NET", flash);
+    led_net_set_action("LED_MQTT", off);
     ap_connected = FALSE;
     mqtt_notify_disconnect();
     mqtt_status = 0x00;
@@ -166,7 +163,7 @@ static void init_m26_driver(void)
  */
 static void vConnectAp(void *pvParameters)
 {
-    led_net_flashing(LED_AP, FLASH_INTERVAL);
+    led_net_set_action("LED_NET", flash);
     for (;;)
     {
         if (FALSE == ap_connected)
@@ -196,7 +193,7 @@ static void vHeart(void *pvParameters)
         {
             mqtt_pingreq();
         }
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(9000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -265,7 +262,7 @@ static void vMotorState(void *pvParameters)
             sprintf(topic, "%s/%s", TOPIC_STATE, g_id);
             mqtt_publish(topic, (const char *)status_str, 0, 0, 0);
         }   
-        vTaskDelay(9000 / portTICK_PERIOD_MS);
+        vTaskDelay(1800000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -276,7 +273,7 @@ static void mqtt_connack_cb(uint8_t status)
 {
     if (MQTT_ERR_OK == status)
     {
-        led_net_stop_flashing(LED_MQTT);
+        led_net_set_action("LED_MQTT", on);
         mqtt_status |= 0x02;
         /* register sn */
         mqtt_publish(TOPIC_REGISTER, (const char *)g_id, 0, 1, 0);
@@ -404,6 +401,32 @@ static void init_param(void)
 }
 
 /**
+ * @brief update motor status
+ */
+void wifi_update_motor_status(void)
+{
+    uint16_t status = 0;
+    uint8_t status_str[11];
+    status_str[10] = 0x00;
+    char topic[40];
+    status = motor_getstatus();
+    for (int i = 0; i < 10; ++i)
+    {
+        if (status & 0x01)
+        {
+            status_str[i] = '1';
+        }
+        else
+        {
+            status_str[i] = '0';
+        }
+        status >>= 1;
+    }
+    sprintf(topic, "%s/%s", TOPIC_STATE, g_id);
+    mqtt_publish(topic, (const char *)status_str, 0, 0, 0);
+}
+
+/**
  * @brief init wifi
  * @return init status
  */
@@ -429,12 +452,12 @@ bool wifi_init(void)
     
     xTaskCreate(vConnectMqtt, "connectmqtt", AP_STACK_SIZE, NULL, 
                        AP_PRIORITY, &xConnectMqttTask);
-    //xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
-    //                    AP_PRIORITY, &xHeartTask);
+    xTaskCreate(vHeart, "heart", AP_STACK_SIZE, NULL, 
+                        AP_PRIORITY, &xHeartTask);
     xTaskCreate(vMotorState, "motorstate", MOTOR_STATE_STACK_SIZE, NULL, 
                        MOTOR_STATE_PRIORITY, &xMotorStateTask);
     if ((NULL == xConnectMqttTask) ||
-        //(NULL == xHeartTask) ||
+        (NULL == xHeartTask) ||
         (NULL == xMotorStateTask))
     {
         return FALSE;

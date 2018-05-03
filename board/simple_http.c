@@ -26,7 +26,7 @@
 #define AP_NAME              "vendor"
 #define AP_PWD               "12345678"
 #define AP_CHL               5
-#define AP_ENC               OPEN
+#define AP_ENC               WPA2_PSK
 
 /* ap address */
 #define AP_IP           "192.168.10.1"
@@ -37,7 +37,7 @@ TaskHandle_t xHttpHandle = NULL;
 
 /* set page */
 const char set_page[] = "\
-<html>\r\n \
+<!DOCTYPE html><html>\r\n \
 <body>\r\n \
 <p>set AP name and password</p>\r\n \
 <form action=\"/setting\" method=\"get\" target=\"_self\">\r\n \

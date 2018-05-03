@@ -5,36 +5,61 @@
 *
 * See the COPYING file for the terms of usage and distribution.
 */
-#include "led_motor.h"
+#include <string.h>
+#include "led_net.h"
 #include "FreeRTOS.h"
-#include "timers.h"
+#include "task.h"
 #include "assert.h"
 #include "trace.h"
 #include "pinconfig.h"
+#include "global.h"
 
 #undef __TRACE_MODULE
 #define __TRACE_MODULE  "[led_net]"
 
-#define LED_NUM  3
+typedef struct
+{
+    const char *name;
+    led_action action;
+}led_status;
 
-/* led name */
-const char *led_names[LED_NUM] = {"LED1", "LED2", "LED3"};
-/* timer handler */
-TimerHandle_t led_timers[LED_NUM] = {NULL, NULL, NULL};
+static led_status leds[] = 
+{
+    {"LED_ERROR", off},
+    {"LED_NET", off},
+    {"LED_MQTT", off}
+};
 
 /**
- * @brief timer callback
- * @param pxTimer - timer handler
+ * @brief led control task
+ * @param pvParameters - task parameters
  */
-static void vTimerCallback(TimerHandle_t pxTimer)
+static void vLed(void *pvParameters)
 {
-    int32_t led_num;
-    
-    /* Which timer expired? */
-    led_num = (int32_t)pvTimerGetTimerID(pxTimer);
-
-    pin_toggle(led_names[led_num]);
+    for (;;)
+    {
+        for (int i = 0; i < sizeof(leds) / sizeof(leds[0]); ++i)
+        {
+            switch (leds[i].action)
+            {
+            case on:
+                pin_set(leds[i].name);
+                break;
+            case off:
+                pin_reset(leds[i].name);
+                break;
+            case flash:
+                pin_toggle(leds[i].name);
+                break;
+            default:
+                break;
+            }
+            
+        }
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+    }
 }
+
 
 /**
  * @brief initialize net led
@@ -42,78 +67,29 @@ static void vTimerCallback(TimerHandle_t pxTimer)
 void led_net_init(void)
 {
     TRACE("initialize net led...\r\n");
-    for (int i = 0; i < LED_NUM; ++i)
+    for (int i = 0; i < sizeof(leds) / sizeof(leds[0]); ++i)
     {
-        pin_reset(led_names[i]);
+        pin_reset(leds[i].name);
     }
+    
+    xTaskCreate(vLed, "led", LED_STACK_SIZE, NULL, LED_PRIORITY, NULL);
 }
 
 /**
- * @brief turn on led
- * @param num - led number(0-2)
+ * @brief set led action
+ * @param name - led name
+ * @param action - led action
  */
-void led_net_turn_on(uint8_t num)
+void led_net_set_action(const char *name, led_action action)
 {
-    assert_param(num < LED_NUM);
-    TRACE("turn on led: %d\r\n", num);
-    pin_set(led_names[num]);
-}
-
-/**
- * @brief turn off led
- * @param num - led number(0-2)
- */
-void led_net_turn_off(uint8_t num)
-{
-    assert_param(num < LED_NUM);
-    TRACE("turn off led: %d\r\n", num);
-    pin_reset(led_names[num]);
-}
-
-/**
- * @brief flashing led
- * num - led number(0-2)
- * interval - flashing interval
- */
-void led_net_flashing(uint8_t num, TickType_t interval)
-{
-    assert_param(num < LED_NUM);
-    TRACE("flashing led: %d, interval: %d\r\n", num, interval);
-    if (NULL != led_timers[num])
+    assert_param(NULL != name);
+    assert_param(action <= flash);
+    for (int i = 0; i < sizeof(leds) / sizeof(leds[0]); ++i)
     {
-        if (pdPASS != xTimerStart(led_timers[num], 0))
+        if (0 == strcmp(leds[i].name, name))
         {
-            TRACE("start timer failed\r\n");
+            TRACE("set led(%s) action: %d\r\n", name, action);
+            leds[i].action = action;
         }
-    }
-    else
-    {
-        led_timers[num] = xTimerCreate("Timer", interval, pdTRUE, (void *)num,
-                                    vTimerCallback);
-        if (NULL == led_timers[num])
-        {
-            TRACE("create timer failed\r\n");
-        }
-        else
-        {
-            if (pdPASS != xTimerStart(led_timers[num], 0))
-            {
-                TRACE("start timer failed\r\n");
-            }
-        }
-    }
-}
-
-/**
- * @brief stop led flashing
- * @param num - led number(0-2)
- */
-void led_net_stop_flashing(uint8_t num)
-{
-    assert_param(num < LED_NUM);
-    if (NULL != led_timers[num])
-    {
-        TRACE("stop flashing led: %d\r\n", num);
-        xTimerStop(led_timers[num], 0);
     }
 }
