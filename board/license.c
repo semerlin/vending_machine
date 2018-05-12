@@ -28,9 +28,9 @@ static void vLicense(void *pvParameters)
     for (;;)
     {
         g_count++;
-        if (g_count >= 3600 * 10)
+        if (g_count >= 3600 * 24)
         {
-            /* license experid */
+            /* license expired */
             /* shutdown network task */
             esp8266_shutdown();
             m26_shutdown();

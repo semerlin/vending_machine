@@ -31,7 +31,7 @@
 #define INIT_NETWORK_STACK_SIZE      (configMINIMAL_STACK_SIZE)
 #define HTTP_STACK_SIZE              (configMINIMAL_STACK_SIZE)
 #define AP_STACK_SIZE                (configMINIMAL_STACK_SIZE)
-#define ESP8266_STACK_SIZE           (configMINIMAL_STACK_SIZE)
+#define ESP8266_STACK_SIZE           (configMINIMAL_STACK_SIZE * 2)
 #define M26_STACK_SIZE               (configMINIMAL_STACK_SIZE)
 #define MOTOR_STACK_SIZE             (configMINIMAL_STACK_SIZE)
 #define MQTT_STACK_SIZE              (configMINIMAL_STACK_SIZE)

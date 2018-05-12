@@ -39,6 +39,7 @@ static void vIRCtl(void *pvParameters)
                 if (!led_off)
                 {
                     led_off = TRUE;
+                    TRACE("human leaved, turn off leds\r\n");
                     led_motor_all_off();
                 }
             }
@@ -49,6 +50,7 @@ static void vIRCtl(void *pvParameters)
             if (led_off)
             {
                 led_off = FALSE;
+                TRACE("human detected, turn on leds\r\n");
                 led_motor_all_on();
             }
         }

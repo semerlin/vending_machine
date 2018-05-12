@@ -31,15 +31,15 @@ static char g_ssid[32];
 static char g_pwd[32];
 
 /* mqtt topic */
-#define TOPIC_CONTROL     "controller"
-#define TOPIC_STATE       "state"
 #define TOPIC_REGISTER    "register"
 
-uint8_t g_id[25];
+static uint8_t g_id[25];
+static char topic_control[36];
+static char topic_state[31];
 
 /* mqtt information */
 #define MQTT_ID        2
-#define MQTT_ADDRESS   "139.196.137.228"
+#define MQTT_ADDRESS   "39.105.72.237"
 #define MQTT_PORT      1883
 
 /* mqtt status */
@@ -241,7 +241,6 @@ static void vMotorState(void *pvParameters)
     uint16_t status = 0;
     uint8_t status_str[11];
     status_str[10] = 0x00;
-    char topic[40];
     for (;;)
     {
         if (0x03 == mqtt_status)
@@ -259,8 +258,7 @@ static void vMotorState(void *pvParameters)
                 }
                 status >>= 1;
             }
-            sprintf(topic, "%s/%s", TOPIC_STATE, g_id);
-            mqtt_publish(topic, (const char *)status_str, 0, 0, 0);
+            mqtt_publish(topic_state, (const char *)status_str, 0, 0, 0);
         }   
         vTaskDelay(1800000 / portTICK_PERIOD_MS);
     }
@@ -279,9 +277,7 @@ static void mqtt_connack_cb(uint8_t status)
         mqtt_publish(TOPIC_REGISTER, (const char *)g_id, 0, 1, 0);
 
         /* subscribe topic */
-        char topic[40];
-        sprintf(topic, "%s/%s", TOPIC_CONTROL, g_id);
-        mqtt_subscribe(topic, 2);
+        mqtt_subscribe(topic_control, 2);
     }
 }
 
@@ -322,9 +318,7 @@ static void mqtt_suback_cb(uint8_t status, uint16_t id)
         if (0x03 == mqtt_status)
         {
             /* try to subscribe again */
-            char topic[36];
-            sprintf(topic, "%s/%s", TOPIC_CONTROL, g_id);
-            mqtt_subscribe(TOPIC_CONTROL, 2);
+            mqtt_subscribe(topic_control, 2);
         }
     }
 }
@@ -408,7 +402,6 @@ void wifi_update_motor_status(void)
     uint16_t status = 0;
     uint8_t status_str[11];
     status_str[10] = 0x00;
-    char topic[40];
     status = motor_getstatus();
     for (int i = 0; i < 10; ++i)
     {
@@ -422,8 +415,7 @@ void wifi_update_motor_status(void)
         }
         status >>= 1;
     }
-    sprintf(topic, "%s/%s", TOPIC_STATE, g_id);
-    mqtt_publish(topic, (const char *)status_str, 0, 0, 0);
+    mqtt_publish(topic_state, (const char *)status_str, 0, 0, 0);
 }
 
 /**
@@ -463,6 +455,9 @@ bool wifi_init(void)
         return FALSE;
     }
     convert_chipid();
+    sprintf(topic_control, "%s/%s", "controller", g_id);
+    sprintf(topic_state, "%s/%s", "state", g_id);
+
 
     if (MODE_NET_WIFI == mode_net())
     {

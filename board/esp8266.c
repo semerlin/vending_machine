@@ -375,8 +375,8 @@ static int process_tcp_data(uint8_t id, char *data, uint16_t len)
     {
         node.data[i] = data[i];
     }
-    xQueueSend(xTcpQueue, &node, 100 / portTICK_PERIOD_MS);
-    
+    //xQueueSend(xTcpQueue, &node, 100 / portTICK_PERIOD_MS);
+    xQueueSend(xTcpQueue, &node, 0);
     return 0;
 }
 

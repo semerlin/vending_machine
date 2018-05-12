@@ -59,6 +59,27 @@ void EXTI3_IRQHandler(void)
 #endif
 
 /**
+ * @brief start motor
+ * @param left - left bridge
+ * @param right - right bridge
+ */
+static __INLINE void start_motor(uint8_t left, uint8_t right)
+{
+    pin_set(motor_left[left]);
+    pin_set(motor_right[right]);
+}
+
+/**
+ * @brief start motor
+ * @param left - left bridge
+ * @param right - right bridge
+ */
+static __INLINE void stop_motor(uint8_t left, uint8_t right)
+{
+    pin_reset(motor_left[left]);
+    pin_reset(motor_right[right]);
+}
+/**
  * @brief motor control task
  * @param pvParameter - parameters pass to task
  */
@@ -73,8 +94,7 @@ static void vMotorCtl(void *pvParameters)
             left = (num >> 2);
             right = num - (left << 2);
             TRACE("start motor: %d\r\n", num);
-            pin_set(motor_left[left]);
-            pin_set(motor_right[right]);
+            start_motor(left, right);
             
 #ifdef USE_DETECT
             /* wait motor working */
@@ -92,8 +112,7 @@ static void vMotorCtl(void *pvParameters)
 #endif
             
             TRACE("stop motor: %d\r\n", num);
-            pin_reset(motor_left[left]);
-            pin_reset(motor_right[right]);
+            stop_motor(left, right);
             wifi_update_motor_status();
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
@@ -109,8 +128,8 @@ void motor_init(void)
     TRACE("initialize motor...\r\n");
     for (; i < sizeof(motor_left) / sizeof(char *); ++i)
     {
-        pin_reset(motor_left[i]);
-        pin_reset(motor_right[i]);
+        pin_set(motor_left[i]);
+        pin_set(motor_right[i]);
     }
     
     xMotorQueue = xQueueCreate(MOTOR_MSG_NUM, 1);

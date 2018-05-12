@@ -966,7 +966,7 @@ void mqtt_puback(uint16_t id)
     *pdata ++ = TYPE_PUBACK;
     *pdata ++ = 0x02;
     *pdata ++ = (uint8_t)(id >> 8);
-    *pdata ++ = (uint8_t)(id & 0x0f);
+    *pdata ++ = (uint8_t)(id & 0xff);
     
     msg.size = 4;
 
@@ -979,6 +979,7 @@ void mqtt_puback(uint16_t id)
  */
 void mqtt_pubrec(uint16_t id)
 {
+    TRACE("id1 = %d\r\n", id);
     //TRACE("mqtt pubrec\r\n");
     mqtt_msg msg;
     uint8_t *pdata = msg.data;
@@ -987,7 +988,7 @@ void mqtt_pubrec(uint16_t id)
     *pdata ++ = TYPE_PUBREC;
     *pdata ++ = 0x02;
     *pdata ++ = (uint8_t)(id >> 8);
-    *pdata ++ = (uint8_t)(id & 0x0f);
+    *pdata ++ = (uint8_t)(id & 0xff);
     
     msg.size = 4;
 
@@ -1001,6 +1002,7 @@ void mqtt_pubrec(uint16_t id)
 void mqtt_pubcomp(uint16_t id)
 {
     //TRACE("mqtt pubcomp\r\n");
+    TRACE("id2 = %d\r\n", id);
     mqtt_msg msg;
     uint8_t *pdata = msg.data;
 
@@ -1008,7 +1010,7 @@ void mqtt_pubcomp(uint16_t id)
     *pdata ++ = TYPE_PUBCOMP;
     *pdata ++ = 0x02;
     *pdata ++ = (uint8_t)(id >> 8);
-    *pdata ++ = (uint8_t)(id & 0x0f);
+    *pdata ++ = (uint8_t)(id & 0xff);
     
     msg.size = 4;
 

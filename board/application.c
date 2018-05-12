@@ -29,7 +29,7 @@
 
 
 #define DEFAULT_TIMEOUT      (3000 / portTICK_PERIOD_MS)
-#define VERSION  ("v1.0.2.3_alpha")
+#define VERSION  ("v1.0.2.5_alpha")
 
 /**
  * @brief initialize esp8266 module
