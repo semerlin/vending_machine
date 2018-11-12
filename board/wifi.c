@@ -57,12 +57,16 @@ static TaskHandle_t xHeartTask = NULL;
 static TaskHandle_t xMotorStateTask = NULL; 
 static TaskHandle_t xConnectApTask = NULL; 
 
+#define PWD_RESET_COUNT    10
+static uint8_t err_count = 0;
 
 /**
  * @brief connedted default process function
  */
 static void esp8266_ap_connect(void)
 {
+    err_count = 0;
+    
     led_net_set_action("LED_NET", on);
     led_net_set_action("LED_MQTT", flash);
     ap_connected = TRUE;
@@ -73,6 +77,13 @@ static void esp8266_ap_connect(void)
  */
 static void esp8266_ap_disconnect(void)
 {
+    err_count ++;
+    if (err_count > PWD_RESET_COUNT)
+    {
+        err_count = 0;
+        flash_restore();
+    }
+    
     led_net_set_action("LED_NET", flash);
     led_net_set_action("LED_MQTT", off);
     ap_connected = FALSE;
